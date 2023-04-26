@@ -1,0 +1,15 @@
+.gradle/
+.idea/
+/build
+/buildSrc/build/
+/gradle/
+/gradlew
+/gradlew.bat
+/wrapper/
+.DS_Store
+.jqwik-database
+*.iml
+.classpath
+.factorypath
+.project
+.settings/

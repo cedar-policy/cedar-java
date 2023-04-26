@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_ERR">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%level] (%t) %logger{36}: %msg%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console" />
+        </Root>
+        <!--
+        Uncomment this to enable JNI call trace logging for unit tests.
+        <Logger name="cedarpolicy" level="trace" additivity="false">
+            <AppenderRef ref="Console" />
+        </Logger>
+        -->
+    </Loggers>
+</Configuration>

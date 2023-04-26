@@ -1,0 +1,65 @@
+{
+  "": {
+    "entityTypes": {
+      "User": {
+        "memberOfTypes": [
+          "UserGroup"
+        ]
+      },
+      "Photo": {
+        "memberOfTypes": [
+          "Album",
+          "Account"
+        ]
+      },
+      "Album": {},
+      "UserGroup": {},
+      "Account": {}
+    },
+    "actions": {
+      "readOnly": {},
+      "readWrite": {},
+      "createAlbum": {
+        "appliesTo": {
+          "resourceTypes": [
+            "Account",
+            "Album"
+          ],
+          "principalTypes": [
+            "User"
+          ]
+        }
+      },
+      "addPhotoToAlbum": {
+        "appliesTo": {
+          "principalTypes": [
+            "User"
+          ],
+          "resourceTypes": [
+            "Album"
+          ]
+        }
+      },
+      "viewPhoto": {
+        "appliesTo": {
+          "principalTypes": [
+            "User"
+          ],
+          "resourceTypes": [
+            "Photo"
+          ]
+        }
+      },
+      "viewComments": {
+        "appliesTo": {
+          "principalTypes": [
+            "User"
+          ],
+          "resourceTypes": [
+            "Photo"
+          ]
+        }
+      }
+    }
+  }
+}
