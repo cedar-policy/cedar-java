@@ -13,11 +13,11 @@ public class EntityUID extends Value {
     private static class EUIDValidator {
         // Any char except {'\','"'} or escaped slash `\\` or escaped quote `\"` or unicode `\u0000`
         // We need to escape twice, once for Java and once for the Regex
-        private static String anyCharExceptSlashOrQuote = "[^\\\"\\\\]";
-        private static String escapedSlash = "\\\\\\\\";
-        private static String escapedQuote = "\\\\\\\"";
-        private static String unicodeEscapedPattern = "\\\\u[A-Fa-f0-9]{4,6}";
-        private static Pattern entityUIDPattern =
+        private static final String anyCharExceptSlashOrQuote = "[^\\\"\\\\]";
+        private static final String escapedSlash = "\\\\\\\\";
+        private static final String escapedQuote = "\\\\\\\"";
+        private static final String unicodeEscapedPattern = "\\\\u[A-Fa-f0-9]{4,6}";
+        private static final Pattern entityUIDPattern =
                 Pattern.compile(
                         "^([A-Za-z_]([A-Za-z0-9_])*::)+\"("
                                 + anyCharExceptSlashOrQuote

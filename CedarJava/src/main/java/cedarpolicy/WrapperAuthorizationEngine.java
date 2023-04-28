@@ -1,7 +1,9 @@
 package cedarpolicy;
 
-import static cedarpolicy.CedarJson.objectMapper;
+import static cedarpolicy.CedarJson.objectReader;
+import static cedarpolicy.CedarJson.objectWriter;
 
+import java.io.IOException;
 import cedarpolicy.model.AuthorizationQuery;
 import cedarpolicy.model.AuthorizationResult;
 import cedarpolicy.model.ValidationQuery;
@@ -54,8 +56,8 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
                                 + " but JNI Cedar Language version is "
                                 + cedarJNIVersion);
             }
-            final ObjectNode requestNode = objectMapper().valueToTree(request);
-            final String fullRequest = objectMapper().writeValueAsString(requestNode);
+            // final ObjectNode requestNode = objectWriter().valueToTree(request);
+            final String fullRequest = objectWriter().writeValueAsString(request);
 
             // LOG.debug(
             //         "Making a request ({}, {}) of length {} through the JNI interface:",
@@ -66,14 +68,14 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
             final String response = callCedarJNI(operation, fullRequest);
             // LOG.trace("Received response of length {}:\n{}", response.length(), response);
 
-            final JsonNode responseNode = objectMapper().readTree(response);
+            final JsonNode responseNode = objectReader().readTree(response);
             boolean wasSuccessful = responseNode.path("success").asBoolean(false);
             if (wasSuccessful) {
                 final String resultJson = responseNode.path("result").textValue();
-                return objectMapper().readValue(resultJson, responseClass);
+                return objectReader().readValue(resultJson, responseClass);
             } else {
-                final ErrorResponse error =
-                        objectMapper().convertValue(responseNode, ErrorResponse.class);
+                final ErrorResponse error = objectReader().forType(ErrorResponse.class).readValue(responseNode);//forType(ErrorResponse.class).readTree(response);
+                        // objectWriter().convertValue(responseNode, ErrorResponse.class);
                 if (error.isInternal) {
                     throw new InternalException(error.errors);
                 } else {
@@ -84,6 +86,8 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
             throw new AuthException("JSON Serialization Error", e);
         } catch (IllegalArgumentException e) {
             throw new AuthException("Authorization error caused by illegal argument exception.", e);
+        } catch (IOException e) {
+            throw new AuthException("JSON Deserialization Error", e);
         }
     }
 

@@ -1,6 +1,7 @@
 package cedarpolicy;
 
-import static cedarpolicy.CedarJson.objectMapper;
+import static cedarpolicy.CedarJson.objectReader;
+import static cedarpolicy.CedarJson.objectWriter;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,7 +31,7 @@ public class JSONTests {
     private static final String ESCAPE_SEQ = "__expr";
 
     private static void assertJSONEqual(JsonNode expectedJSON, Object obj) {
-        String objJson = assertDoesNotThrow(() -> objectMapper().writeValueAsString(obj));
+        String objJson = assertDoesNotThrow(() -> objectWriter().writeValueAsString(obj));
         assertEquals(expectedJSON.toString(), objJson);
     }
 
@@ -40,7 +41,7 @@ public class JSONTests {
         String src =
                 "{ \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } }";
         try {
-            AuthorizationResult r = objectMapper().readValue(src, AuthorizationResult.class);
+            AuthorizationResult r = objectReader().forType(AuthorizationResult.class).readValue(src);
             assertTrue(r.isAllowed());
         } catch (JsonProcessingException e) {
             fail(e);

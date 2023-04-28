@@ -21,7 +21,7 @@ fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
         .expect("could not serialise response"),
     )
     .expect("error creating Java string")
-    .into_inner()
+    .into_raw()
 }
 
 /// The main JNI entry point
@@ -35,25 +35,31 @@ pub fn callCedarJNI(
     let parsing_err = || build_err_obj(env, "parsing");
     let getting_err = || build_err_obj(env, "getting");
 
-    let j_call_str = match env.get_string(j_call) {
-        Ok(call_str) => call_str,
+    let j_call_str: String = match env.get_string(j_call) {
+        Ok(call_str) => call_str.into(),
         _ => return getting_err(),
     };
-    let j_call_str = match j_call_str.to_str() {
-        Ok(call_str) => call_str,
-        _ => return parsing_err(),
-    };
+    let mut j_call_str = j_call_str.clone();
+    j_call_str.push(' ');
+    j_call_str = j_call_str.trim_end().to_string();
+    // let j_call_str = match j_call_str.to_str() {
+    //     Ok(call_str) => call_str,
+    //     _ => return parsing_err(),
+    // };
 
     let j_input_str: String = match env.get_string(j_input) {
         Ok(s) => s.into(),
         Err(_) => return parsing_err(),
     };
+    let mut j_input_str = j_input_str.clone();
+    j_input_str.push(' ');
 
-    let result = call_cedar(j_call_str, &j_input_str);
+    let result = call_cedar(&j_call_str, &j_input_str);
+    println!("Done with call_cedar");
 
     let res = env.new_string(result);
     match res {
-        Ok(r) => r.into_inner(),
+        Ok(r) => r.into_raw(),
         _ => env
             .new_string(
                 serde_json::to_string(&InterfaceResult::fail_internally(
@@ -62,24 +68,32 @@ pub fn callCedarJNI(
                 .expect("could not serialise response"),
             )
             .expect("error creating Java string")
-            .into_inner(),
+            .into_raw(),
     }
 }
 
 /// The main JNI entry point
 #[jni_fn("cedarpolicy.WrapperAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
-    env.new_string("1.2")
+    env.new_string("2.0")
         .expect("error creating Java string")
-        .into_inner()
+        .into_raw()
 }
 
 fn call_cedar(call: &str, input: &str) -> String {
-    let result = match call {
-        V0_AUTH_OP => json_is_authorized(input),
-        V0_VALIDATE_OP => json_validate(input),
+    println!("Rust input: {input}");
+    let call = String::from(call);
+    let input = String::from(input);
+    let result = match call.as_str() {
+        V0_AUTH_OP => {
+            println!("Calling: `json_is_authorized`");
+            json_is_authorized(&input)
+        }
+        V0_VALIDATE_OP => json_validate(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
     };
+    println!("Response:");
+    println!("{:?}", result);
     serde_json::to_string(&result).expect("could not serialise response")
 }
 
@@ -126,6 +140,45 @@ mod test {
     fn unrecognised_call_fails() {
         let result = call_cedar("BadOperation", "");
         assert_failure(result);
+    }
+
+    #[test]
+    fn long_authorization_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationOperation",
+            r#"
+{
+  "principal": "User::\"alice\"",
+  "action": "Photo::\"view\"",
+  "resource": "Photo::\"photo\"",
+  "slice": {
+    "policies": {
+        "001": "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };"
+    },
+    "entities": [
+        { "uid": { "__entity": { "type": "Photo", "id": "photo"} },
+    "attrs": {
+      "name": "my_photo"
+    },
+    "parents": []
+}
+     ]
+  },
+  "context": {}
+}
+            "#,
+        );
+        assert_success(result);
+    }
+
+    #[test]
+    fn java_authorization_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationOperation",
+            r#"{"context":{},"schema":null,"slice":{"policies":{"ID1":"permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"my_photo.jpg\" ) when { resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" };"},"entities":[{"uid":{"__expr":"Resource::\"my_photo.jpg\""},"attrs":{"name123":"my_photo123"},"parents":[]},{"uid":{"__expr":"Action::\"view\""},"attrs":{},"parents":[]},{"uid":{"__expr":"User::\"alice\""},"attrs":{},"parents":[]}],"templates":{},"template_instantiations":[]},"principal":"User::\"alice\"","action":"Action::\"view\"","resource":"Resource::\"my_photo.jpg\""}"#,
+        );
+        println!("Result: {:?}", result);
+        assert_success(result);
     }
 
     #[test]

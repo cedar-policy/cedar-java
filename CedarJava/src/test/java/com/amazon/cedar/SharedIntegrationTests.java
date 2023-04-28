@@ -230,7 +230,7 @@ public class SharedIntegrationTests {
         JsonTest test;
         try (InputStream jsonIn =
                 new FileInputStream(resolveIntegrationTestPath(jsonFile).toFile())) {
-            test = OBJECT_MAPPER.readValue(jsonIn, JsonTest.class);
+            test = OBJECT_MAPPER.reader().readValue(jsonIn, JsonTest.class);
         }
         Set<Entity> entities = loadEntities(test.entities);
         Set<Policy> policies = loadPolicies(test.policies);
@@ -279,7 +279,7 @@ public class SharedIntegrationTests {
     private Schema loadSchema(String schemaFile) throws IOException {
         try (InputStream schemaIn =
                 new FileInputStream(resolveIntegrationTestPath(schemaFile).toFile())) {
-            return new Schema(OBJECT_MAPPER.readValue(schemaIn, JsonNode.class));
+            return new Schema(OBJECT_MAPPER.reader().readValue(schemaIn, JsonNode.class));
         }
     }
 
@@ -307,7 +307,7 @@ public class SharedIntegrationTests {
     private Set<Entity> loadEntities(String entitiesFile) throws IOException {
         try (InputStream entitiesIn =
                 new FileInputStream(resolveIntegrationTestPath(entitiesFile).toFile())) {
-            return Arrays.stream(OBJECT_MAPPER.readValue(entitiesIn, JsonEntity[].class))
+            return Arrays.stream(OBJECT_MAPPER.reader().readValue(entitiesIn, JsonEntity[].class))
                     .map(je -> loadEntity(je))
                     .collect(Collectors.toSet());
         }
