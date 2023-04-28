@@ -1,4 +1,4 @@
-use cedar::frontend::{
+use cedar_policy::frontend::{
     is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
 };
 use jni::{
@@ -25,7 +25,7 @@ fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
 }
 
 /// The main JNI entry point
-#[jni_fn("cedar-policy.WrapperAuthorizationEngine")]
+#[jni_fn("cedar_policy.WrapperAuthorizationEngine")]
 pub fn callCedarJNI(
     env: JNIEnv<'_>,
     _class: JClass<'_>,
@@ -67,7 +67,7 @@ pub fn callCedarJNI(
 }
 
 /// The main JNI entry point
-#[jni_fn("cedar-policy.WrapperAuthorizationEngine")]
+#[jni_fn("cedar_policy.WrapperAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
     env.new_string("1.2")
         .expect("error creating Java string")
