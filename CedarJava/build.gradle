@@ -80,10 +80,21 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'net.jqwik:jqwik:1.7.3'
+    testImplementation 'org.slf4j:slf4j-reload4j:2.0.7'
 }
 
 test {
     useJUnitPlatform()
-    //systemProperty 'java.library.path', '../
-    //environment "CEDAR_INTEGRATION_TESTS_ROOT", Gradle.path('[CedarIntegrationTests]pkg.src')
+    systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
+    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+    testLogging {    
+        showStandardStreams true
+        exceptionFormat 'full'
+    }
+    filter {
+        //exclude shared integration tests
+        excludeTestsMatching "*SharedIntegrationTests"
+        //logging doesn't work for ValidationTests
+        excludeTestsMatching "*ValidationTests"
+    }
 }

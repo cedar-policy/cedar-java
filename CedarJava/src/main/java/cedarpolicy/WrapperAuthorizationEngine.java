@@ -15,12 +15,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
 public final class WrapperAuthorizationEngine implements AuthorizationEngine {
-    private static final Logger LOG = LoggerFactory.getLogger(WrapperAuthorizationEngine.class);
+    // private static final Logger LOG = LoggerFactory.getLogger(WrapperAuthorizationEngine.class);
 
     static {
         System.loadLibrary("cedar_java_ffi");
@@ -32,14 +32,14 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
     @Override
     public AuthorizationResult isAuthorized(AuthorizationQuery q, Slice slice)
             throws AuthException {
-        LOG.trace("Making an isAuthorized query:\n{}\nwith slice\n{}", q, slice);
+        // LOG.trace("Making an isAuthorized query:\n{}\nwith slice\n{}", q, slice);
         final AuthorizationRequest request = new AuthorizationRequest(q, slice);
         return call("AuthorizationOperation", AuthorizationResult.class, request);
     }
 
     @Override
     public ValidationResult validate(ValidationQuery q) throws AuthException {
-        LOG.trace("Making a validate query:\n{}", q);
+        // LOG.trace("Making a validate query:\n{}", q);
         return call("ValidateOperation", ValidationResult.class, q);
     }
 
@@ -57,14 +57,14 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
             final ObjectNode requestNode = objectMapper().valueToTree(request);
             final String fullRequest = objectMapper().writeValueAsString(requestNode);
 
-            LOG.debug(
-                    "Making a request ({}, {}) of length {} through the JNI interface:",
-                    operation,
-                    fullRequest.length());
-            LOG.trace("The request:\n{}", fullRequest);
+            // LOG.debug(
+            //         "Making a request ({}, {}) of length {} through the JNI interface:",
+            //         operation,
+            //         fullRequest.length());
+            // LOG.trace("The request:\n{}", fullRequest);
 
             final String response = callCedarJNI(operation, fullRequest);
-            LOG.trace("Received response of length {}:\n{}", response.length(), response);
+            // LOG.trace("Received response of length {}:\n{}", response.length(), response);
 
             final JsonNode responseNode = objectMapper().readTree(response);
             boolean wasSuccessful = responseNode.path("success").asBoolean(false);
