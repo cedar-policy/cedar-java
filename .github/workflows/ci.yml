@@ -36,21 +36,7 @@ jobs:
       - name: cargo test
         working-directory: ./CedarJavaFFI
         run: cargo test --verbose
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          ## limits ssh access and adds the ssh public key for the user which triggered the workflow
-          limit-access-to-actor: true
-          ## limits ssh access and adds the ssh public keys of the listed GitHub users
-          limit-access-to-users: andrewmwells-amazon
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
         run: ./gradlew build
-      - name: Test CedarJava
-        shell: bash
-        run: |
-             export LD_LIBRARY_PATH=${LD_LIBRARY_PATH+$LD_LIBRARY_PATH:}$JAVA_HOME/lib/server:$(pwd)/CedarJavaFFI/target/debug &&
-             export PATH=$PATH:$(pwd)/CedarJavaFFI/target/debug
-             export CLASSPATH="$(pwd)/CedarJava/build/libs/CedarJava.jar" &&
-             ./gradlew test

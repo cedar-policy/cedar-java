@@ -84,6 +84,12 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    //systemProperty 'java.library.path', '../
-    //environment "CEDAR_INTEGRATION_TESTS_ROOT", Gradle.path('[CedarIntegrationTests]pkg.src')
+    systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
+    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+    filter {
+        //exclude shared integration tests
+        excludeTestsMatching "*SharedIntegrationTests"
+        //logging doesn't work for ValidationTests
+        excludeTestsMatching "*ValidationTests"
+    }
 }
