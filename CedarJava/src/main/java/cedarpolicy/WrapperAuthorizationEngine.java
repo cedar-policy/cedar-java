@@ -23,7 +23,7 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
     private static final Logger LOG = LoggerFactory.getLogger(WrapperAuthorizationEngine.class);
 
     static {
-        System.loadLibrary("CedarJavaFFI");
+        System.loadLibrary("cedar_java_ffi");
     }
 
     /** Construct a wrapper authorization engine. */
