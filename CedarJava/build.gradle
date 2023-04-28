@@ -86,6 +86,10 @@ test {
     useJUnitPlatform()
     systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
     environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+    testLogging {    
+        showStandardStreams true
+        exceptionFormat 'full'
+    }
     filter {
         //exclude shared integration tests
         excludeTestsMatching "*SharedIntegrationTests"
