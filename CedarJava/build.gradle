@@ -101,12 +101,20 @@ test {
     }
 }
 
-tasks.named('integration_tests', Test) {
+task integrationTest(type: Test) {
     useJUnitPlatform()
     systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
     environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
     testLogging {    
         showStandardStreams true
         exceptionFormat 'full'
+    }
+    filter {
+        //exclude shared integration tests
+        includeTestsMatching "*SharedIntegrationTests"
+        //logging doesn't work for ValidationTests
+        includeTestsMatching "*ValidationTests"
+
+        includeTestsMatching "*IntegrationTests*"
     }
 }
