@@ -96,5 +96,17 @@ test {
         excludeTestsMatching "*SharedIntegrationTests"
         //logging doesn't work for ValidationTests
         excludeTestsMatching "*ValidationTests"
+
+        excludeTestsMatching "*IntegrationTests*"
+    }
+}
+
+tasks.named('integration_tests', Test) {
+    useJUnitPlatform()
+    systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
+    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+    testLogging {    
+        showStandardStreams true
+        exceptionFormat 'full'
     }
 }

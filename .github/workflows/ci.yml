@@ -46,8 +46,32 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew build -x test
-      - name: Build CedarJava
+        run: ./gradlew build
+      - name: Test CedarJava
         working-directory: ./CedarJava
         shell: bash
         run: ./gradlew test --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testResourceAttribute" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testIpAddressExtension" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testDecimalExtension" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testTemplateResourceAttribute" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testSchemaParsingDeny" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integration_tests --tests "*testSchemaParsingAllow" --max-workers=1
