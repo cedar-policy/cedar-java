@@ -21,7 +21,7 @@ fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
         .expect("could not serialise response"),
     )
     .expect("error creating Java string")
-    .into_inner()
+    .into_raw()
 }
 
 /// The main JNI entry point
@@ -35,25 +35,32 @@ pub fn callCedarJNI(
     let parsing_err = || build_err_obj(env, "parsing");
     let getting_err = || build_err_obj(env, "getting");
 
-    let j_call_str = match env.get_string(j_call) {
-        Ok(call_str) => call_str,
+    let j_call_str: String = match env.get_string(j_call) {
+        Ok(call_str) => call_str.into(),
         _ => return getting_err(),
     };
-    let j_call_str = match j_call_str.to_str() {
-        Ok(call_str) => call_str,
-        _ => return parsing_err(),
-    };
+    let mut j_call_str = j_call_str.clone();
+    j_call_str.push(' ');
+    j_call_str = j_call_str.trim_end().to_string();
+    // let j_call_str = match j_call_str.to_str() {
+    //     Ok(call_str) => call_str,
+    //     _ => return parsing_err(),
+    // };
 
     let j_input_str: String = match env.get_string(j_input) {
         Ok(s) => s.into(),
         Err(_) => return parsing_err(),
     };
+    let mut j_input_str = j_input_str.clone();
+    j_input_str.push(' ');
 
-    let result = call_cedar(j_call_str, &j_input_str);
+
+    let result = call_cedar(&j_call_str, &j_input_str);
+    println!("Done with call_cedar");
 
     let res = env.new_string(result);
     match res {
-        Ok(r) => r.into_inner(),
+        Ok(r) => r.into_raw(),
         _ => env
             .new_string(
                 serde_json::to_string(&InterfaceResult::fail_internally(
@@ -62,7 +69,7 @@ pub fn callCedarJNI(
                 .expect("could not serialise response"),
             )
             .expect("error creating Java string")
-            .into_inner(),
+            .into_raw(),
     }
 }
 
@@ -71,7 +78,7 @@ pub fn callCedarJNI(
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
     env.new_string("2.0")
         .expect("error creating Java string")
-        .into_inner()
+        .into_raw()
 }
 
 fn call_cedar(call: &str, input: &str) -> String {
