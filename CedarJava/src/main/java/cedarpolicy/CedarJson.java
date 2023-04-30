@@ -6,6 +6,8 @@ import cedarpolicy.serializer.ValueCedarDeserializer;
 import cedarpolicy.serializer.ValueCedarSerializer;
 import cedarpolicy.value.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
@@ -18,6 +20,14 @@ final class CedarJson {
 
     public static ObjectMapper objectMapper() {
         return OBJECT_MAPPER;
+    }
+
+    public static ObjectWriter objectWriter() {
+        return OBJECT_MAPPER.writer();
+    }
+
+    public static ObjectReader objectReader() {
+        return OBJECT_MAPPER.reader();
     }
 
     private static ObjectMapper createObjectMapper() {
