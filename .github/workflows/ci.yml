@@ -50,11 +50,23 @@ jobs:
       - name: Integration Test CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew integrationTest --max-workers=1
+        run: ./gradlew integrationTest --tests "*testSingleThread" --max-workers=1
       - name: Test CedarJava
         working-directory: ./CedarJava
         shell: bash
         run: ./gradlew test --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integrationTest --tests "*testSingleThread" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integrationTest --tests "*testRandomResourceAttribute" --max-workers=1
+      - name: Integration Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew integrationTest --tests "*testRandomResourceAttributeDeny" --max-workers=1
       # - name: Integration Test CedarJava
       #   working-directory: ./CedarJava
       #   shell: bash

@@ -114,6 +114,7 @@ task integrationTest(type: Test) {
 
         // includeTestsMatching "*testRandomResourceAttribute"
         includeTestsMatching "*testSingleThread"
-        
+        includeTestsMatching "*testRandomResourceAttribute"
+        includeTestsMatching "*testRandomResourceAttributeDeny"
     }
 }

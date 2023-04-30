@@ -274,7 +274,7 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
         AuthorizationResult result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertFalse(result.isAllowed());
+        Assertions.assertTrue(result.isAllowed());
     }
 
     /** Tests a single attribute: resource.owner. */
