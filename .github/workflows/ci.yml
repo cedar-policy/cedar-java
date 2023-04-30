@@ -54,24 +54,24 @@ jobs:
       - name: Integration Test CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew integrationTest --tests "*testResourceAttribute" --max-workers=1
-      - name: Integration Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew integrationTest --tests "*testIpAddressExtension" --max-workers=1
-      - name: Integration Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew integrationTest --tests "*testDecimalExtension" --max-workers=1
-      - name: Integration Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew integrationTest --tests "*testTemplateResourceAttribute" --max-workers=1
-      - name: Integration Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew integrationTest --tests "*testSchemaParsingDeny" --max-workers=1
-      - name: Integration Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew integrationTest --tests "*testSchemaParsingAllow" --max-workers=1
+        run: ./gradlew integrationTest --max-workers=1
+      # - name: Integration Test CedarJava
+      #   working-directory: ./CedarJava
+      #   shell: bash
+      #   run: ./gradlew integrationTest --tests "*testIpAddressExtension" --max-workers=1
+      # - name: Integration Test CedarJava
+      #   working-directory: ./CedarJava
+      #   shell: bash
+      #   run: ./gradlew integrationTest --tests "*testDecimalExtension" --max-workers=1
+      # - name: Integration Test CedarJava
+      #   working-directory: ./CedarJava
+      #   shell: bash
+      #   run: ./gradlew integrationTest --tests "*testTemplateResourceAttribute" --max-workers=1
+      # - name: Integration Test CedarJava
+      #   working-directory: ./CedarJava
+      #   shell: bash
+      #   run: ./gradlew integrationTest --tests "*testSchemaParsingDeny" --max-workers=1
+      # - name: Integration Test CedarJava
+      #   working-directory: ./CedarJava
+      #   shell: bash
+      #   run: ./gradlew integrationTest --tests "*testSchemaParsingAllow" --max-workers=1
