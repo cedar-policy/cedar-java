@@ -13,7 +13,7 @@ import java.util.regex.PatternSyntaxException;
 public class IpAddress extends Value {
 
     private static class IpAddressValidator {
-        private static Pattern ipv4Pattern =
+        private static final Pattern ipv4Pattern =
                 Pattern.compile(
                         "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)"
                                 + "{3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
@@ -30,7 +30,7 @@ public class IpAddress extends Value {
             }
         }
 
-        private static Pattern ipv6Pattern =
+        private static final Pattern ipv6Pattern =
                 Pattern.compile(
                         "^(([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|"

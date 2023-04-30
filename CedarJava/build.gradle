@@ -95,7 +95,7 @@ test {
         //exclude shared integration tests
         excludeTestsMatching "*SharedIntegrationTests"
         //logging doesn't work for ValidationTests
-        excludeTestsMatching "*ValidationTests"
+        // excludeTestsMatching "*ValidationTests"
 
         excludeTestsMatching "*IntegrationTests*"
     }

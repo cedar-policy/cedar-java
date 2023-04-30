@@ -52,6 +52,6 @@ public interface AuthorizationEngine {
      * @return The Cedar language major version supported
      */
     static String getCedarLangVersion() {
-        return "1.2";
+        return "2.0";
     }
 }
