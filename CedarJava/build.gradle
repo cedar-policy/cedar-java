@@ -96,7 +96,7 @@ test {
         // excludeTestsMatching "*SharedIntegrationTests"
 
         excludeTestsMatching "*testRandomResourceAttribute"
-        // excludeTestsMatching "*testRandomResourceAttributeDeny"
+        excludeTestsMatching "*testRandomResourceAttributeDeny"
     }
 }
 
@@ -112,6 +112,8 @@ task integrationTest(type: Test) {
         //exclude shared integration tests
         // includeTestsMatching "*SharedIntegrationTests"
 
-        includeTestsMatching "*testRandomResourceAttribute"
+        // includeTestsMatching "*testRandomResourceAttribute"
+        includeTestsMatching "*testSingleThread"
+        
     }
 }

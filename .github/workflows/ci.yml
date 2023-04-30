@@ -46,15 +46,15 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew build
-      - name: Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: ./gradlew test --max-workers=1
+        run: ./gradlew build -x test
       - name: Integration Test CedarJava
         working-directory: ./CedarJava
         shell: bash
         run: ./gradlew integrationTest --max-workers=1
+      - name: Test CedarJava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew test --max-workers=1
       # - name: Integration Test CedarJava
       #   working-directory: ./CedarJava
       #   shell: bash
