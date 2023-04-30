@@ -174,7 +174,6 @@ mod test {
         println!("Result: {:?}", result);
         assert_success(result);
     }
-    
 
     #[test]
     fn test_unspecified_principal_call_succeeds() {
