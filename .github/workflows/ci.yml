@@ -39,7 +39,7 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew build --max-workers=1
+        run: ./gradlew build -x test --max-workers=1
       - name: Integration Test CedarJava
         working-directory: ./CedarJava
         shell: bash
