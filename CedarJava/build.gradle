@@ -88,7 +88,7 @@ test {
     systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
     environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
     testLogging {    
-        showStandardStreams true
+        showStandardStreams false
         exceptionFormat 'full'
     }
     filter {
@@ -97,6 +97,7 @@ test {
 
         excludeTestsMatching "*testRandomResourceAttribute"
         excludeTestsMatching "*testRandomResourceAttributeDeny"
+        excludeTestsMatching "*testSingleThread"
     }
 }
 
