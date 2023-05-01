@@ -91,27 +91,4 @@ test {
         showStandardStreams false
         exceptionFormat 'full'
     }
-    filter {
-        //exclude shared integration tests
-        // excludeTestsMatching "*SharedIntegrationTests"
-
-        excludeTestsMatching "*testRandomResourceAttribute"
-        excludeTestsMatching "*testRandomResourceAttributeDeny"
-        excludeTestsMatching "*testSingleThread"
-    }
-}
-
-task integrationTest(type: Test) {
-    useJUnitPlatform()
-    systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
-    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
-    testLogging {
-        showStandardStreams true
-        exceptionFormat 'full'
-    }
-    filter {
-        includeTestsMatching "*testSingleThread"
-        includeTestsMatching "*testRandomResourceAttribute"
-        includeTestsMatching "*testRandomResourceAttributeDeny"
-    }
 }
