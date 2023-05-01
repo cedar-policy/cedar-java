@@ -95,8 +95,8 @@ test {
         //exclude shared integration tests
         // excludeTestsMatching "*SharedIntegrationTests"
 
-        excludeTestsMatching "*testRandomResourceAttribute"
-        excludeTestsMatching "*testRandomResourceAttributeDeny"
+        // excludeTestsMatching "*testRandomResourceAttribute"
+        // excludeTestsMatching "*testRandomResourceAttributeDeny"
         excludeTestsMatching "*testSingleThread"
     }
 }
@@ -111,7 +111,7 @@ task integrationTest(type: Test) {
     }
     filter {
         includeTestsMatching "*testSingleThread"
-        includeTestsMatching "*testRandomResourceAttribute"
-        includeTestsMatching "*testRandomResourceAttributeDeny"
+        // includeTestsMatching "*testRandomResourceAttribute"
+        // includeTestsMatching "*testRandomResourceAttributeDeny"
     }
 }

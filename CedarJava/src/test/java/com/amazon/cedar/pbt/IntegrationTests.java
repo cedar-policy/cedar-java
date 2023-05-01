@@ -89,7 +89,7 @@ public class IntegrationTests {
 
     /** Tests a randomly generated attribute for resource. */
     @Property(tries = 50)
-    public void testRandomResourceAttribute(@ForAll @IntRange(min = 1, max = 50) int count) {
+    public void testRandomResourceAttribute(@ForAll @IntRange(min = 1, max = 30) int count) {
         Set<Entity> entities = new HashSet<>();
         String principal = "User::\"alice\"";
         Map<String, Value> principalAttributes = new HashMap<>();
@@ -143,7 +143,7 @@ public class IntegrationTests {
                         + " when {\n"
                         + attributes.toString()
                         + "\n};";
-        // attributes = null;
+        attributes = null;
         Policy policy = new Policy(p, "ID" + String.valueOf(count));
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
@@ -160,7 +160,7 @@ public class IntegrationTests {
 
     /** Tests a randomly generated with one bad attribute for resource Result: Deny. */
     @Property(tries = 50)
-    public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 2) int count) {
+    public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 30) int count) {
         Set<Entity> entities = new HashSet<>();
         String principal = "User::\"alice\"";
         Map<String, Value> principalAttributes = new HashMap<>();
@@ -183,46 +183,46 @@ public class IntegrationTests {
         Set<String> resourceParents = new HashSet<>();
         e = new Entity(resource, resourceAttributes, resourceParents);
         entities.add(e);
-        // /*
-        //  *      select random attributes
-        //  */
-        // List<String> attrKeys = new ArrayList<String>(resourceAttributes.keySet());
-        // int n = Utils.intInRange(0, count - 1);
-        // StringBuffer attributes = new StringBuffer();
-        // int r = Utils.intInRange(0, n);
-        // for (int i = 0; i <= n; i++) {
-        //     attributes.append("resource.");
-        //     String key = attrKeys.get(i);
-        //     attributes.append(key);
-        //     attributes.append("==");
-        //     /*
-        //      *   introduce one bad attribute
-        //      */
-        //     if (i == r) {
-        //         attributes.append("\"noise\"");
-        //     } else {
-        //         attributes.append("\"" + resourceAttributes.get(key).toString() + "\"");
-        //     }
-        //     attributes.append(" && ");
-        // }
-        // attributes.delete(attributes.length() - 3, attributes.length()); // remove last &&
-        // String p =
-        //         "permit(\n"
-        //                 + "principal=="
-        //                 + principal
-        //                 + ",\n"
-        //                 + "action=="
-        //                 + action
-        //                 + ",\n"
-        //                 + "resource=="
-        //                 + resource
-        //                 + "\n"
-        //                 + ")\n"
-        //                 + " when {\n"
-        //                 + attributes.toString()
-        //                 + "};";
-        String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };";
-        // attributes = null;
+        /*
+         *      select random attributes
+         */
+        List<String> attrKeys = new ArrayList<String>(resourceAttributes.keySet());
+        int n = Utils.intInRange(0, count - 1);
+        StringBuffer attributes = new StringBuffer();
+        int r = Utils.intInRange(0, n);
+        for (int i = 0; i <= n; i++) {
+            attributes.append("resource.");
+            String key = attrKeys.get(i);
+            attributes.append(key);
+            attributes.append("==");
+            /*
+             *   introduce one bad attribute
+             */
+            if (i == r) {
+                attributes.append("\"noise\"");
+            } else {
+                attributes.append("\"" + resourceAttributes.get(key).toString() + "\"");
+            }
+            attributes.append(" && ");
+        }
+        attributes.delete(attributes.length() - 3, attributes.length()); // remove last &&
+        String p =
+                "permit(\n"
+                        + "principal=="
+                        + principal
+                        + ",\n"
+                        + "action=="
+                        + action
+                        + ",\n"
+                        + "resource=="
+                        + resource
+                        + "\n"
+                        + ")\n"
+                        + " when {\n"
+                        + attributes.toString()
+                        + "};";
+        
+        attributes = null;
         // System.out.println("Policy: "+p);
         Policy policy = new Policy(p, "ID" + String.valueOf(count));
         Set<Policy> policies = new HashSet<>();
