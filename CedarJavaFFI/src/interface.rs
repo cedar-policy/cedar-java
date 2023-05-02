@@ -8,6 +8,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
+use std::thread;
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
@@ -22,6 +23,11 @@ fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
     )
     .expect("error creating Java string")
     .into_raw()
+}
+
+fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
+    let result = call_cedar(&call_str, &input_str);
+    result
 }
 
 /// The main JNI entry point
@@ -39,13 +45,7 @@ pub fn callCedarJNI(
         Ok(call_str) => call_str.into(),
         _ => return getting_err(),
     };
-    let mut j_call_str = j_call_str.clone();
-    j_call_str.push(' ');
-    j_call_str = j_call_str.trim_end().to_string();
-    // let j_call_str = match j_call_str.to_str() {
-    //     Ok(call_str) => call_str,
-    //     _ => return parsing_err(),
-    // };
+    let j_call_str = j_call_str.clone();
 
     let j_input_str: String = match env.get_string(j_input) {
         Ok(s) => s.into(),
@@ -54,8 +54,12 @@ pub fn callCedarJNI(
     let mut j_input_str = j_input_str.clone();
     j_input_str.push(' ');
 
-    let result = call_cedar(&j_call_str, &j_input_str);
-    println!("Done with call_cedar");
+    let handle = thread::spawn(move || call_cedar_in_thread(j_call_str, j_input_str));
+
+    let result = match handle.join() {
+        Ok(s) => s,
+        Err(e) => format!("Authorization thread failed {e:?}"),
+    };
 
     let res = env.new_string(result);
     match res {
@@ -81,7 +85,6 @@ pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
 }
 
 fn call_cedar(call: &str, input: &str) -> String {
-    println!("Rust input: {input}");
     let call = String::from(call);
     let input = String::from(input);
     let result = match call.as_str() {
@@ -92,8 +95,6 @@ fn call_cedar(call: &str, input: &str) -> String {
         V0_VALIDATE_OP => json_validate(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
     };
-    println!("Response:");
-    println!("{:?}", result);
     serde_json::to_string(&result).expect("could not serialise response")
 }
 
