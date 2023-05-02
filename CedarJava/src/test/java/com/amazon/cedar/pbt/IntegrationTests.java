@@ -88,8 +88,8 @@ public class IntegrationTests {
     }
 
     /** Tests a randomly generated attribute for resource. */
-    @Property(tries = 30)
-    public void testRandomResourceAttribute(@ForAll @IntRange(min = 1, max = 30) int count) {
+    @Property(tries = 50)
+    public void testRandomResourceAttribute(@ForAll @IntRange(min = 1, max = 50) int count) {
         Set<Entity> entities = new HashSet<>();
         String principal = "User::\"alice\"";
         Map<String, Value> principalAttributes = new HashMap<>();
@@ -159,8 +159,8 @@ public class IntegrationTests {
     }
 
     /** Tests a randomly generated with one bad attribute for resource Result: Deny. */
-    @Property(tries = 30)
-    public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 30) int count) {
+    @Property(tries = 50)
+    public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 50) int count) {
         Set<Entity> entities = new HashSet<>();
         String principal = "User::\"alice\"";
         Map<String, Value> principalAttributes = new HashMap<>();
@@ -223,6 +223,43 @@ public class IntegrationTests {
                         + "};";
         attributes = null;
         Policy policy = new Policy(p, "ID" + String.valueOf(count));
+        Set<Policy> policies = new HashSet<>();
+        policies.add(policy);
+        Slice slice = new BasicSlice(policies, entities);
+        Map<String, Value> currentContext = new HashMap<>();
+        AuthorizationQuery query =
+                new AuthorizationQuery(
+                        principal, action, resource, currentContext, Optional.empty());
+        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationResult result =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
+        Assertions.assertFalse(result.isAllowed());
+    }
+
+    /** Tests a long expression that crashes the JNI if Rust doesn't spawn a new thread. */
+    @Test
+    public void testLongExprRequiresRustThread() {
+        Set<Entity> entities = new HashSet<>();
+        String principal = "User::\"alice\"";
+        Map<String, Value> principalAttributes = new HashMap<>();
+        Set<String> principalParents = new HashSet<>();
+        Entity e = new Entity(principal, principalAttributes, principalParents);
+        entities.add(e);
+
+        String action = "Action::\"view\"";
+        Map<String, Value> actionAttributes = new HashMap<>();
+        Set<String> actionParents = new HashSet<>();
+        Entity act = new Entity(action, actionAttributes, actionParents);
+        entities.add(act);
+
+        String resource = "Resource::" + "\"" + "photo.jpg" + "\"";
+        Map<String, Value> resourceAttributes = new HashMap<>();
+        resourceAttributes.put("name", new PrimString("my_photo"));
+        Set<String> resourceParents = new HashSet<>();
+        e = new Entity(resource, resourceAttributes, resourceParents);
+        entities.add(e);
+        String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"my_photo.jpg\" ) when { resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" && resource.name123==\"my_photo123\" };";
+        Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
