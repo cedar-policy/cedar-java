@@ -32,3 +32,12 @@ other Log4j2-based packages.
 
 Debugging calls across the JNI boundary is a bit tricky (as ever a bit more so on a Mac), but can be done by attaching
 both a Java and native debugger (such as GDB/LLDB) to the program.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This project is licensed under the Apache-2.0 License.
+
