@@ -2,7 +2,8 @@
 
 This repository contains `CedarJavaFFI`, a Rust crate to allow calling the Cedar library from Java and `CedarJava`, a Java package to make calling Cedar from Java more convenient.
 
-You can build the Rust crate with `cargo build`. See `CedarJava/README.md` for instructions on building `CedarJava`
+You can find build instructions and more information in the subfolders.
+
 ## Note
 Cedar is primarily developed in Rust. CedarJava typically lags behind the newest Cedar features. Notably, as of this writing, Cedar Java does not expose Partial Evaluation APIs.
 
