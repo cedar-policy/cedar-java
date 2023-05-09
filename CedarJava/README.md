@@ -8,6 +8,7 @@ For more information about Cedar, please see: https://www.cedarpolicy.com/
 This package depends on [Cedar](https://www.cedarpolicy.com/), a library
 that needs to be compiled so that it can be run on the used platform.
 
+You need JDK 17 or later to run the code.
 
 ### Building
 - Ensure Rust, Gradle and a JDK are installed.
