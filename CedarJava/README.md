@@ -7,8 +7,9 @@ For more information about Cedar, please see: https://www.cedarpolicy.com/
 ## Usage
 This package depends on [Cedar](https://www.cedarpolicy.com/), a library
 that needs to be compiled so that it can be run on the used platform.
-
 You need JDK 17 or later to run the code.
+
+You need to ensure the `CEDAR_JAVA_FFI_LIB` variable is set correctly. Typically running `config.sh` will set this for you.
 
 ### Building
 - Ensure Rust, Gradle and a JDK are installed.
@@ -19,6 +20,7 @@ cd CedarJavaFFI
 cargo build
 cargo test
 cd ../CedarJava
+bash config.sh
 ./gradlew build
 ```
 

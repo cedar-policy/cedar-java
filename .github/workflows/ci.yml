@@ -38,4 +38,4 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew build
+        run: bash config.sh && ./gradlew build

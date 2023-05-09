@@ -85,8 +85,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    systemProperty 'java.library.path', '../CedarJavaFFI/target/debug/'
     environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+    environment 'CEDAR_JAVA_FFI_LIB', '/Users/anmwells/Development/Cedar/cedar-java/CedarJavaFFI/target/debug/libcedar_java_ffi.dylib'
     testLogging {
         showStandardStreams false
         exceptionFormat 'full'
