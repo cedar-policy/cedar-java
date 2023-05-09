@@ -1,0 +1,30 @@
+{
+    "": {
+        "entityTypes": {
+            "User": {
+                "shape": {
+                    "type": "Record",
+                    "attributes": {
+                        "foo": {"type": "String"}
+                    }
+                }
+            },
+            "Resource": {
+                "shape": {
+                    "type": "Record",
+                    "attributes": {
+                        "owner": {"type": "Boolean"}
+                    }
+                }
+            }
+        },
+        "actions": {
+            "view": {
+                "appliesTo": {
+                    "principalTypes": [ "User" ],
+                    "resourceTypes": ["Resource"]
+                }
+            }
+        }
+    }
+}
