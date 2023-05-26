@@ -512,8 +512,7 @@ public class IntegrationTests {
                         + "\n"
                         + ")\n"
                         + " when {\n"
-                        + "resource.owner=="
-                        + principalSlot
+                        + "resource.owner == principal"
                         + "};";
         final String policyId = "ID0";
         Policy policy = new Policy(p, policyId);
