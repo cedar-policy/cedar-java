@@ -56,7 +56,7 @@ jobs:
 
   publish-release:
     needs: [run-tests, get-version]
-    uses: ./.github/workflows/publish-release-reusable.yml
+    uses: ./.github/workflows/publish_release_reusable.yml
     with:
       name: ${{ needs.get-version.outputs.version }}
       sha: ${{ github.sha }}
