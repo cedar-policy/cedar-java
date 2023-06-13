@@ -13,3 +13,6 @@
 .factorypath
 .project
 .settings/
+
+# Ignore changes to gradle.properties because we enter passwords here for releases
+/gradle.properties
