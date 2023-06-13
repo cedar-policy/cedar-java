@@ -35,7 +35,7 @@ jobs:
         toolchain:
           - stable
     steps:
-      - name: Checkout Cedar Examples
+      - name: Checkout cedar-java
         uses: actions/checkout@v3
       - name: Checkout cedar
         uses: actions/checkout@v3
