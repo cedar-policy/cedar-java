@@ -63,12 +63,12 @@ jobs:
         shell: bash
         run: mv debug/libcedar_java_ffi.so debug/libcedar_java_ffi-${{ inputs.name }}.so
       - name: Create GitHub release
-          uses: softprops/action-gh-release@v1
-          with:
-            name: CedarJavaFFI ${{ inputs.name }}
-            tag_name: ${{ inputs.tag_name }}
-            body: ${{ inputs.release_notes }}
-            draft: ${{ inputs.draft }}
-            prerelease: ${{ inputs.prerelease }}
-            files: debug/libcedar_java_ffi-${{ inputs.name }}
-            fail_on_unmatched_files: true
+        uses: softprops/action-gh-release@v1
+        with:
+          name: CedarJavaFFI ${{ inputs.name }}
+          tag_name: ${{ inputs.tag_name }}
+          body: ${{ inputs.release_notes }}
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          files: debug/libcedar_java_ffi-${{ inputs.name }}
+          fail_on_unmatched_files: true
