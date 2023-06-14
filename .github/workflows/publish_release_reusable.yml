@@ -58,10 +58,14 @@ jobs:
         working-directory: ./CedarJava
         shell: bash
         run: bash config.sh && ./gradlew build
-      - name: Move libcedar_java_ffi.dylib
+      - name: Move libcedar_java_ffi
         working-directory: ./CedarJavaFFI
         shell: bash
         run: mv target/debug/libcedar_java_ffi.so target/debug/libcedar_java_ffi-${{ inputs.name }}.so
+      - name: Save hash for libcedar_java_ffi
+        working-directory: ./CedarJavaFFI
+        shell: bash
+        run: sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.so > target/debug/libcedar_java_ffi-${{ inputs.name }}.so.sha1
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
@@ -70,5 +74,7 @@ jobs:
           body: ${{ inputs.release_notes }}
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-          files: target/debug/libcedar_java_ffi-${{ inputs.name }}.so
+          files: |
+            ./CedarJavaFFI/target/debug/libcedar_java_ffi-${{ inputs.name }}.so
+            ./CedarJavaFFI/target/debug/libcedar_java_ffi-${{ inputs.name }}.so.sha1
           fail_on_unmatched_files: true
