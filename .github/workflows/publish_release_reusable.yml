@@ -58,8 +58,6 @@ jobs:
         working-directory: ./CedarJava
         shell: bash
         run: bash config.sh && ./gradlew build
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: Move libcedar_java_ffi.dylib
         working-directory: ./CedarJavaFFI
         shell: bash
