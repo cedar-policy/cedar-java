@@ -63,7 +63,7 @@ jobs:
       - name: Move libcedar_java_ffi.dylib
         working-directory: ./CedarJavaFFI
         shell: bash
-        run: mv debug/libcedar_java_ffi.so debug/libcedar_java_ffi-${{ inputs.name }}.so
+        run: mv target/debug/libcedar_java_ffi.so target/debug/libcedar_java_ffi-${{ inputs.name }}.so
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
@@ -72,5 +72,5 @@ jobs:
           body: ${{ inputs.release_notes }}
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-          files: debug/libcedar_java_ffi-${{ inputs.name }}
+          files: target/debug/libcedar_java_ffi-${{ inputs.name }}
           fail_on_unmatched_files: true
