@@ -70,5 +70,5 @@ jobs:
           body: ${{ inputs.release_notes }}
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
-          files: target/debug/libcedar_java_ffi-${{ inputs.name }}
+          files: target/debug/libcedar_java_ffi-${{ inputs.name }}.so
           fail_on_unmatched_files: true
