@@ -30,6 +30,8 @@ jobs:
   build_and_test_cedar_java_ffi:
     name: Rust project - latest
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       matrix:
         toolchain:
