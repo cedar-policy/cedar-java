@@ -104,9 +104,7 @@ fn call_cedar(call: &str, input: &str) -> String {
     let call = String::from(call);
     let input = String::from(input);
     let result = match call.as_str() {
-        V0_AUTH_OP => {
-            json_is_authorized(&input)
-        }
+        V0_AUTH_OP => json_is_authorized(&input),
         V0_VALIDATE_OP => json_validate(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
     };
