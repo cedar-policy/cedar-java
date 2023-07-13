@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.PrimBool;
@@ -57,7 +57,7 @@ public class JSONTests {
         String src =
                 "{ \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } }";
         try {
-            AuthorizationResult r = objectReader().forType(AuthorizationResult.class).readValue(src);
+            AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
             assertTrue(r.isAllowed());
         } catch (JsonProcessingException e) {
             fail(e);
@@ -67,7 +67,7 @@ public class JSONTests {
     /** Test. */
     @Test
     public void testQuery() {
-        AuthorizationQuery q = new AuthorizationQuery("gandalf", "opens", "moria");
+        AuthorizationRequest q = new AuthorizationRequest("gandalf", "opens", "moria");
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode c = JsonNodeFactory.instance.objectNode();
         n.set("context", c);

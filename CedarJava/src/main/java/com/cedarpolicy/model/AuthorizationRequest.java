@@ -34,7 +34,7 @@ import java.util.Optional;
  * (in general, you don't need to worry about this if you construct your entities via the EntityUID
  * class).
  */
-public class AuthorizationQuery {
+public class AuthorizationRequest {
     /** EUID of the principal in the query. */
     @JsonProperty("principal")
     public final Optional<String> principalEUID;
@@ -60,7 +60,7 @@ public class AuthorizationQuery {
      * @param context Key/Value context.
      * @param schema Schema (optional).
      */
-    public AuthorizationQuery(
+    public AuthorizationRequest(
             Optional<String> principalEUID,
             String actionEUID,
             Optional<String> resourceEUID,
@@ -84,7 +84,7 @@ public class AuthorizationQuery {
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
      */
-    public AuthorizationQuery(
+    public AuthorizationRequest(
             Optional<String> principalEUID, String actionEUID, Optional<String> resourceEUID) {
         this(principalEUID, actionEUID, resourceEUID, new HashMap<>(), Optional.empty());
     }
@@ -98,7 +98,7 @@ public class AuthorizationQuery {
      * @param context Key/Value context.
      * @param schema Schema (optional).
      */
-    public AuthorizationQuery(
+    public AuthorizationRequest(
             String principalEUID,
             String actionEUID,
             String resourceEUID,
@@ -122,7 +122,7 @@ public class AuthorizationQuery {
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
      */
-    public AuthorizationQuery(String principalEUID, String actionEUID, String resourceEUID) {
+    public AuthorizationRequest(String principalEUID, String actionEUID, String resourceEUID) {
         this(
                 Optional.of(principalEUID),
                 actionEUID,

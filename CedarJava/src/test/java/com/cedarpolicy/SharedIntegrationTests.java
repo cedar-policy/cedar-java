@@ -19,8 +19,8 @@ package com.cedarpolicy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
@@ -135,7 +135,7 @@ public class SharedIntegrationTests {
         public Map<String, Value> context;
 
         /** The expected decision that should be returned by the authorization engine. */
-        public AuthorizationResult.Decision decision;
+        public AuthorizationResponse.Decision decision;
 
         /** The expected reason list that should be returned by the authorization engine. */
         public List<String> reasons;
@@ -337,15 +337,15 @@ public class SharedIntegrationTests {
     private void executeJsonQueryTest(
             Set<Entity> entities, Set<Policy> policies, JsonQuery query, Schema schema) {
         AuthorizationEngine auth = new WrapperAuthorizationEngine();
-        AuthorizationQuery authQuery =
-                new AuthorizationQuery(
+        AuthorizationRequest authQuery =
+                new AuthorizationRequest(
                         query.principal,
                         query.action,
                         query.resource,
                         query.context,
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
-        AuthorizationResult result = assertDoesNotThrow(() -> auth.isAuthorized(authQuery, slice));
+        AuthorizationResponse result = assertDoesNotThrow(() -> auth.isAuthorized(authQuery, slice));
 
         assertEquals(query.decision, result.getDecision());
         assertEquals(query.errors, result.getErrors());

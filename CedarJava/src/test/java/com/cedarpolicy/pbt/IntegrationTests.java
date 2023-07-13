@@ -20,8 +20,8 @@ import static com.cedarpolicy.TestUtil.loadSchemaResource;
 
 import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.WrapperAuthorizationEngine;
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.EntityTypeAndId;
@@ -94,11 +94,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -165,11 +165,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -243,11 +243,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
     }
@@ -280,11 +280,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -317,11 +317,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
     }
@@ -355,15 +355,15 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         Optional.of(principal),
                         action,
                         Optional.empty(),
                         currentContext,
                         Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -412,11 +412,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -465,11 +465,11 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -535,11 +535,11 @@ public class IntegrationTests {
 
         Slice slice = new BasicSlice(policies, entities, templates, templateInstantiations);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -591,15 +591,15 @@ public class IntegrationTests {
         // Schema says resource.owner is a bool, so we should get a parse failure and a deny.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal,
                         action,
                         resource,
                         currentContext,
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")));
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
     }
@@ -652,15 +652,15 @@ public class IntegrationTests {
         // Schema says resource.owner is a User, so we should not get a parse failure.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal,
                         action,
                         resource,
                         currentContext,
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")));
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }

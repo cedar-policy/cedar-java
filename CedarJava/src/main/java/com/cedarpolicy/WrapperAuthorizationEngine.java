@@ -20,8 +20,8 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationQuery;
 import com.cedarpolicy.model.ValidationResult;
 import com.cedarpolicy.model.exception.AuthException;
@@ -47,11 +47,11 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
     public WrapperAuthorizationEngine() {}
 
     @Override
-    public AuthorizationResult isAuthorized(AuthorizationQuery q, Slice slice)
+    public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
             throws AuthException {
         LOG.trace("Making an isAuthorized query:\n{}\nwith slice\n{}", q, slice);
         final AuthorizationRequest request = new AuthorizationRequest(q, slice);
-        return call("AuthorizationOperation", AuthorizationResult.class, request);
+        return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
 
     @Override
@@ -104,10 +104,10 @@ public final class WrapperAuthorizationEngine implements AuthorizationEngine {
         }
     }
 
-    private static final class AuthorizationRequest extends AuthorizationQuery {
+    private static final class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
         @JsonProperty public final Slice slice;
 
-        AuthorizationRequest(AuthorizationQuery query, Slice slice) {
+        AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest query, Slice slice) {
             super(
                     query.principalEUID,
                     query.actionEUID,

@@ -30,7 +30,7 @@ import java.util.Set;
  * list of errors encountered during query processing. Some errors will still result in a decision
  * being reached, please see the Cedar Spec for more information.
  */
-public final class AuthorizationResult {
+public final class AuthorizationResponse {
 
     /** The three possible results of query evaluation. */
     public enum Decision {
@@ -80,7 +80,7 @@ public final class AuthorizationResult {
      *     that might have happened during evaluation
      */
     @JsonCreator
-    public AuthorizationResult(
+    public AuthorizationResponse(
             @JsonProperty("decision") Decision decision,
             @JsonProperty("diagnostics") Diagnostics diagnostics) {
         this.decision = decision;

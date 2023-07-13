@@ -16,8 +16,8 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationQuery;
 import com.cedarpolicy.model.ValidationResult;
 import com.cedarpolicy.model.exception.AuthException;
@@ -48,7 +48,7 @@ public interface AuthorizationEngine {
      *     AuthorizationResult. Note: This error interface will likely change in the future. We will
      *     likely unify the error handling story.
      */
-    AuthorizationResult isAuthorized(AuthorizationQuery q, Slice slice) throws AuthException;
+    AuthorizationResponse isAuthorized(AuthorizationRequest q, Slice slice) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationQuery} <code>q</code> are correct

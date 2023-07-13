@@ -18,8 +18,8 @@ package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.WrapperAuthorizationEngine;
-import com.cedarpolicy.model.AuthorizationQuery;
-import com.cedarpolicy.model.AuthorizationResult;
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
@@ -81,11 +81,11 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -145,11 +145,11 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
     }
@@ -208,11 +208,11 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationQuery query =
-                new AuthorizationQuery(
+        AuthorizationRequest query =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
         AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
-        AuthorizationResult result =
+        AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
 
         Assertions.assertTrue(result.isAllowed());
@@ -238,10 +238,10 @@ public class ParserTest {
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
         action = actions.get(index).uid;
-        AuthorizationQuery query2 =
-                new AuthorizationQuery(
+        AuthorizationRequest query2 =
+                new AuthorizationRequest(
                         principal, action, resource, currentContext2, Optional.empty());
-        AuthorizationResult result2 =
+        AuthorizationResponse result2 =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query2, slice2));
         Assertions.assertTrue(result2.isAllowed());
     }
