@@ -66,13 +66,13 @@ jobs:
         shell: bash
         run: |
              if [ "$RUNNER_OS" == "Linux" ]; then
-              mv debug/libcedar_java_ffi.so debug/libcedar_java_ffi-${{ inputs.name }}.so
+              mv target/debug/libcedar_java_ffi.so target/debug/libcedar_java_ffi-${{ inputs.name }}.so
               sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.so > target/debug/libcedar_java_ffi-${{ inputs.name }}.so.sha1
              elif [ "$RUNNER_OS" == "macOS" ]; then
-              mv debug/libcedar_java_ffi.dylib debug/libcedar_java_ffi-${{ inputs.name }}.dylib
+              mv target/debug/libcedar_java_ffi.dylib target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib
               sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib > target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib.sha1
             elif [ "$RUNNER_OS" == "Windows" ]; then
-              mv debug/libcedar_java_ffi.dll debug/libcedar_java_ffi-${{ inputs.name }}.dll
+              mv target/debug/libcedar_java_ffi.dll target/debug/libcedar_java_ffi-${{ inputs.name }}.dll
               sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.dll > target/debug/libcedar_java_ffi-${{ inputs.name }}.dll.sha1
             else
               echo "OS did not match"
