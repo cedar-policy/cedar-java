@@ -47,7 +47,7 @@ fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
 }
 
 /// The main JNI entry point
-#[jni_fn("cedarpolicy.WrapperAuthorizationEngine")]
+#[jni_fn("com.cedarpolicy.WrapperAuthorizationEngine")]
 pub fn callCedarJNI(
     env: JNIEnv<'_>,
     _class: JClass<'_>,
@@ -93,7 +93,7 @@ pub fn callCedarJNI(
 }
 
 /// The main JNI entry point
-#[jni_fn("cedarpolicy.WrapperAuthorizationEngine")]
+#[jni_fn("com.cedarpolicy.WrapperAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
     env.new_string("2.0")
         .expect("error creating Java string")
@@ -104,10 +104,7 @@ fn call_cedar(call: &str, input: &str) -> String {
     let call = String::from(call);
     let input = String::from(input);
     let result = match call.as_str() {
-        V0_AUTH_OP => {
-            println!("Calling: `json_is_authorized`");
-            json_is_authorized(&input)
-        }
+        V0_AUTH_OP => json_is_authorized(&input),
         V0_VALIDATE_OP => json_validate(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
     };
