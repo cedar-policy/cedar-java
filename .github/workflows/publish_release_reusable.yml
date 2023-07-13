@@ -86,6 +86,5 @@ jobs:
           draft: ${{ inputs.draft }}
           prerelease: ${{ inputs.prerelease }}
           files: |
-            ./CedarJavaFFI/target/debug/libcedar_java_ffi-${{ inputs.name }}.so
-            ./CedarJavaFFI/target/debug/libcedar_java_ffi-${{ inputs.name }}.so.sha1
+            ./CedarJavaFFI/target/debug/libcedar_java_ffi-${{ inputs.name }}.*
           fail_on_unmatched_files: true
