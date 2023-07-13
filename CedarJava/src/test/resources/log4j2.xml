@@ -11,7 +11,7 @@
         </Root>
         <!--
         Uncomment this to enable JNI call trace logging for unit tests.
-        <Logger name="cedarpolicy" level="trace" additivity="false">
+        <Logger name="com.cedarpolicy" level="trace" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
         -->
