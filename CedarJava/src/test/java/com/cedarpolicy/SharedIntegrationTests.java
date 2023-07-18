@@ -176,7 +176,7 @@ public class SharedIntegrationTests {
      * files in this array will be executed as integration tests.
      */
     private static final String[] JSON_TEST_FILES = {
-        "tests/example_use_cases_doc/1a.json_typo",
+        "tests/example_use_cases_doc/1a.json",
         "tests/example_use_cases_doc/2a.json",
         "tests/example_use_cases_doc/2b.json",
         "tests/example_use_cases_doc/2c.json",
