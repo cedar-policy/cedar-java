@@ -207,6 +207,11 @@ public class SharedIntegrationTests {
     @TestFactory
     public List<DynamicContainer> integrationTestsFromJson() throws IOException {
         List<DynamicContainer> tests = new ArrayList<>();
+        //If we can't find the `cedar` package, don't try to load integration tests.
+        //In CI, MUST_RUN_CEDAR_INTEGRATION_TESTS is set
+        if(System.getenv("MUST_RUN_CEDAR_INTEGRATION_TESTS") == null && Files.notExists(Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, "corpus_tests"))) {
+            return tests;
+        }
         // tests other than corpus tests
         for (String testFile : JSON_TEST_FILES) {
             tests.add(loadJsonTests(testFile));
