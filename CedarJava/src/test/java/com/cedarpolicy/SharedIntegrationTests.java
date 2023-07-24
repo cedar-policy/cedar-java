@@ -341,7 +341,7 @@ public class SharedIntegrationTests {
      */
     private void executeJsonQueryTest(
             Set<Entity> entities, Set<Policy> policies, JsonQuery query, Schema schema) {
-        AuthorizationEngine auth = new WrapperAuthorizationEngine();
+        AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authQuery =
                 new AuthorizationRequest(
                         query.principal,

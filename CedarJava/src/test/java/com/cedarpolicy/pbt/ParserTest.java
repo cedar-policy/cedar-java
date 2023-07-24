@@ -17,7 +17,7 @@
 package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.AuthorizationEngine;
-import com.cedarpolicy.WrapperAuthorizationEngine;
+import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.slice.BasicSlice;
@@ -84,7 +84,7 @@ public class ParserTest {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -148,7 +148,7 @@ public class ParserTest {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -211,7 +211,7 @@ public class ParserTest {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
 

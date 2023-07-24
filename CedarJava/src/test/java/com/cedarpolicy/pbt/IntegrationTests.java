@@ -19,7 +19,7 @@ package com.cedarpolicy.pbt;
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
 
 import com.cedarpolicy.AuthorizationEngine;
-import com.cedarpolicy.WrapperAuthorizationEngine;
+import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.slice.BasicSlice;
@@ -97,7 +97,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -168,7 +168,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -246,7 +246,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
@@ -283,7 +283,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -320,7 +320,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
@@ -362,7 +362,7 @@ public class IntegrationTests {
                         Optional.empty(),
                         currentContext,
                         Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -415,7 +415,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -468,7 +468,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -538,7 +538,7 @@ public class IntegrationTests {
         AuthorizationRequest query =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -598,7 +598,7 @@ public class IntegrationTests {
                         resource,
                         currentContext,
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")));
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertFalse(result.isAllowed());
@@ -659,7 +659,7 @@ public class IntegrationTests {
                         resource,
                         currentContext,
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")));
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());

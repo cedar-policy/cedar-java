@@ -36,15 +36,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
-public final class WrapperAuthorizationEngine implements AuthorizationEngine {
-    private static final Logger LOG = LoggerFactory.getLogger(WrapperAuthorizationEngine.class);
+public final class BasicAuthorizationEngine implements AuthorizationEngine {
+    private static final Logger LOG = LoggerFactory.getLogger(BasicAuthorizationEngine.class);
 
     static {
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
     }
 
     /** Construct a wrapper authorization engine. */
-    public WrapperAuthorizationEngine() {}
+    public BasicAuthorizationEngine() {}
 
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
