@@ -17,7 +17,7 @@
 package com.cedarpolicy.model.exception;
 
 /** Error deserializing a value. */
-public class InvalidValueSerializationException extends RuntimeException {
+public class InvalidValueSerializationException extends AuthException {
     /**
      * Construct InvalidValueSerializationException.
      *
