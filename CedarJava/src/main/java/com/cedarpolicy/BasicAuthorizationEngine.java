@@ -44,7 +44,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
     }
 
-    /** Construct a wrapper authorization engine. */
+    /** Construct a basic authorization engine. */
     public BasicAuthorizationEngine() {}
 
     @Override
