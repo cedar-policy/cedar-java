@@ -20,6 +20,7 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationQuery;
