@@ -16,14 +16,18 @@
 
 package com.cedarpolicy.model.exception;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.exc.InputCoercionException;
+
 /** Error deserializing a value. */
-public class InvalidValueDeserializationException extends RuntimeException {
+public class InvalidValueDeserializationException extends InputCoercionException {
     /**
      * Construct InvalidValueDeserializationException.
      *
      * @param errorMessage Error message.
      */
-    public InvalidValueDeserializationException(String errorMessage) {
-        super(errorMessage);
+    public InvalidValueDeserializationException(JsonParser parser, String errorMessage, JsonToken token, Class<?> targetType) {
+        super(parser, errorMessage, token, targetType);
     }
 }

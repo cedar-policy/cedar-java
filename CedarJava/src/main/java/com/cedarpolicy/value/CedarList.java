@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /** Lists in the Cedar language. */
 public final class CedarList extends Value implements List<Value> {
     /** Internal list of Value objects. */
-    public final java.util.List<Value> list;
+    private final java.util.List<Value> list;
 
     /**
      * Create a Cedar list by copy.
@@ -68,9 +68,9 @@ public final class CedarList extends Value implements List<Value> {
         return list.toString();
     }
 
-    /** Write as cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return "[" + list.stream().map(Value::toCedarExpr).collect(Collectors.joining(", ")) + "]";
     }
 

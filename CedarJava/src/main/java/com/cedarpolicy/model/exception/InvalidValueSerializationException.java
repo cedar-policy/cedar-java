@@ -16,7 +16,8 @@
 
 package com.cedarpolicy.model.exception;
 
-/** Error deserializing a value. */
+/** Error deserializing a value. This will be thrown if you extend the value class and don't
+ * handle the new Value type in `ValueCedarSerializer.java` */
 public class InvalidValueSerializationException extends RuntimeException {
     /**
      * Construct InvalidValueSerializationException.

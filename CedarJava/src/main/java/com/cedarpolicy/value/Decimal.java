@@ -44,7 +44,7 @@ public class Decimal extends Value {
     }
 
     /** decimal as a string. */
-    public final String decimal;
+    private final String decimal;
 
     /**
      * Construct Decimal.
@@ -59,9 +59,9 @@ public class Decimal extends Value {
         this.decimal = decimal;
     }
 
-    /** Convert Decimal to cedar expr. */
+    /** Convert Decimal to Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return "decimal(\"" + decimal + "\")";
     }
 

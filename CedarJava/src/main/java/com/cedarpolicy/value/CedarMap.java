@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 /** Represents a Cedar Map value. Maps support mapping strings to arbitrary values. */
 public final class CedarMap extends Value implements Map<String, Value> {
     /** Internal map data. */
-    public final java.util.Map<String, Value> map;
+    private final java.util.Map<String, Value> map;
 
     /**
      * Create a Cedar map by copy.
@@ -61,9 +61,9 @@ public final class CedarMap extends Value implements Map<String, Value> {
         return Objects.hash(map);
     }
 
-    /** To cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return "{"
                 + map.entrySet().stream()
                         .map(e -> '\"' + e.getKey() + "\": " + e.getValue().toCedarExpr())

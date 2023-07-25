@@ -47,7 +47,7 @@ fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
 }
 
 /// The main JNI entry point
-#[jni_fn("com.cedarpolicy.WrapperAuthorizationEngine")]
+#[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn callCedarJNI(
     env: JNIEnv<'_>,
     _class: JClass<'_>,
@@ -93,7 +93,7 @@ pub fn callCedarJNI(
 }
 
 /// The main JNI entry point
-#[jni_fn("com.cedarpolicy.WrapperAuthorizationEngine")]
+#[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
     env.new_string("2.3")
         .expect("error creating Java string")

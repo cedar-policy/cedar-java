@@ -341,13 +341,13 @@ public class SharedIntegrationTests {
      */
     private void executeJsonQueryTest(
             Set<Entity> entities, Set<Policy> policies, JsonQuery query, Schema schema) {
-        AuthorizationEngine auth = new WrapperAuthorizationEngine();
+        AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authQuery =
                 new AuthorizationRequest(
-                        query.principal,
+                        Optional.of(query.principal),
                         query.action,
-                        query.resource,
-                        query.context,
+                         Optional.of(query.resource),
+                         Optional.of(query.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
         AuthorizationResponse result = assertDoesNotThrow(() -> auth.isAuthorized(authQuery, slice));

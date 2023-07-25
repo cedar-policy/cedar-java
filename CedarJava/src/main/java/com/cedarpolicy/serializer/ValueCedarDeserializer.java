@@ -35,7 +35,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-/** Deserialize Json to Value. */
+/** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
+ * `Value` class. */
 public class ValueCedarDeserializer extends JsonDeserializer<Value> {
     private static final String ESCAPE_SEQ =
             "__expr"; // Not depricated yet but should never be passed from Cedar
@@ -83,8 +84,8 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                 } else if (!entry.getKey()
                         .equals(ESCAPE_SEQ)) { // Not depricated yet, but we don't use this
                     // internally anymore. Will just be treated as a map.
-                    throw new InvalidValueDeserializationException(
-                            "Use __entity or __extn: " + node.toString());
+                    throw new InvalidValueDeserializationException(parser,
+                            "Use __entity or __extn: " + node.toString(), node.asToken(), Map.class);
                 }
             }
             if (escapeType != EscapeType.UNRECOGNIZED) {
@@ -92,21 +93,21 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                     if (escapeType == EscapeType.ENTITY) {
                         JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
                         if (!val.isTextual()) {
-                            throw new InvalidValueDeserializationException(
-                                    "Not textual node: " + node.toString());
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Not textual node: " + node.toString(), node.asToken(), Map.class);
                         }
                         return new EntityUID(val.textValue());
                     } else {
                         JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
                         JsonNode fn = val.get("fn");
                         if (!fn.isTextual()) {
-                            throw new InvalidValueDeserializationException(
-                                    "Not textual node: " + fn.toString());
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Not textual node: " + fn.toString(), node.asToken(), Map.class);
                         }
                         JsonNode arg = val.get("arg");
                         if (!arg.isTextual()) {
-                            throw new InvalidValueDeserializationException(
-                                    "Not textual node: " + arg.toString());
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Not textual node: " + arg.toString(), node.asToken(), Map.class);
                         }
 
                         if (fn.textValue().equals("ip")) {
@@ -114,13 +115,13 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                         } else if (fn.textValue().equals("decimal")) {
                             return new Decimal(arg.textValue());
                         } else {
-                            throw new InvalidValueDeserializationException(
-                                    "Invalid function type: " + fn.toString());
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
                         }
                     }
                 } else {
-                    throw new InvalidValueDeserializationException(
-                            "More than one K,V pair with {__entity, __extn}: " + node.toString());
+                    throw new InvalidValueDeserializationException(parser,
+                            "More than one K,V pair with {__entity, __extn}: " + node.toString(), node.asToken(), Map.class);
                 }
             }
             CedarMap myMap = new CedarMap();
@@ -131,7 +132,7 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
             }
             return myMap;
         } else {
-            throw new InvalidValueDeserializationException(node.toString());
+            throw new InvalidValueDeserializationException(parser, node.toString(), node.asToken(), Object.class);
         }
     }
 }

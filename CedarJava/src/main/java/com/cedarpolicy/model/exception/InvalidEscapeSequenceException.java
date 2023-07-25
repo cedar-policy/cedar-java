@@ -17,7 +17,7 @@
 package com.cedarpolicy.model.exception;
 
 /** Error due to invalid escape sequence (__expr). */
-public class InvalidEscapeSequenceException extends RuntimeException {
+public class InvalidEscapeSequenceException extends AuthException {
     /**
      * Construct InvalidEscapeSequenceException.
      *

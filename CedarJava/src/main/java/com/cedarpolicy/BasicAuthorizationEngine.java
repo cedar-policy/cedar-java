@@ -20,6 +20,7 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationQuery;
@@ -36,15 +37,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
-public final class WrapperAuthorizationEngine implements AuthorizationEngine {
-    private static final Logger LOG = LoggerFactory.getLogger(WrapperAuthorizationEngine.class);
+public final class BasicAuthorizationEngine implements AuthorizationEngine {
+    private static final Logger LOG = LoggerFactory.getLogger(BasicAuthorizationEngine.class);
 
     static {
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
     }
 
-    /** Construct a wrapper authorization engine. */
-    public WrapperAuthorizationEngine() {}
+    /** Construct a basic authorization engine. */
+    public BasicAuthorizationEngine() {}
 
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)

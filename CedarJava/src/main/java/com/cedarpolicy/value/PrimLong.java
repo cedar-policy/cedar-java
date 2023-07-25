@@ -21,18 +21,20 @@ import java.util.Objects;
 /** Represents the primitive Cedar integer type. */
 public final class PrimLong extends Value {
     /** Value. */
-    public final Long value;
+    private final long value;
 
     /**
      * Build PrimLong.
      *
      * @param i Long.
      */
-    public PrimLong(Long i) throws NullPointerException {
-        if (i == null) {
-            throw new NullPointerException("Attempt to create PrimLong from null");
-        }
+    public PrimLong(long i) {
         value = i;
+    }
+
+    /** Get the PrimLong as a long. */
+    public long getValue() {
+        return value;
     }
 
     /** equals. */
@@ -44,8 +46,7 @@ public final class PrimLong extends Value {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        PrimLong primLong = (PrimLong) o;
-        return value.equals(primLong.value);
+        return this.value == ((PrimLong) o).value;
     }
 
     /** hash. */
@@ -57,12 +58,12 @@ public final class PrimLong extends Value {
     /** toString. */
     @Override
     public String toString() {
-        return value.toString();
+        return String.valueOf(value);
     }
 
-    /** To Cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
-        return value.toString();
+    public String toCedarExpr() {
+        return this.toString();
     }
 }

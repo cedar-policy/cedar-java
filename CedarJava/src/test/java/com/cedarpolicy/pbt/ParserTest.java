@@ -17,7 +17,7 @@
 package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.AuthorizationEngine;
-import com.cedarpolicy.WrapperAuthorizationEngine;
+import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.slice.BasicSlice;
@@ -83,8 +83,8 @@ public class ParserTest {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest query =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+                        principal, action, resource, currentContext);
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -147,8 +147,8 @@ public class ParserTest {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest query =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+                        principal, action, resource, currentContext);
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
         Assertions.assertTrue(result.isAllowed());
@@ -210,8 +210,8 @@ public class ParserTest {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest query =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext, Optional.empty());
-        AuthorizationEngine authEngine = new WrapperAuthorizationEngine();
+                        principal, action, resource, currentContext);
+        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse result =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
 
@@ -240,7 +240,7 @@ public class ParserTest {
         action = actions.get(index).uid;
         AuthorizationRequest query2 =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext2, Optional.empty());
+                        principal, action, resource, currentContext2);
         AuthorizationResponse result2 =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query2, slice2));
         Assertions.assertTrue(result2.isAllowed());

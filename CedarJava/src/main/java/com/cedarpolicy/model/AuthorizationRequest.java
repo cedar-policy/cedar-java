@@ -46,7 +46,7 @@ public class AuthorizationRequest {
     public final Optional<String> resourceEUID;
 
     /** Key/Value map representing the context of the query. */
-    public final Map<String, Value> context;
+    public final Optional<Map<String, Value>> context;
 
     /** JSON object representing the Schema. */
     public final Optional<Schema> schema;
@@ -64,70 +64,33 @@ public class AuthorizationRequest {
             Optional<String> principalEUID,
             String actionEUID,
             Optional<String> resourceEUID,
-            Map<String, Value> context,
+            Optional<Map<String, Value>> context,
             Optional<Schema> schema) {
         this.principalEUID = principalEUID;
         this.actionEUID = actionEUID;
         this.resourceEUID = resourceEUID;
-        if (context == null) {
-            this.context = new HashMap<>();
+        if (context.isEmpty() || context.get() == null) {
+            this.context = Optional.empty();
         } else {
-            this.context = new HashMap<>(context);
+            this.context = Optional.of(new HashMap<>(context.get()));
         }
         this.schema = schema;
     }
 
     /**
      * Create a query in the empty context.
-     *
-     * @param principalEUID Principal's EUID.
-     * @param actionEUID Action's EUID.
-     * @param resourceEUID Resource's EUID.
-     */
-    public AuthorizationRequest(
-            Optional<String> principalEUID, String actionEUID, Optional<String> resourceEUID) {
-        this(principalEUID, actionEUID, resourceEUID, new HashMap<>(), Optional.empty());
-    }
-
-    /**
-     * Create an authorization query from the EUIDs and Context.
      *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
      * @param context Key/Value context.
-     * @param schema Schema (optional).
      */
-    public AuthorizationRequest(
-            String principalEUID,
-            String actionEUID,
-            String resourceEUID,
-            Map<String, Value> context,
-            Optional<Schema> schema) {
-        this.principalEUID = Optional.of(principalEUID);
-        this.actionEUID = actionEUID;
-        this.resourceEUID = Optional.of(resourceEUID);
-        if (context == null) {
-            this.context = new HashMap<>();
-        } else {
-            this.context = new HashMap<>(context);
-        }
-        this.schema = schema;
-    }
-
-    /**
-     * Create a query in the empty context.
-     *
-     * @param principalEUID Principal's EUID.
-     * @param actionEUID Action's EUID.
-     * @param resourceEUID Resource's EUID.
-     */
-    public AuthorizationRequest(String principalEUID, String actionEUID, String resourceEUID) {
+    public AuthorizationRequest(String principalEUID, String actionEUID, String resourceEUID, Map<String, Value> context) {
         this(
                 Optional.of(principalEUID),
                 actionEUID,
                 Optional.of(resourceEUID),
-                new HashMap<>(),
+                Optional.of(context),
                 Optional.empty());
     }
 

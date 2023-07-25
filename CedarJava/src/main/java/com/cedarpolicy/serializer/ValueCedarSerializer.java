@@ -16,7 +16,7 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
+import com.cedarpolicy.model.exception.InvalidValueSerializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;
@@ -30,9 +30,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 
-/** Serialize Value to Json. */
+/** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
+ * `Value` class. */
 public class ValueCedarSerializer extends JsonSerializer<Value> {
     private static final String ESCAPE_SEQ = "__expr";
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
@@ -51,18 +53,18 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
         } else if (value instanceof PrimString) {
             jsonGenerator.writeString(value.toString());
         } else if (value instanceof PrimBool) {
-            jsonGenerator.writeBoolean(((PrimBool) value).value);
+            jsonGenerator.writeBoolean(((PrimBool) value).getValue());
         } else if (value instanceof PrimLong) {
-            jsonGenerator.writeNumber(((PrimLong) value).value);
+            jsonGenerator.writeNumber(((PrimLong) value).getValue());
         } else if (value instanceof CedarList) {
             jsonGenerator.writeStartArray();
-            for (Value v : ((CedarList) value).list) {
-                jsonGenerator.writeObject(v);
+            for (Value item : (CedarList) value) {
+                jsonGenerator.writeObject(item);
             }
             jsonGenerator.writeEndArray();
         } else if (value instanceof CedarMap) {
             jsonGenerator.writeStartObject();
-            for (Map.Entry<String, Value> entry : ((CedarMap) value).map.entrySet()) {
+            for (Map.Entry<String, Value> entry : ((CedarMap) value).entrySet()) {
                 jsonGenerator.writeObjectField(entry.getKey(), entry.getValue());
             }
             jsonGenerator.writeEndObject();
@@ -89,8 +91,10 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
         } else {
             // It is recommended that you extend the Value classes in
             // main.java.com.cedarpolicy.model.value or that you convert your class to a CedarMap
-            throw new InvalidValueDeserializationException(
-                    "Error serializing Value: " + value.toString());
+            throw new InvalidValueSerializationException(
+                    "Error serializing `Value`: " + value.toString()+". No branch matched `instanceof` for this `Value`." +
+                            " If you extended `Value`, please modify `ValueCedarSerializer.java` to handle the new" +
+                            "type.");
         }
     }
 }

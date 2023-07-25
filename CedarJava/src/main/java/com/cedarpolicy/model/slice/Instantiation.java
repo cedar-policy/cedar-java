@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Instantiation for policy template. */
 public class Instantiation {
-    /** The slot in the template. */
-    public final String slot;
-    /** The value to put in the slot. */
-    public final EntityTypeAndId value;
+    private final String slot;
+    private final EntityTypeAndId value;
 
     /**
      * Instantiation for policy template.
@@ -37,5 +35,16 @@ public class Instantiation {
             @JsonProperty("slot") String slot, @JsonProperty("value") EntityTypeAndId value) {
         this.slot = slot;
         this.value = value;
+    }
+
+
+    /** Get the slot in the template. */
+    public String getSlot() {
+        return slot;
+    }
+
+    /** Get the value to put in the slot. */
+    public EntityTypeAndId getValue() {
+        return value;
     }
 }

@@ -139,7 +139,7 @@ public class ValidationTests {
 
     @BeforeAll
     private static void setUp() {
-        engine = new WrapperAuthorizationEngine();
+        engine = new BasicAuthorizationEngine();
     }
 
     @BeforeEach

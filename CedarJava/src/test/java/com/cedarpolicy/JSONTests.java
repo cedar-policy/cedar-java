@@ -40,6 +40,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 
 /** Test. JSON (de)serialization */
@@ -67,14 +69,14 @@ public class JSONTests {
     /** Test. */
     @Test
     public void testQuery() {
-        AuthorizationRequest q = new AuthorizationRequest("gandalf", "opens", "moria");
+        AuthorizationRequest q = new AuthorizationRequest("gandalf", "opens", "moria", new HashMap<String, Value>());
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode c = JsonNodeFactory.instance.objectNode();
         n.set("context", c);
-        n.put("schema", JsonNodeFactory.instance.nullNode());
-        n.put("principal", "gandalf");
-        n.put("action", "opens");
-        n.put("resource", "moria");
+        n.set("schema", JsonNodeFactory.instance.nullNode());
+        n.set("principal", JsonNodeFactory.instance.textNode("gandalf"));
+        n.set("action", JsonNodeFactory.instance.textNode("opens"));
+        n.set("resource", JsonNodeFactory.instance.textNode("moria"));
         assertJSONEqual(n, q);
     }
 

@@ -60,7 +60,7 @@ public class EntityUID extends Value {
     }
 
     /** Entity uid. */
-    public final String euid;
+    private final String euid;
 
     /**
      * Build EntityUID.
@@ -82,9 +82,9 @@ public class EntityUID extends Value {
         return euid;
     }
 
-    /** Write as Cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return euid;
     }
 }

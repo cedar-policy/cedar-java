@@ -19,11 +19,8 @@ package com.cedarpolicy.model.slice;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,35 +39,6 @@ public class BasicSlice implements Slice {
 
     @JsonProperty("template_instantiations")
     private final List<TemplateInstantiation> templateInstantiations;
-
-    /**
-     * Construct a Slice from Entity and Policy objects.
-     *
-     * @param policies Set of policies.
-     * @param entities Set of entities.
-     */
-    @SuppressFBWarnings
-    public BasicSlice(Set<Policy> policies, Set<Entity> entities) {
-        this.policies = new HashMap<>();
-        for (Policy p : policies) {
-            this.policies.put(p.policyID, p.policySrc);
-        }
-        HashMap<String, Map<String, Value>> attributes = new HashMap<>();
-        HashMap<String, List<String>> parents = new HashMap<>();
-
-        for (Entity entity : entities) {
-            attributes.put(entity.uid, entity.attrs);
-            List<String> parentList = new ArrayList<>(entity.parents);
-            parents.put(entity.uid, parentList);
-        }
-
-        this.attributes = attributes;
-        this.parents = parents;
-
-        this.entities = entities;
-        this.templatePolicies = new HashMap<String, String>();
-        this.templateInstantiations = new ArrayList<TemplateInstantiation>();
-    }
 
     /**
      * Construct a Slice from Entity and Policy objects.
@@ -109,6 +77,20 @@ public class BasicSlice implements Slice {
                 templates.stream().collect(Collectors.toMap(p -> p.policyID, p -> p.policySrc));
         this.templateInstantiations = new ArrayList<TemplateInstantiation>(templateInstantiations);
     }
+
+
+    /**
+     * Construct a Slice from Entity and Policy objects.
+     *
+     * @param policies Set of policies.
+     * @param entities Set of entities.
+     */
+    @SuppressFBWarnings
+    public BasicSlice(Set<Policy> policies, Set<Entity> entities) {
+        this(policies, entities, Collections.emptySet(), Collections.emptyList());
+    }
+
+
 
     @Override
     @SuppressFBWarnings

@@ -24,9 +24,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public abstract class Value {
     /**
      * Convert the Value instance into a string containing the Cedar source code for the equivalent
-     * Cedar value.
+     * Cedar value. This is useful if you e.g., want to print the value in a programatically generated
+     * policy.
      *
      * @return Cedar source code for the value.
      */
-    abstract String toCedarExpr();
+    public abstract String toCedarExpr();
 }
