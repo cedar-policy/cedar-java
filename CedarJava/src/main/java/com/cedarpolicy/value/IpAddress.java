@@ -90,7 +90,7 @@ public class IpAddress extends Value {
 
     /** Convert IPAddress to Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return "ip(\"" + ipAddress + "\")";
     }
 

@@ -29,5 +29,5 @@ public abstract class Value {
      *
      * @return Cedar source code for the value.
      */
-    abstract String toCedarExpr();
+    public abstract String toCedarExpr();
 }

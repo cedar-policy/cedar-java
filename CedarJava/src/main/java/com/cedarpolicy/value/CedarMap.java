@@ -63,7 +63,7 @@ public final class CedarMap extends Value implements Map<String, Value> {
 
     /** To Cedar expr that can be used in a Cedar policy. */
     @Override
-    String toCedarExpr() {
+    public String toCedarExpr() {
         return "{"
                 + map.entrySet().stream()
                         .map(e -> '\"' + e.getKey() + "\": " + e.getValue().toCedarExpr())
