@@ -17,7 +17,7 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.SliceJsonSerializer;
+import com.cedarpolicy.SliceJsonSerializer;
 import com.cedarpolicy.serializer.ValueCedarDeserializer;
 import com.cedarpolicy.serializer.ValueCedarSerializer;
 import com.cedarpolicy.value.Value;

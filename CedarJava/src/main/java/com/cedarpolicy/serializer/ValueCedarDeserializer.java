@@ -35,7 +35,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-/** Deserialize Json to Value. */
+/** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
+ * `Value` class. */
 public class ValueCedarDeserializer extends JsonDeserializer<Value> {
     private static final String ESCAPE_SEQ =
             "__expr"; // Not depricated yet but should never be passed from Cedar
