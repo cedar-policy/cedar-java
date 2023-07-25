@@ -19,20 +19,18 @@ package com.cedarpolicy.model.slice;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 /** Template instantiation. */
 public class TemplateInstantiation {
 
-    /** The template ID. */
     @JsonProperty("template_id")
-    public final String templateId;
+    private final String templateId;
 
-    /** The resulting policy id after slots in the template are filled. */
     @JsonProperty("result_policy_id")
-    public final String resultPolicyId;
+    private final String resultPolicyId;
 
-    /** The instantiations to fill the slots. */
-    public final List<Instantiation> instantiations;
+    private final List<Instantiation> instantiations;
 
     /**
      * Template Instantiation.
@@ -48,6 +46,21 @@ public class TemplateInstantiation {
             @JsonProperty("instantiations") List<Instantiation> instantiations) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
-        this.instantiations = instantiations;
+        this.instantiations = ImmutableList.copyOf(instantiations);
+    }
+
+    /** Get the template ID. */
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    /** Get the resulting policy id after slots in the template are filled. */
+    public String getResultPolicyId() {
+        return resultPolicyId;
+    }
+
+    /** Get the instantiations to fill the slots. */
+    public List<Instantiation> getInstantiations() {
+        return instantiations;
     }
 }
