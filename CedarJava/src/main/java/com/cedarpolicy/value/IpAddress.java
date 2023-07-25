@@ -88,7 +88,7 @@ public class IpAddress extends Value {
         this.ipAddress = ipAddress;
     }
 
-    /** Convert IPAddress to cedar expr. */
+    /** Convert IPAddress to Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return "ip(\"" + ipAddress + "\")";

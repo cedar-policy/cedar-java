@@ -59,7 +59,7 @@ public class Decimal extends Value {
         this.decimal = decimal;
     }
 
-    /** Convert Decimal to cedar expr. */
+    /** Convert Decimal to Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return "decimal(\"" + decimal + "\")";

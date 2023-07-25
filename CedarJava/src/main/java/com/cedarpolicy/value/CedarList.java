@@ -68,7 +68,7 @@ public final class CedarList extends Value implements List<Value> {
         return list.toString();
     }
 
-    /** Write as cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return "[" + list.stream().map(Value::toCedarExpr).collect(Collectors.joining(", ")) + "]";

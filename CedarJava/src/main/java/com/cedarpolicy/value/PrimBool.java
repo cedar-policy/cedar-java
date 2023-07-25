@@ -56,7 +56,7 @@ public final class PrimBool extends Value {
         return String.valueOf(value);
     }
 
-    /** To Cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return this.toString();

@@ -82,7 +82,7 @@ public class EntityUID extends Value {
         return euid;
     }
 
-    /** Write as Cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return euid;

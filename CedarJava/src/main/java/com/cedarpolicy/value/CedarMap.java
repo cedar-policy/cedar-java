@@ -61,7 +61,7 @@ public final class CedarMap extends Value implements Map<String, Value> {
         return Objects.hash(map);
     }
 
-    /** To cedar expr. */
+    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     String toCedarExpr() {
         return "{"
