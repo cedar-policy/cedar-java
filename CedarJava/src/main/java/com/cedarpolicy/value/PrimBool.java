@@ -21,17 +21,14 @@ import java.util.Objects;
 /** Represents a primitive Cedar boolean value. */
 public final class PrimBool extends Value {
     /** value. */
-    public final Boolean value;
+    public final boolean value;
 
     /**
      * Build PrimBool.
      *
      * @param b Boolean.
      */
-    public PrimBool(Boolean b) throws NullPointerException {
-        if (b == null) {
-            throw new NullPointerException("Attempt to create PrimBool from null");
-        }
+    public PrimBool(boolean b) {
         value = b;
     }
 
@@ -44,8 +41,7 @@ public final class PrimBool extends Value {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        PrimBool primBool = (PrimBool) o;
-        return value.equals(primBool.value);
+        return this.value == ((PrimBool) o).value;
     }
 
     /** Hash. */
@@ -57,12 +53,12 @@ public final class PrimBool extends Value {
     /** toString. */
     @Override
     public String toString() {
-        return value.toString();
+        return String.valueOf(value);
     }
 
     /** To Cedar expr. */
     @Override
     String toCedarExpr() {
-        return value.toString();
+        return this.toString();
     }
 }
