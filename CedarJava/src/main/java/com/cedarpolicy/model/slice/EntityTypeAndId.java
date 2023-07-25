@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Entity type and ID. */
 public class EntityTypeAndId {
-    /** Entity type. */
-    public final String ty;
-    /** Entity ID. */
-    public final String eid;
+    private final String ty; //We use `ty` to match the JSON format expected by the Rust code
+    private final String eid;
 
     /**
      * Construct Entity type and ID.
@@ -36,5 +34,15 @@ public class EntityTypeAndId {
     public EntityTypeAndId(@JsonProperty("ty") String ty, @JsonProperty("eid") String eid) {
         this.ty = ty;
         this.eid = eid;
+    }
+
+    /** Get entity type. */
+    public String getTy() {
+        return ty;
+    }
+
+    /** Get entity ID. */
+    public String getEid() {
+        return eid;
     }
 }
