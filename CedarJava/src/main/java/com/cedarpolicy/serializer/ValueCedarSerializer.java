@@ -16,7 +16,7 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
+import com.cedarpolicy.model.exception.InvalidValueSerializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;
@@ -91,8 +91,10 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
         } else {
             // It is recommended that you extend the Value classes in
             // main.java.com.cedarpolicy.model.value or that you convert your class to a CedarMap
-            throw new InvalidValueDeserializationException(
-                    "Error serializing Value: " + value.toString());
+            throw new InvalidValueSerializationException(
+                    "Error serializing `Value`: " + value.toString()+". No branch matched `instanceof` for this `Value`." +
+                            " If you extended `Value`, please modify `ValueCedarSerializer.java` to handle the new" +
+                            "type.");
         }
     }
 }
