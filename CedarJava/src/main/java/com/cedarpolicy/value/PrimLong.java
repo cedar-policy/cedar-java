@@ -21,7 +21,7 @@ import java.util.Objects;
 /** Represents the primitive Cedar integer type. */
 public final class PrimLong extends Value {
     /** Value. */
-    public final long value;
+    private final long value;
 
     /**
      * Build PrimLong.
@@ -30,6 +30,11 @@ public final class PrimLong extends Value {
      */
     public PrimLong(long i) {
         value = i;
+    }
+
+    /** Get the PrimLong as a long. */
+    public long getValue() {
+        return value;
     }
 
     /** equals. */

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /** Lists in the Cedar language. */
 public final class CedarList extends Value implements List<Value> {
     /** Internal list of Value objects. */
-    public final java.util.List<Value> list;
+    private final java.util.List<Value> list;
 
     /**
      * Create a Cedar list by copy.

@@ -21,7 +21,7 @@ import java.util.Objects;
 /** Represents a primitive Cedar boolean value. */
 public final class PrimBool extends Value {
     /** value. */
-    public final boolean value;
+    private final boolean value;
 
     /**
      * Build PrimBool.
@@ -30,6 +30,11 @@ public final class PrimBool extends Value {
      */
     public PrimBool(boolean b) {
         value = b;
+    }
+
+    /** Get the PrimBool as a boolean. */
+    public boolean getValue() {
+        return value;
     }
 
     /** Equals. */

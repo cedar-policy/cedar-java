@@ -44,7 +44,7 @@ public class Decimal extends Value {
     }
 
     /** decimal as a string. */
-    public final String decimal;
+    private final String decimal;
 
     /**
      * Construct Decimal.

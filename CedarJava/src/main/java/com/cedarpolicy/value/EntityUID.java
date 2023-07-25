@@ -60,7 +60,7 @@ public class EntityUID extends Value {
     }
 
     /** Entity uid. */
-    public final String euid;
+    private final String euid;
 
     /**
      * Build EntityUID.

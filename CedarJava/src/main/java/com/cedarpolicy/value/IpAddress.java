@@ -71,7 +71,7 @@ public class IpAddress extends Value {
     }
 
     /** ip address as a string. */
-    public final String ipAddress;
+    private final String ipAddress;
 
     /**
      * Construct IPAddress.

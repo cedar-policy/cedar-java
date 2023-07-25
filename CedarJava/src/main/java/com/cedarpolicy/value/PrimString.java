@@ -21,7 +21,7 @@ import java.util.Objects;
 /** Represents a primitive Cedar string value. */
 public final class PrimString extends Value {
     /** Value. */
-    public final String value;
+    private final String value;
 
     /**
      * Build PrimString.
