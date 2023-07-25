@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Set;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * The result of processing an AuthorizationQuery. The answer to the query is contained in the
@@ -52,10 +54,10 @@ public final class AuthorizationResponse {
          * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny,
          * all deny policies that evaluated to True will appear in Reasons.
          */
-        private Set<String> reason;
+        private ImmutableSet<String> reason;
 
         /** Set of errors and warnings returned by Cedar. */
-        private List<String> errors;
+        private ImmutableList<String> errors;
 
         /**
          * Read the reasons and errors from a JSON object.
@@ -67,8 +69,8 @@ public final class AuthorizationResponse {
         public Diagnostics(
                 @JsonProperty("reason") Set<String> reason,
                 @JsonProperty("errors") List<String> errors) {
-            this.errors = errors;
-            this.reason = reason;
+            this.errors = ImmutableList.copyOf(errors);
+            this.reason = ImmutableSet.copyOf(reason);
         }
     }
 
