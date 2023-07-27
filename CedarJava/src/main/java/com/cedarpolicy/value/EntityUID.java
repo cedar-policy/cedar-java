@@ -87,4 +87,15 @@ public class EntityUID extends Value {
     public String toCedarExpr() {
         return euid;
     }
+
+    /** Get the type of the EUID. */
+    public String getType() {
+        return this.euid.substring(0, this.euid.length()-this.getId().length()-4);
+    }
+
+    /** Get the ID of the EUID. */
+    public String getId() {
+        String[] strs = this.euid.split("::");
+        return strs[strs.length-1].substring(1,strs[strs.length-1].length()-1);
+    }
 }

@@ -58,7 +58,11 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
         public final Set<JsonEUID> parents;
 
         JsonEntity(Entity e) {
-            this.uid = new JsonEUID(e.uid.split("::")[0], e.uid.split("::")[1]);
+            String[] uid_parts = e.uid.split("::");
+            String uid_id = uid_parts[uid_parts.length-1].substring(1,uid_parts[uid_parts.length-1].length()-1);
+            String uid_type = e.uid.substring(0, e.uid.length()-uid_id.length()-4);
+
+            this.uid = new JsonEUID(uid_type, uid_id);
             this.attrs = e.attrs;
             this.parents = new HashSet<JsonEUID>();
             for (String parent : e.parents) {

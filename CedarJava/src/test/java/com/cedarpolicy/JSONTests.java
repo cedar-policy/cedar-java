@@ -46,7 +46,7 @@ import org.junit.jupiter.api.Test;
 
 /** Test. JSON (de)serialization */
 public class JSONTests {
-    private static final String ESCAPE_SEQ = "__expr";
+    private static final String ENTITY_ESCAPE_SEQ = "__entity";
 
     private static void assertJSONEqual(JsonNode expectedJSON, Object obj) {
         String objJson = assertDoesNotThrow(() -> objectWriter().writeValueAsString(obj));
@@ -114,7 +114,10 @@ public class JSONTests {
         String text = "silver::\"jakob\"";
         EntityUID uid = new EntityUID(text);
         ObjectNode n = JsonNodeFactory.instance.objectNode();
-        n.put(ESCAPE_SEQ, text);
+        ObjectNode inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", "jakob");
+        inner.put("type", "silver");
+        n.put(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
 
         String invalidNamespace = "Us,er::\"alice\"";
@@ -141,7 +144,10 @@ public class JSONTests {
         String validEID = "User::\"ali\\\"ce\"";
         uid = new EntityUID(validEID);
         n = JsonNodeFactory.instance.objectNode();
-        n.put(ESCAPE_SEQ, validEID);
+        inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", "ali\\\"ce");
+        inner.put("type", "User");
+        n.put(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
     }
 
@@ -151,7 +157,10 @@ public class JSONTests {
         String text = "long::john::silver::\"donut\"";
         EntityUID uid = new EntityUID(text);
         ObjectNode n = JsonNodeFactory.instance.objectNode();
-        n.put(ESCAPE_SEQ, text);
+        ObjectNode inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", "donut");
+        inner.put("type", "long::john::silver");
+        n.put(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
     }
 
