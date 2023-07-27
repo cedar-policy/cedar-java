@@ -217,29 +217,29 @@ public class SharedIntegrationTests {
             tests.add(loadJsonTests(testFile));
         }
         // corpus tests
-        try (Stream<Path> stream =
-                Files.list(Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, "corpus_tests"))) {
-            stream
-                    // ignore non-JSON files
-                    .filter(path -> path.endsWith(".json"))
-                    // ignore files that start with policies_, entities_, or schema_
-                    .filter(
-                            path ->
-                                    !path.startsWith("policies_")
-                                            && !path.startsWith("entities_")
-                                            && !path.startsWith("schema_"))
-                    // add the test
-                    .forEach(
-                            path -> {
-                                try {
-                                    tests.add(loadJsonTests(path.toAbsolutePath().toString()));
-                                } catch (final IOException e) {
-                                    // inside the forEach we can't throw checked exceptions, but we
-                                    // can throw this unchecked exception
-                                    throw new UncheckedIOException(e);
-                                }
-                            });
-        }
+//        try (Stream<Path> stream =
+//                Files.list(Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, "corpus_tests"))) {
+//            stream
+//                    // ignore non-JSON files
+//                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+//                    // ignore files that start with policies_, entities_, or schema_
+//                    .filter(
+//                            path ->
+//                                    !path.getFileName().toString().startsWith("policies_")
+//                                            && !path.getFileName().toString().startsWith("entities_")
+//                                            && !path.getFileName().toString().startsWith("schema_"))
+//                    // add the test
+//                    .forEach(
+//                            path -> {
+//                                try {
+//                                    tests.add(loadJsonTests(path.toAbsolutePath().toString()));
+//                                } catch (final IOException e) {
+//                                    // inside the forEach we can't throw checked exceptions, but we
+//                                    // can throw this unchecked exception
+//                                    throw new UncheckedIOException(e);
+//                                }
+//                            });
+//        }
         return tests;
     }
 
@@ -326,6 +326,7 @@ public class SharedIntegrationTests {
      * objects instead of strings.
      */
     private Set<Entity> loadEntities(String entitiesFile) throws IOException {
+        System.out.println("Entities file: "+entitiesFile);
         try (InputStream entitiesIn =
                 new FileInputStream(resolveIntegrationTestPath(entitiesFile).toFile())) {
             return Arrays.stream(OBJECT_MAPPER.reader().readValue(entitiesIn, JsonEntity[].class))

@@ -79,10 +79,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
+//    environment "CEDAR_INTEGRATION_TESTS_ROOT", '../cedar/cedar-integration-tests'
     //environment 'CEDAR_JAVA_FFI_LIB', 'set to absolute path of cedar_java_ffi native library (including file extension)'
     testLogging {
-        showStandardStreams false
+        showStandardStreams true
         exceptionFormat 'full'
     }
 }
