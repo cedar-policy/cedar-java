@@ -38,8 +38,6 @@ import java.util.Map;
 /** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
 public class ValueCedarDeserializer extends JsonDeserializer<Value> {
-    private static final String ESCAPE_SEQ =
-            "__expr"; // Not depricated yet but should never be passed from Cedar
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
@@ -81,22 +79,25 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                     escapeType = EscapeType.ENTITY;
                 } else if (entry.getKey().equals(EXTENSION_ESCAPE_SEQ)) {
                     escapeType = EscapeType.EXTENSION;
-                } else if (!entry.getKey()
-                        .equals(ESCAPE_SEQ)) { // Not depricated yet, but we don't use this
-                    // internally anymore. Will just be treated as a map.
-                    throw new InvalidValueDeserializationException(parser,
-                            "Use __entity or __extn: " + node.toString(), node.asToken(), Map.class);
                 }
             }
             if (escapeType != EscapeType.UNRECOGNIZED) {
                 if (count == 1) {
                     if (escapeType == EscapeType.ENTITY) {
                         JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
-                        if (!val.isTextual()) {
+                        if (val.isTextual()) {
+                            return new EntityUID(val.textValue());
+                        } else if(val.isObject() && val.has("id") && val.has("type")) {
+                            int num_fields = 0;
+                            for(Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
+                                num_fields++;
+                            }
+                            if(num_fields == 2) {
+                                return new EntityUID(val.get("type").textValue(), val.get("id").textValue());
+                            }
+                        }
                             throw new InvalidValueDeserializationException(parser,
                                     "Not textual node: " + node.toString(), node.asToken(), Map.class);
-                        }
-                        return new EntityUID(val.textValue());
                     } else {
                         JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
                         JsonNode fn = val.get("fn");

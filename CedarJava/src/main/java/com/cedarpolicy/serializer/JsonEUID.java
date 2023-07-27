@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 /** Represent JSON format of Entity Unique Identifier. */
 @JsonDeserialize
 public class JsonEUID {
-    /** euid (__expr is used as escape sequence in JSON). */
+    /** euid (__entity is used as escape sequence in JSON). */
     @JsonProperty("type")
     public final String type;
 

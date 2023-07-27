@@ -36,7 +36,6 @@ import java.util.Map;
 /** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
 public class ValueCedarSerializer extends JsonSerializer<Value> {
-    private static final String ESCAPE_SEQ = "__expr";
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
