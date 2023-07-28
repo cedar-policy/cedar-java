@@ -14,4 +14,6 @@ mv new_build.gradle build.gradle
 export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
 
 curr_dir="$(pwd)"
-export CEDAR_INTEGRATION_TESTS_ROOT='"$curr_dir"/cedar/cedar-integration-tests'
+export CEDAR_INTEGRATION_TESTS_ROOT=$curr_dir/cedar/cedar-integration-tests
+
+echo $CEDAR_INTEGRATION_TESTS_ROOT
