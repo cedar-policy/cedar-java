@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  */
 public class Entity {
     /** EUID of this entity object. */
-    public final String uid; //With quotes around the ID part
+    public final String uid;
 
     /** Key/Value attribute map. */
     public final Map<String, Value> attrs;
@@ -65,7 +65,7 @@ public class Entity {
     }
 
     /**
-     * Create an entity from unwrapped JSON values.
+     * Create an entity from JsonEUID and unwrapped JSON values.
      *
      * @param uid Euid of the Entity.
      * @param attributes Key/Value map of attributes.
