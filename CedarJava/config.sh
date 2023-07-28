@@ -11,8 +11,8 @@ fi
 sed "83s;.*;$ffi_lib_str;" "build.gradle" > new_build.gradle
 mv new_build.gradle build.gradle
 
-int_tests_str="    environment 'CEDAR_INTEGRATION_TESTS_ROOT', '"$parent_dir"/cedar/cedar-integration-tests'"
-sed "82s;.*;$int_test_str;" "build.gradle" > new_build.gradle
+integration_tests_str="    environment 'CEDAR_INTEGRATION_TESTS_ROOT', '"$parent_dir"/cedar/cedar-integration-tests'"
+sed "82s;.*;$integration_tests_str;" "build.gradle" > new_build.gradle
 mv new_build.gradle build.gradle
 
 export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
