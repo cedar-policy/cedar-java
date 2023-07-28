@@ -76,6 +76,21 @@ public class EntityUID extends Value {
         this.euid = euid;
     }
 
+    /**
+     * Build EntityUID.
+     *
+     * @param type Type component of Entity Unique ID.
+     * @param id Id component of Entity Unique ID.
+     *     <p>Note, we limit euids to 1024 chars.
+     */
+    public EntityUID(String type, String id) throws IllegalArgumentException {
+        String euid = type + "::\""+id+"\"";
+        if (!EUIDValidator.validEntityUID(euid)) {
+            throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
+        }
+        this.euid = euid;
+    }
+
     /** As String. */
     @Override
     public String toString() {
@@ -86,5 +101,16 @@ public class EntityUID extends Value {
     @Override
     public String toCedarExpr() {
         return euid;
+    }
+
+    /** Get the type of the EUID. */
+    public String getType() {
+        return this.euid.substring(0, this.euid.length()-this.getId().length()-4);
+    }
+
+    /** Get the ID of the EUID. */
+    public String getId() {
+        String[] strs = this.euid.split("::");
+        return strs[strs.length-1].substring(1,strs[strs.length-1].length()-1);
     }
 }

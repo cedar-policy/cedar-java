@@ -36,7 +36,6 @@ import java.util.Map;
 /** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
 public class ValueCedarSerializer extends JsonSerializer<Value> {
-    private static final String ESCAPE_SEQ = "__expr";
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
@@ -47,8 +46,13 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
             throws IOException {
         if (value instanceof EntityUID) {
             jsonGenerator.writeStartObject();
-            jsonGenerator.writeFieldName(ESCAPE_SEQ);
-            jsonGenerator.writeString(value.toString());
+            jsonGenerator.writeFieldName(ENTITY_ESCAPE_SEQ);
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("id");
+            jsonGenerator.writeString(((EntityUID) value).getId());
+            jsonGenerator.writeFieldName("type");
+            jsonGenerator.writeString(((EntityUID) value).getType());
+            jsonGenerator.writeEndObject();
             jsonGenerator.writeEndObject();
         } else if (value instanceof PrimString) {
             jsonGenerator.writeString(value.toString());

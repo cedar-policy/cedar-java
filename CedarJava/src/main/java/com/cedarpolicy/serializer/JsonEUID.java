@@ -22,26 +22,31 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 /** Represent JSON format of Entity Unique Identifier. */
 @JsonDeserialize
 public class JsonEUID {
-    /** euid (__expr is used as escape sequence in JSON). */
-    @JsonProperty("__expr")
-    public final String euid;
+    /** euid (__entity is used as escape sequence in JSON). */
+    @JsonProperty("type")
+    public final String type;
+
+    @JsonProperty("id")
+    public final String id;
+
 
     /** Readable string representation. */
     public String toString() {
-        return euid;
+        return type+"::"+id;
     }
 
     /**
      * Build JsonEUID.
      *
-     * @param s Entity Unique ID.
+     * @param type Entity Type.
+     * @param id   Entity ID.
      */
-    public JsonEUID(String s) {
-        this.euid = s;
+    public JsonEUID(String type, String id) {
+        this.type = type; this.id = id;
     }
 
     /** Build JsonEUID (default constructor needed by Jackson). */
     public JsonEUID() {
-        this.euid = "";
+        this.type = ""; this.id = "";
     }
 }
