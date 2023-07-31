@@ -69,7 +69,7 @@ public class AuthorizationRequest {
         this.principalEUID = principalEUID;
         this.actionEUID = actionEUID;
         this.resourceEUID = resourceEUID;
-        if (context.isEmpty() || context.get() == null) {
+        if (!context.isPresent() || context.get() == null) {
             this.context = Optional.empty();
         } else {
             this.context = Optional.of(new HashMap<>(context.get()));
