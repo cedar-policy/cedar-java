@@ -176,13 +176,13 @@ public class SharedIntegrationTests {
      * files in this array will be executed as integration tests.
      */
     private static final String[] JSON_TEST_FILES = {
-//        "tests/example_use_cases_doc/1a.json",
-//        "tests/example_use_cases_doc/2a.json",
-//        "tests/example_use_cases_doc/2b.json",
-//        "tests/example_use_cases_doc/2c.json",
-//        "tests/example_use_cases_doc/3a.json",
-//        "tests/example_use_cases_doc/3b.json",
-//        "tests/example_use_cases_doc/3c.json",
+        "tests/example_use_cases_doc/1a.json",
+        "tests/example_use_cases_doc/2a.json",
+        "tests/example_use_cases_doc/2b.json",
+        "tests/example_use_cases_doc/2c.json",
+        "tests/example_use_cases_doc/3a.json",
+        "tests/example_use_cases_doc/3b.json",
+        "tests/example_use_cases_doc/3c.json",
         // "tests/example_use_cases_doc/4a.json", // currently disabled due to action attributes
         // "tests/example_use_cases_doc/4c.json", // currently disabled due to action attributes
         // "tests/example_use_cases_doc/4d.json", // currently disabled due to action attributes
@@ -190,11 +190,11 @@ public class SharedIntegrationTests {
         // "tests/example_use_cases_doc/4f.json", // currently disabled due to action attributes
         // "tests/example_use_cases_doc/5b.json", // currently disabled due to action attributes
         // Need to change extension handling to match natural JSON CRs
-//        "tests/ip/1.json",
-//        "tests/ip/2.json",
-//        "tests/ip/3.json",
-//        "tests/multi/1.json",
-//        "tests/multi/2.json",
+        "tests/ip/1.json",
+        "tests/ip/2.json",
+        "tests/ip/3.json",
+        "tests/multi/1.json",
+        "tests/multi/2.json",
         // "tests/multi/3.json", // currently disabled because it uses action attributes
         // "tests/multi/4.json", // currently disabled because it uses action attributes
         // "tests/multi/5.json", // currently disabled because it uses action attributes

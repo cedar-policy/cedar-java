@@ -35,6 +35,11 @@ public class JsonEUID {
         return type+"::"+id;
     }
 
+    /** String representation in valid Cedar syntax. */
+    public String toCedar() {
+        return type+"::\""+id+"\"";
+    }
+
     /**
      * Build JsonEUID.
      *

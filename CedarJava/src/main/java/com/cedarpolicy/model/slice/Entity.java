@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +62,19 @@ public class Entity {
         this.uid = uid;
         this.attrs = new HashMap<>();
         this.parents = new HashSet<>();
+    }
+
+    /**
+     * Create an entity from JsonEUID and unwrapped JSON values.
+     *
+     * @param uid Euid of the Entity.
+     * @param attributes Key/Value map of attributes.
+     * @param parents Set of parent entities.
+     */
+    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<String> parents) {
+        this.uid = uid.toString();
+        this.attrs = new HashMap<>(attributes);
+        this.parents = parents;
     }
 
     @Override
