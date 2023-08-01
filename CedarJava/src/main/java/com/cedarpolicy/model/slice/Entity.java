@@ -18,10 +18,8 @@ package com.cedarpolicy.model.slice;
 
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +31,8 @@ import java.util.stream.Collectors;
 public class Entity {
     /** EUID of this entity object. */
     public final String uid;
+
+    private final Optional<JsonEUID> euid;
 
     /** Key/Value attribute map. */
     public final Map<String, Value> attrs;
@@ -51,6 +51,7 @@ public class Entity {
         this.uid = uid;
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
+        this.euid = Optional.empty();
     }
 
     /**
@@ -62,6 +63,7 @@ public class Entity {
         this.uid = uid;
         this.attrs = new HashMap<>();
         this.parents = new HashSet<>();
+        this.euid = Optional.empty();
     }
 
     /**
@@ -75,6 +77,7 @@ public class Entity {
         this.uid = uid.toString();
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
+        this.euid = Optional.of(uid);
     }
 
     @Override
@@ -92,5 +95,13 @@ public class Entity {
                                     .collect(Collectors.joining("\n\t\t"));
         }
         return uid + parentStr + attributeStr;
+    }
+
+    /**
+     * Get entity uid in JsonEUID format
+     * @return Entity UID in JsonEUID format
+     */
+    public Optional<JsonEUID> getEuid() {
+        return euid;
     }
 }
