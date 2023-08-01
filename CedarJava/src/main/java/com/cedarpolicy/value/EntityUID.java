@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.value;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -62,6 +63,13 @@ public class EntityUID extends Value {
     /** Entity uid. */
     private final String euid;
 
+    /** Entity uid type. */
+    private final Optional<String> type;
+
+    /** Entity uid type. */
+    private final Optional<String> id;
+
+
     /**
      * Build EntityUID.
      *
@@ -74,6 +82,8 @@ public class EntityUID extends Value {
         }
 
         this.euid = euid;
+        this.type = Optional.empty();
+        this.id = Optional.empty();
     }
 
     /**
@@ -89,6 +99,8 @@ public class EntityUID extends Value {
             throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
         }
         this.euid = euid;
+        this.type = Optional.of(type);
+        this.id = Optional.of(id);
     }
 
     /** As String. */
@@ -105,11 +117,17 @@ public class EntityUID extends Value {
 
     /** Get the type of the EUID. */
     public String getType() {
+        if(!this.type.isEmpty()) {
+            return this.type.get();
+        }
         return this.euid.substring(0, this.euid.length()-this.getId().length()-4);
     }
 
     /** Get the ID of the EUID. */
     public String getId() {
+        if(!this.id.isEmpty()) {
+            return this.id.get();
+        }
         String[] strs = this.euid.split("::");
         return strs[strs.length-1].substring(1,strs[strs.length-1].length()-1);
     }

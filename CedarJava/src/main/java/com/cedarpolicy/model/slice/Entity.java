@@ -40,6 +40,9 @@ public class Entity {
     /** Set of entity EUIDs that are parents to this entity. */
     public final Set<String> parents;
 
+    /** Set of entity EUIDs that are parents to this entity. */
+    public final Optional<Set<JsonEUID>> parentsEUIDs;
+
     /**
      * Create an entity from unwrapped JSON values.
      *
@@ -52,6 +55,7 @@ public class Entity {
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
         this.euid = Optional.empty();
+        this.parentsEUIDs = Optional.empty();
     }
 
     /**
@@ -64,6 +68,7 @@ public class Entity {
         this.attrs = new HashMap<>();
         this.parents = new HashSet<>();
         this.euid = Optional.empty();
+        this.parentsEUIDs = Optional.empty();
     }
 
     /**
@@ -78,6 +83,22 @@ public class Entity {
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
         this.euid = Optional.of(uid);
+        this.parentsEUIDs = Optional.empty();
+    }
+
+    /**
+     * Create an entity from JsonEUID and unwrapped JSON values.
+     *
+     * @param uid Euid of the Entity.
+     * @param attributes Key/Value map of attributes.
+     * @param parents Set of parent entities.
+     */
+    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<String> parents, Set<JsonEUID> parentsEUIDs) {
+        this.uid = uid.toString();
+        this.attrs = new HashMap<>(attributes);
+        this.parents = parents;
+        this.euid = Optional.of(uid);
+        this.parentsEUIDs = Optional.of(parentsEUIDs);
     }
 
     @Override
@@ -103,5 +124,13 @@ public class Entity {
      */
     public Optional<JsonEUID> getEuid() {
         return euid;
+    }
+
+    /**
+     * Get entity uid in JsonEUID format
+     * @return Entity UID in JsonEUID format
+     */
+    public Optional<Set<JsonEUID>> getParents() {
+        return parentsEUIDs;
     }
 }

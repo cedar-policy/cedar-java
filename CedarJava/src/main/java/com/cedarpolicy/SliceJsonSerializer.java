@@ -70,16 +70,22 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
             }
 
             this.attrs = e.attrs;
-            this.parents = new HashSet<JsonEUID>();
-            for (String parent : e.parents) {
-                String[] uid_parts = parent.split("::");
-                //Types cannot be empty but ids can. If the string ends with `:::` the id is `":"`. If the string ends with `::` the id is `""` and everything before the last `::` is the type.
-                String uid_id = parent.endsWith(":::") ? ":" : parent.endsWith("::") ? "" : uid_parts[uid_parts.length-1];
-                String uid_type = parent.substring(0, parent.length()-uid_id.length()-2);
+
+            if(e.getParents().isEmpty()) {
+                this.parents = new HashSet<JsonEUID>();
+
+                for (String parent : e.parents) {
+                    String[] uid_parts = parent.split("::");
+                    //Types cannot be empty but ids can. If the string ends with `:::` the id is `":"`. If the string ends with `::` the id is `""` and everything before the last `::` is the type.
+                    String uid_id = parent.endsWith(":::") ? ":" : parent.endsWith("::") ? "" : uid_parts[uid_parts.length - 1];
+                    String uid_type = parent.substring(0, parent.length() - uid_id.length() - 2);
 
 //                System.out.println("parent euid: "+(uid_type+"::\""+uid_id+"\""));
 
-                this.parents.add(new JsonEUID(uid_type, uid_id));
+                    this.parents.add(new JsonEUID(uid_type, uid_id));
+                }
+            } else {
+                this.parents = e.getParents().get();
             }
         }
     }
