@@ -36,4 +36,4 @@ else
     export CEDAR_INTEGRATION_TESTS_ROOT=/tmp
 fi
 
-tail gradlew
+tail build.gradle
