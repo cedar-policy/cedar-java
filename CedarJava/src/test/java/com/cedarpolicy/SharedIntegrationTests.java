@@ -224,7 +224,7 @@ public class SharedIntegrationTests {
                    .filter(path -> path.getFileName().toString().endsWith(".json"))
                    //TODO: fix this
                    //Parsing of one policy in our corpus tests is broken due to a `;` in a string. Disable for now:
-                //    .filter(p -> !p.getFileName().toString().endsWith("54d561c25c3da949ee5e512f2ccd85af57ba9502.json"))
+                   .filter(p -> !p.getFileName().toString().endsWith("54d561c25c3da949ee5e512f2ccd85af57ba9502.json"))
                    // ignore files that start with policies_, entities_, or schema_
                    .filter(
                            path ->
