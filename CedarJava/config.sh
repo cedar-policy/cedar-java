@@ -35,3 +35,5 @@ else
     unset MUST_RUN_CEDAR_INTEGRATION_TESTS
     export CEDAR_INTEGRATION_TESTS_ROOT=/tmp
 fi
+
+tail gradlew

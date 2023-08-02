@@ -41,4 +41,4 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: ./gradlew build
+        run: tail gradlew && export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
