@@ -37,4 +37,4 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: bash config.sh && ./gradlew build
+        run: bash config.sh run_int_tests && ./gradlew build

@@ -9,22 +9,32 @@ This package depends on [Cedar](https://www.cedarpolicy.com/), a library
 that needs to be compiled so that it can be run on the used platform.
 You need JDK 17 or later to run the code.
 
-You need to ensure the `CEDAR_JAVA_FFI_LIB` variable is set correctly. Typically running `config.sh` will set this for you.
+You need to ensure the `CEDAR_JAVA_FFI_LIB` variable is set correctly. Typically ./config.sh will set this for you.
 
 ### Building
 - Ensure Rust, Gradle and a JDK are installed.
-- clone `cedar-policy/cedar` into `cedar-java/cedar` (you don't have to build it)
 - then:
 ```shell
 cd CedarJavaFFI
 cargo build
 cargo test
 cd ../CedarJava
-bash config.sh
+./config.sh
 ./gradlew build
 ```
+This will run the tests as well (but not the integration tests).
 
-This will run the tests as well.
+If you want to run the integration tests, you'll also need:
+```shell
+export CEDAR_INTEGRATION_TESTS_ROOT=`path_to_cedar/cedar-integration-tests`
+```
+
+Otherwise you can do (done for you in `config.sh`):
+```shell
+export CEDAR_INTEGRATION_TESTS_ROOT=`/tmp`
+```
+And the tests won't be found (and hence won't be run).
+
 
 ## Debugging
 
@@ -37,7 +47,7 @@ Debugging calls across the JNI boundary is a bit tricky (as ever a bit more so o
 both a Java and native debugger (such as GDB/LLDB) to the program.
 
 ## Unsupported Features
-You can see a list of features not yet supported in CedarJava at [Differences from Rust](DIFFERENCES_FROM_RUST.md).  
+You can see a list of features not yet supported in CedarJava at [Differences from Rust](DIFFERENCES_FROM_RUST.md).
 
 ## Security
 
