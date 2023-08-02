@@ -37,3 +37,5 @@ else
 fi
 
 tail build.gradle
+cat ../CedarJavaFFI/Cargo.toml
+ls /home/runner/work/cedar-java/cedar-java/cedar/cedar-integration-tests
