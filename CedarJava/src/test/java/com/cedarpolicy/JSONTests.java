@@ -149,6 +149,16 @@ public class JSONTests {
         inner.put("type", "User");
         n.put(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
+
+        String weirdType = "a";
+        String weirdId = "";
+        String weirdEID = weirdType+"::\""+weirdId+"\"";
+        uid = new EntityUID(weirdEID);
+        inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", weirdId);
+        inner.put("type", weirdType);
+        n.put(ENTITY_ESCAPE_SEQ, inner);
+        assertJSONEqual(n, uid);
     }
 
     /** Test. */

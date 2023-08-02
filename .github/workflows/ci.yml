@@ -28,6 +28,10 @@ jobs:
       - name: cargo fmt
         working-directory: ./CedarJavaFFI
         run: cargo fmt --all --check
+      - name: configure
+        working-directory: ./CedarJava
+        shell: bash
+        run: bash config.sh run_int_tests
       - name: cargo rustc
         working-directory: ./CedarJavaFFI
         run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
@@ -37,4 +41,4 @@ jobs:
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: bash config.sh && ./gradlew build
+        run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build

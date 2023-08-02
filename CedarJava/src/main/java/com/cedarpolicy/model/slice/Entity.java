@@ -18,10 +18,8 @@ package com.cedarpolicy.model.slice;
 
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -34,11 +32,16 @@ public class Entity {
     /** EUID of this entity object. */
     public final String uid;
 
+    private final Optional<JsonEUID> euid;
+
     /** Key/Value attribute map. */
     public final Map<String, Value> attrs;
 
     /** Set of entity EUIDs that are parents to this entity. */
     public final Set<String> parents;
+
+    /** Set of entity EUIDs that are parents to this entity. */
+    public final Optional<Set<JsonEUID>> parentsEUIDs;
 
     /**
      * Create an entity from unwrapped JSON values.
@@ -51,6 +54,8 @@ public class Entity {
         this.uid = uid;
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
+        this.euid = Optional.empty();
+        this.parentsEUIDs = Optional.empty();
     }
 
     /**
@@ -62,6 +67,8 @@ public class Entity {
         this.uid = uid;
         this.attrs = new HashMap<>();
         this.parents = new HashSet<>();
+        this.euid = Optional.empty();
+        this.parentsEUIDs = Optional.empty();
     }
 
     /**
@@ -75,6 +82,23 @@ public class Entity {
         this.uid = uid.toString();
         this.attrs = new HashMap<>(attributes);
         this.parents = parents;
+        this.euid = Optional.of(uid);
+        this.parentsEUIDs = Optional.empty();
+    }
+
+    /**
+     * Create an entity from JsonEUID and unwrapped JSON values.
+     *
+     * @param uid Euid of the Entity.
+     * @param attributes Key/Value map of attributes.
+     * @param parents Set of parent entities.
+     */
+    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<String> parents, Set<JsonEUID> parentsEUIDs) {
+        this.uid = uid.toString();
+        this.attrs = new HashMap<>(attributes);
+        this.parents = parents;
+        this.euid = Optional.of(uid);
+        this.parentsEUIDs = Optional.of(parentsEUIDs);
     }
 
     @Override
@@ -92,5 +116,21 @@ public class Entity {
                                     .collect(Collectors.joining("\n\t\t"));
         }
         return uid + parentStr + attributeStr;
+    }
+
+    /**
+     * Get entity uid in JsonEUID format
+     * @return Entity UID in JsonEUID format
+     */
+    public Optional<JsonEUID> getEuid() {
+        return euid;
+    }
+
+    /**
+     * Get entity uid in JsonEUID format
+     * @return Entity UID in JsonEUID format
+     */
+    public Optional<Set<JsonEUID>> getParents() {
+        return parentsEUIDs;
     }
 }
