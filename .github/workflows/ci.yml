@@ -38,9 +38,7 @@ jobs:
       - name: cargo test
         working-directory: ./CedarJavaFFI
         run: cargo test --verbose
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: Build CedarJava
         working-directory: ./CedarJava
         shell: bash
-        run: tail build.gradle && export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
+        run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
