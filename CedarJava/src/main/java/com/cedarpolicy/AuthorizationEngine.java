@@ -43,10 +43,10 @@ public interface AuthorizationEngine {
      * @param q The query to evaluate
      * @param slice The slice to evaluate against
      * @return The result of the query evaluation
+     * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException On failure to make the authorization query. Note that errors inside the
      *     authorization engine are included in the <code>errors</code> field on the
-     *     AuthorizationResult. Note: This error interface will likely change in the future. We will
-     *     likely unify the error handling story.
+     *     AuthorizationResponse.
      */
     AuthorizationResponse isAuthorized(AuthorizationRequest q, Slice slice) throws AuthException;
 

@@ -57,7 +57,7 @@ public class JSONTests {
     @Test
     public void testAuthResult() {
         String src =
-                "{ \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } }";
+                "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
         try {
             AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
             assertTrue(r.isAllowed());

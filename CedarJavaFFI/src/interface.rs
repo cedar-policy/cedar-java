@@ -173,7 +173,7 @@ mod test {
             },
             "principal": null,
             "action": "Action::\"view\"",
-            "resource": "Resource:\"thing\""
+            "resource": "Resource::\"thing\""
         }
         "#,
         );

@@ -16,11 +16,12 @@
 
 package com.cedarpolicy;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
@@ -176,28 +177,28 @@ public class SharedIntegrationTests {
      * files in this array will be executed as integration tests.
      */
     private static final String[] JSON_TEST_FILES = {
-//        "tests/example_use_cases_doc/1a.json",
-//        "tests/example_use_cases_doc/2a.json",
-//        "tests/example_use_cases_doc/2b.json",
-//        "tests/example_use_cases_doc/2c.json",
-//        "tests/example_use_cases_doc/3a.json",
-//        "tests/example_use_cases_doc/3b.json",
-//        "tests/example_use_cases_doc/3c.json",
-//        // "tests/example_use_cases_doc/4a.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4c.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4d.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4e.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4f.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/5b.json", // currently disabled due to action attributes
-//        // Need to change extension handling to match natural JSON CRs
-//        "tests/ip/1.json",
-//        "tests/ip/2.json",
-//        "tests/ip/3.json",
-//        "tests/multi/1.json",
-//        "tests/multi/2.json",
-//        // "tests/multi/3.json", // currently disabled because it uses action attributes
-//        // "tests/multi/4.json", // currently disabled because it uses action attributes
-//        // "tests/multi/5.json", // currently disabled because it uses action attributes
+       "tests/example_use_cases_doc/1a.json",
+       "tests/example_use_cases_doc/2a.json",
+       "tests/example_use_cases_doc/2b.json",
+       "tests/example_use_cases_doc/2c.json",
+       "tests/example_use_cases_doc/3a.json",
+       "tests/example_use_cases_doc/3b.json",
+       "tests/example_use_cases_doc/3c.json",
+       // "tests/example_use_cases_doc/4a.json", // currently disabled due to action attributes
+       // "tests/example_use_cases_doc/4c.json", // currently disabled due to action attributes
+       // "tests/example_use_cases_doc/4d.json", // currently disabled due to action attributes
+       // "tests/example_use_cases_doc/4e.json", // currently disabled due to action attributes
+       // "tests/example_use_cases_doc/4f.json", // currently disabled due to action attributes
+       // "tests/example_use_cases_doc/5b.json", // currently disabled due to action attributes
+       // Need to change extension handling to match natural JSON CRs
+       "tests/ip/1.json",
+       "tests/ip/2.json",
+       "tests/ip/3.json",
+       "tests/multi/1.json",
+       "tests/multi/2.json",
+       // "tests/multi/3.json", // currently disabled because it uses action attributes
+       // "tests/multi/4.json", // currently disabled because it uses action attributes
+       // "tests/multi/5.json", // currently disabled because it uses action attributes
     };
 
     /**
@@ -343,7 +344,7 @@ public class SharedIntegrationTests {
     /**
      * This method implements the main test logic and assertions for each query. Given a set of
      * entities, set of policies, and a JsonQuery object, it executes the described query and checks
-     * that the result is equal to the excepted result.
+     * that the result is equal to the expected result.
      */
     private void executeJsonQueryTest(
             Set<Entity> entities, Set<Policy> policies, JsonQuery query, Schema schema) {
@@ -353,20 +354,29 @@ public class SharedIntegrationTests {
                         query.principal == null ? Optional.empty() : Optional.of(query.principal),
                         query.action,
                         query.resource == null ? Optional.empty() : Optional.of(query.resource),
-                         Optional.of(query.context),
+                        Optional.of(query.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
-        AuthorizationResponse result = assertDoesNotThrow(() -> auth.isAuthorized(authQuery, slice));
-
-        assertEquals(query.decision, result.getDecision());
-        //Errors can disagree if e.g.,
-        // <[error occurred while evaluating policy `policy0`: wrong number of arguments provided to extension function isInRange: expected 2, got 0]>
-        // but was: <[couldn't parse policy with id policy0, poorly formed: invalid syntax, expected function, found isInRange]>
-        // This skips ~48 tests. Of course, the authorization decision will be the same, even though the error may be different
-        //TODO: fix this
-        if(result.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("couldn't parse policy with id"))) {
+        
+        try {
+            AuthorizationResponse result = auth.isAuthorized(authQuery, slice);
+            assertEquals(query.decision, result.getDecision());
             assertEquals(query.errors, result.getErrors());
             assertEquals(new HashSet<>(query.reasons), result.getReasons());
+        } catch (BadRequestException e) {
+            // In case of a parse error, isAuthorized and validate will throw `BadRequestException`.
+            // A few of our corpus tests currently fall into this category because a function call
+            // (e.g., `foo()`) is considered a parse error when the function name is unrecognized.
+
+            // TODO: this current fails for 48 test cases
+            // Some of these failures are expected (due to the comment above) but the "invalid" token ones
+            // are a little odd -- it looks like some policies being sent to the authorizer aren't the same
+            // as what's in the corpus files. Some issue with unicode?
+            throw new AssertionError("parse error: " + e.getMessage());
+
+        } catch (AuthException e) {
+            // This case represents an internal failure somewhere. These cannot be ignored.
+            throw new AssertionError("internal error: " + e.getMessage());
         }
     }
 }

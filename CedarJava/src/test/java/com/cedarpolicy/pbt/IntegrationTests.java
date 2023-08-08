@@ -22,6 +22,7 @@ import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.EntityTypeAndId;
@@ -648,7 +649,8 @@ public class IntegrationTests {
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
 
-        // Schema says resource.owner is a bool, so we should get a parse failure and a deny.
+        // Schema says resource.owner is a bool, so we should get a parse failure, which causes 
+        // `isAuthorized()` to throw a `BadRequestException`.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest query =
@@ -659,9 +661,7 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")));
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertFalse(result.isAllowed());
+        Assertions.assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(query, slice));
     }
 
     /** Test using schema parsing. */
