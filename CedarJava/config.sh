@@ -28,7 +28,7 @@ if [ "$#" -ne 0 ] && [ "$1" == "run_int_tests" ]; then
 
     export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
 
-    cargo_str='cedar-policy = { version = "2.3", path = "../cedar/cedar-policy", features = ["ipaddr", "decimal"] }'
+    cargo_str='cedar-policy = { version = "2.3", path = "../cedar/cedar-policy" }'
     sed "12s;.*;$cargo_str;" "../CedarJavaFFI/Cargo.toml" > new_Cargo.toml
     mv new_Cargo.toml ../CedarJavaFFI/Cargo.toml
 else
