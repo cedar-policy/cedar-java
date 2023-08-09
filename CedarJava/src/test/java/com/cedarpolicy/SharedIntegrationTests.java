@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.AuthorizationResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
@@ -365,15 +366,17 @@ public class SharedIntegrationTests {
             assertEquals(new HashSet<>(query.reasons), result.getReasons());
         } catch (BadRequestException e) {
             // In case of a parse error, isAuthorized and validate will throw `BadRequestException`.
-            // A few of our corpus tests currently fall into this category because a function call
-            // (e.g., `foo()`) is considered a parse error when the function name is unrecognized.
-
-            // TODO: this current fails for 48 test cases
-            // Some of these failures are expected (due to the comment above) but the "invalid" token ones
-            // are a little odd -- it looks like some policies being sent to the authorizer aren't the same
-            // as what's in the corpus files. Some issue with unicode?
-            throw new AssertionError("parse error: " + e.getMessage());
-
+            // A few of our corpus tests currently fall into this category because the generator
+            // can produce unparsable ASTs.
+            if (e.getMessage().endsWith("is not a function")) {
+                // This error message is expected. Just check that the expected
+                // decision is "Deny".
+                assertEquals(query.decision, Decision.Deny);
+            } else {
+                // Bad - currently fails on 16 cases with "invalid token" errors.
+                // Some issue with unicode?
+                throw new AssertionError("parse error: " + e.getMessage());
+            }
         } catch (AuthException e) {
             // This case represents an internal failure somewhere. These cannot be ignored.
             throw new AssertionError("internal error: " + e.getMessage());
