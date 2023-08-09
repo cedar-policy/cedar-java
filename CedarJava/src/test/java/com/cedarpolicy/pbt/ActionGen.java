@@ -17,6 +17,7 @@
 package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,21 +32,24 @@ public final class ActionGen {
     /** Generate a random Action Group. */
     public static List<Entity> getEntities() {
         List<Entity> actions = new ArrayList<>();
-        String actionEuid = "Action::\"" + Utils.strings() + "\"";
+        String actionType = "Action";
+        String actionId = Utils.strings();
+        String actionEuid = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
         Set<String> actionParents = new HashSet<>();
-        Entity e = new Entity(actionEuid, actionAttributes, actionParents);
+        Entity e = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         actions.add(e);
         int count = Arbitraries.integers().between(10, 100).sample();
 
         for (int i = 0; i < count; i++) {
-            actionEuid = "Action::\"" + Utils.strings() + "\"";
+            actionId = Utils.strings();
+            actionEuid = "Action::\"" + actionId + "\"";
             if (!e.uid.equals(actionEuid)) {
                 e.parents.add(actionEuid);
             }
             actionAttributes = new HashMap<>();
             actionParents = new HashSet<>();
-            actions.add(new Entity(actionEuid, actionAttributes, actionParents));
+            actions.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
         }
         return actions;
     }

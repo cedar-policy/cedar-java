@@ -119,6 +119,15 @@ public class Entity {
     }
 
     /**
+     * Get the EUID in valid Cedar syntax
+     * @return EUID as a string in Cedar syntax
+     */
+    public String getCedarEuid() {
+        JsonEUID jsoneuid = euid.get();
+        return jsoneuid.type+"::\""+jsoneuid.id+"\"";
+    }
+
+    /**
      * Get entity uid in JsonEUID format
      * @return Entity UID in JsonEUID format
      */
