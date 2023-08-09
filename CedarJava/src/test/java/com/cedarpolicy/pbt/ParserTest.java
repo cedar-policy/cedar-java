@@ -58,7 +58,7 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
 
         /*
@@ -68,7 +68,7 @@ public class ParserTest {
         String actionId = Utils.strings();
         String action = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
 
         /*
@@ -78,7 +78,7 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
         /*
          *  Generate a universal permit policy
@@ -115,7 +115,7 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
 
         /*
@@ -125,7 +125,7 @@ public class ParserTest {
         String actionId = Utils.strings();
         String action = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
 
         /*
@@ -135,7 +135,7 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
 
         /*
@@ -187,7 +187,7 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
 
         /*
@@ -203,7 +203,7 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
         /*
          *  Generate a universal permit policy

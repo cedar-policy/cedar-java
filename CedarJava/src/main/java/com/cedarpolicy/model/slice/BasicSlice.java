@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -65,7 +66,7 @@ public class BasicSlice implements Slice {
 
         for (Entity entity : entities) {
             attributes.put(entity.getEuid().toCedar(), entity.attrs);
-            List<String> parentList = new ArrayList<>(entity.parents);
+            List<String> parentList = new ArrayList<String>(entity.getParents().stream().map(euid -> euid.toCedar()).collect(Collectors.toList()));
             parents.put(entity.getEuid().toCedar(), parentList);
         }
 

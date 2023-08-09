@@ -35,44 +35,27 @@ public class Entity {
     public final Map<String, Value> attrs;
 
     /** Set of entity EUIDs that are parents to this entity. */
-    public final Set<String> parents;
-
-    /** Set of entity EUIDs that are parents to this entity. */
-    public final Optional<Set<JsonEUID>> parentsEUIDs;
+    public final Set<JsonEUID> parentsEUIDs;
 
     /**
      * Create an entity from JsonEUID and unwrapped JSON values.
      *
      * @param uid Euid of the Entity.
      * @param attributes Key/Value map of attributes.
-     * @param parents Set of parent entities.
+     * @param parentsEUID Set of parent entities' EUIDs.
      */
-    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<String> parents) {
+    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<JsonEUID> parentsEUIDs) {
         this.attrs = new HashMap<>(attributes);
-        this.parents = parents;
         this.euid = uid;
-        this.parentsEUIDs = Optional.empty();
-    }
-
-    /**
-     * Create an entity from JsonEUID and unwrapped JSON values.
-     *
-     * @param uid Euid of the Entity.
-     * @param attributes Key/Value map of attributes.
-     * @param parents Set of parent entities.
-     */
-    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<String> parents, Set<JsonEUID> parentsEUIDs) {
-        this.attrs = new HashMap<>(attributes);
-        this.parents = parents;
-        this.euid = uid;
-        this.parentsEUIDs = Optional.of(parentsEUIDs);
+        this.parentsEUIDs = parentsEUIDs;
     }
 
     @Override
     public String toString() {
         String parentStr = "";
-        if (!parents.isEmpty()) {
-            parentStr = "\n\tparents:\n\t\t" + String.join("\n\t\t", parents);
+        if (!parentsEUIDs.isEmpty()) {
+            List<String> parentStrs = new ArrayList<String>(parentsEUIDs.stream().map(euid -> euid.toCedar()).collect(Collectors.toList()));
+            parentStr = "\n\tparents:\n\t\t" + String.join("\n\t\t", parentStrs);
         }
         String attributeStr = "";
         if (!attrs.isEmpty()) {
@@ -98,7 +81,7 @@ public class Entity {
      * Get entity uid in JsonEUID format
      * @return Entity UID in JsonEUID format
      */
-    public Optional<Set<JsonEUID>> getParents() {
+    public Set<JsonEUID> getParents() {
         return parentsEUIDs;
     }
 }

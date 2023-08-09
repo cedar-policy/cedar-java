@@ -36,7 +36,7 @@ public final class ActionGen {
         String actionId = Utils.strings();
         String actionEuid = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         actions.add(e);
         int count = Arbitraries.integers().between(10, 100).sample();
@@ -45,7 +45,7 @@ public final class ActionGen {
             actionId = Utils.strings();
             actionEuid = "Action::\"" + actionId + "\"";
             if (!e.getEuid().toCedar().equals(actionEuid)) {
-                e.parents.add(actionEuid);
+                e.parentsEUIDs.add(new JsonEUID(actionType, actionId));
             }
             actionAttributes = new HashMap<>();
             actionParents = new HashSet<>();
