@@ -1,4 +1,4 @@
-## CedarJava
+# CedarJava
 
 This package provides the Java interface for the Cedar language. You can use these to call Cedar from your Java applications. See [java-hello-world](https://github.com/cedar-policy/cedar-examples/tree/main/cedar-java-hello-world) for an example of calling Cedar from a Java application.
 
@@ -19,7 +19,7 @@ cd CedarJavaFFI
 cargo build
 cargo test
 cd ../CedarJava
-./config.sh
+bash config.sh
 ./gradlew build
 ```
 This will run the tests as well (but not the integration tests).

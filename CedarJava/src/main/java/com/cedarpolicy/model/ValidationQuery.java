@@ -17,9 +17,14 @@
 package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.slice.Policy;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /** Information passed to Cedar for validation. */
 public final class ValidationQuery {
@@ -44,6 +49,22 @@ public final class ValidationQuery {
 
         this.schema = schema;
         this.policySet = policySet;
+    }
+
+    public ValidationQuery(Schema schema, Set<Policy> policySet) {
+        if (schema == null) {
+            throw new NullPointerException("schema");
+        }
+
+        if (policySet == null) {
+            throw new NullPointerException("policySet");
+        }
+
+        this.schema = schema;
+        this.policySet = new HashMap<>();
+        for (Policy p : policySet) {
+            this.policySet.put(p.policyID, p.policySrc);
+        }
     }
 
     /**
