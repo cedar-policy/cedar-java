@@ -58,16 +58,7 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
         public final Set<JsonEUID> parents;
 
         JsonEntity(Entity e) {
-            // if(!e.getEuid().isEmpty()) {
-                this.uid = e.getEuid().get();
-            // } else {
-            //     String[] uid_parts = e.uid.split("::");
-            //     //Types cannot be empty but ids can. If the string ends with `:::` the id is `":"`. If the string ends with `::` the id is `""` and everything before the last `::` is the type.
-            //     String uid_id = e.uid.endsWith(":::") ? ":" : e.uid.endsWith("::") ? "" : uid_parts[uid_parts.length-1];
-            //     String uid_type = e.uid.substring(0, e.uid.length()-uid_id.length()-2);
-
-            //     this.uid = new JsonEUID(uid_type, uid_id);
-            // }
+            this.uid = e.getEuid();
 
             this.attrs = e.attrs;
 

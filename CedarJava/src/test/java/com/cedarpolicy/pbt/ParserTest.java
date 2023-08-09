@@ -195,7 +195,7 @@ public class ParserTest {
          */
         List<Entity> actions = ActionGen.getEntities();
         entities.addAll(actions);
-        String action = actions.get(0).getCedarEuid();
+        String action = actions.get(0).getEuid().toCedar();
         /*
          *  Generate a random Resource
          */
@@ -234,7 +234,7 @@ public class ParserTest {
 
         Assertions.assertTrue(result.isAllowed());
         String actionList =
-                "[" + actions.stream().map(x -> x.getCedarEuid()).collect(Collectors.joining(",")) + "]";
+                "[" + actions.stream().map(x -> x.getEuid().toCedar()).collect(Collectors.joining(",")) + "]";
         String p2 =
                 "permit(\n"
                         + "principal=="
@@ -254,7 +254,7 @@ public class ParserTest {
         Slice slice2 = new BasicSlice(policies, entities);
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
-        action = actions.get(index).getCedarEuid();
+        action = actions.get(index).getEuid().toCedar();
         AuthorizationRequest query2 =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext2);
