@@ -22,18 +22,18 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Information passed to Cedar for validation. */
-public final class ValidationQuery {
+public final class ValidationRequest {
     private final Schema schema;
     private final Map<String, String> policySet;
 
     /**
-     * Construct a validation query.
+     * Construct a validation request.
      *
-     * @param schema Schema for the query
+     * @param schema Schema for the request
      * @param policySet Map of Policy ID to policy.
      */
     @SuppressFBWarnings
-    public ValidationQuery(Schema schema, Map<String, String> policySet) {
+    public ValidationRequest(Schema schema, Map<String, String> policySet) {
         if (schema == null) {
             throw new NullPointerException("schema");
         }
@@ -68,11 +68,11 @@ public final class ValidationQuery {
     /** Test equality. */
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof ValidationQuery)) {
+        if (!(o instanceof ValidationRequest)) {
             return false;
         }
 
-        final ValidationQuery other = (ValidationQuery) o;
+        final ValidationRequest other = (ValidationRequest) o;
         return schema.equals(other.schema) && policySet.equals(other.policySet);
     }
 
@@ -84,6 +84,6 @@ public final class ValidationQuery {
 
     /** Get readable string representation. */
     public String toString() {
-        return "ValidationQuery(schema=" + schema + ", policySet=" + policySet + ")";
+        return "ValidationRequest(schema=" + schema + ", policySet=" + policySet + ")";
     }
 }

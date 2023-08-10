@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.cedarpolicy.model.ValidationQuery;
-import com.cedarpolicy.model.ValidationResult;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
@@ -47,8 +47,8 @@ public class ValidationTests {
     @Test
     public void givenEmptySchemaAndNoPolicyReturnsValid() {
         givenSchema(EMPTY_SCHEMA);
-        ValidationResult result = whenValidated();
-        thenIsValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
     }
 
     /** Test. */
@@ -62,8 +62,8 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == Photo::\"VacationPhoto94.jpg\""
                         + ");");
-        ValidationResult result = whenValidated();
-        thenIsValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
     }
 
     /** Test. */
@@ -77,8 +77,8 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == User::\"bob\""
                         + ");");
-        ValidationResult result = whenValidated();
-        thenIsNotValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
     }
 
     /** Test. */
@@ -98,35 +98,35 @@ public class ValidationTests {
         this.policies.put(id, policy);
     }
 
-    private ValidationResult whenValidated() {
-        ValidationQuery query = new ValidationQuery(schema, policies);
-        return assertDoesNotThrow(() -> engine.validate(query));
+    private ValidationResponse whenValidated() {
+        ValidationRequest request = new ValidationRequest(schema, policies);
+        return assertDoesNotThrow(() -> engine.validate(request));
     }
 
-    private void thenIsValid(ValidationResult result) {
+    private void thenIsValid(ValidationResponse response) {
         assertTrue(
-                result.getNotes().isEmpty(),
+                response.getNotes().isEmpty(),
                 () -> {
                     String notes =
-                            result.getNotes().stream()
+                            response.getNotes().stream()
                                     .map(
                                             note ->
                                                     String.format(
                                                             "in policy %s: %s",
                                                             note.getPolicyId(), note.getNote()))
                                     .collect(Collectors.joining("\n"));
-                    return "Expected valid result but got an invalid one with notes:\n" + notes;
+                    return "Expected valid response but got an invalid one with notes:\n" + notes;
                 });
     }
 
-    private void thenIsNotValid(ValidationResult result) {
-        assertFalse(result.getNotes().isEmpty());
+    private void thenIsNotValid(ValidationResponse response) {
+        assertFalse(response.getNotes().isEmpty());
     }
 
     private AuthException whenValidatingThrows() {
-        ValidationQuery query = new ValidationQuery(schema, policies);
+        ValidationRequest request = new ValidationRequest(schema, policies);
         try {
-            engine.validate(query);
+            engine.validate(request);
         } catch (AuthException e) {
             return e;
         }
