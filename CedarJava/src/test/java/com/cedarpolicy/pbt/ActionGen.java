@@ -44,7 +44,7 @@ public final class ActionGen {
         for (int i = 0; i < count; i++) {
             actionId = Utils.strings();
             actionEuid = "Action::\"" + actionId + "\"";
-            if (!e.getEuid().toCedar().equals(actionEuid)) {
+            if (!e.getEuid().toString().equals(actionEuid)) {
                 e.parentsEUIDs.add(new JsonEUID(actionType, actionId));
             }
             actionAttributes = new HashMap<>();
