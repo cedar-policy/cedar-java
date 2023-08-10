@@ -294,11 +294,9 @@ public class SharedIntegrationTests {
         // file by splitting the full policy source on semicolons. This will 
         // break if a semicolon shows up in a string, eid, or comment.
         String[] policyStrings = policiesSrc.split(";");
-        // Some of the corpus tests contain semicolons in strings and/or comments.
+        // Some of the corpus tests contain semicolons in strings and/or eids.
         // A simple way to check if the code above did the wrong thing in this case
         // is to check for unmatched, unescaped quotes in the resulting policies.
-        // The corpus tests all consist of a single policy, so it is fine to use
-        // the full policy source as a single policy.
         for (String policyString : policyStrings) {
             if (hasUnmatchedQuote(policyString)) {
                 policyStrings = null;
@@ -307,6 +305,9 @@ public class SharedIntegrationTests {
         
         Set<Policy> policies = new HashSet<>();
         if (policyStrings == null) {
+            // This case will only be reached for corpus tests.
+            // The corpus tests all consist of a single policy, so it is fine to use
+            // the full policy source as a single policy.
             policies.add(new Policy(policiesSrc, "policy0"));
         } else {
             for (int i = 0; i < policyStrings.length; i++) {
@@ -324,7 +325,8 @@ public class SharedIntegrationTests {
 
     /** Check for unmatched quotes. */
     private Boolean hasUnmatchedQuote(String s) {
-        // ignore escaped quotes
+        // Ignore escaped quotes, i.e. \"
+        // Note that backslashes in the regular expression have to be double escaped.
         String new_s = s.replaceAll("\\\\\"", "");
         long count = new_s.chars().filter(ch -> ch == '\"').count();
         return (count % 2 == 1);
