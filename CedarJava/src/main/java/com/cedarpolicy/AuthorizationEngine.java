@@ -45,8 +45,7 @@ public interface AuthorizationEngine {
      * @return The result of the request evaluation
      * @throws AuthException On failure to make the authorization request. Note that errors inside the
      *     authorization engine are included in the <code>errors</code> field on the
-     *     AuthorizationResponse. Note: This error interface will likely change in the future. We will
-     *     likely unify the error handling story.
+     *     AuthorizationResponse.
      */
     AuthorizationResponse isAuthorized(AuthorizationRequest request, Slice slice) throws AuthException;
 

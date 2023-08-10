@@ -112,7 +112,7 @@ public class SharedIntegrationTests {
         public boolean shouldValidate;
 
         /** List of requests with their expected result. */
-        public List<JsonRequest> requests;
+        public List<JsonRequest> queries;
     }
 
     /** Directly corresponds to the structure of a request in the JSON formatted tests files. */
@@ -262,7 +262,7 @@ public class SharedIntegrationTests {
 
         return DynamicContainer.dynamicContainer(
                 jsonFile,
-                test.requests.stream()
+                test.queries.stream()
                         .map(
                                 request ->
                                         DynamicTest.dynamicTest(

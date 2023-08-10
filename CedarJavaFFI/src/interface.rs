@@ -42,8 +42,7 @@ fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
 }
 
 fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
-    let result = call_cedar(&call_str, &input_str);
-    result
+    call_cedar(&call_str, &input_str)
 }
 
 /// The main JNI entry point
