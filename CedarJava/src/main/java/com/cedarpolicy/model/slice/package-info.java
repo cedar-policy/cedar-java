@@ -17,8 +17,8 @@
 /**
  * This module represents slices passed in to Cedar
  *
- * <p>The slice contains a sufficient portion of the Entity heirarchy to decide an authorization
- * query.
+ * <p>The slice contains a sufficient portion of the Entity hierarchy to decide an authorization
+ * request.
  *
  * @since 1.2
  * @author anmwells

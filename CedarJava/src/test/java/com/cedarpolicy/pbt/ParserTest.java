@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.jqwik.api.Arbitraries;
@@ -43,8 +42,8 @@ public class ParserTest {
     /*
      * Single policy (Universal permit) Tests
      * policy: permit(principal, action, resource);
-     * Query: random principal, random action, random resource)
-     * Result: Permit
+     * Request: random principal, random action, random resource)
+     * Response: Permit
      *
      * @param ids
      */
@@ -88,19 +87,19 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /**
      * Single policy tests
      *
-     * <p>policy: permit(principal=x, action=y, resource=z); Query: x, y, z Result: Permit
+     * <p>policy: permit(principal=x, action=y, resource=z); Request: x, y, z Response: Permit
      *
      * @param ids
      */
@@ -158,21 +157,21 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /*
      * Single policy tests
      *
      * policy: permit(principal=x, action in [..., y,...], resource=z);
-     * Query: x, y, z
-     * Result: Permit
+     * Request: x, y, z
+     * Response: Permit
      *
      * @param ids
      */
@@ -225,14 +224,14 @@ public class ParserTest {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
 
-        Assertions.assertTrue(result.isAllowed());
+        Assertions.assertTrue(response.isAllowed());
         String actionList =
                 "[" + actions.stream().map(x -> x.getEuid().toString()).collect(Collectors.joining(",")) + "]";
         String p2 =
@@ -255,11 +254,11 @@ public class ParserTest {
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
         action = actions.get(index).getEuid().toString();
-        AuthorizationRequest query2 =
+        AuthorizationRequest request2 =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext2);
-        AuthorizationResponse result2 =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query2, slice2));
-        Assertions.assertTrue(result2.isAllowed());
+        AuthorizationResponse response2 =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request2, slice2));
+        Assertions.assertTrue(response2.isAllowed());
     }
 }
