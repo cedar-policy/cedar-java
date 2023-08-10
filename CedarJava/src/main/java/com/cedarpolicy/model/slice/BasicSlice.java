@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -53,7 +54,7 @@ public class BasicSlice implements Slice {
             Set<Policy> policies,
             Set<Entity> entities,
             Set<Policy> templates,
-            List<TemplateInstantiation> templateInstantiations) {
+            List<TemplateInstantiation> templateInstantiations) {   
         // Copy of previous constructor. We can't call the previous constructor because fields are
         // final
         this.policies = new HashMap<>();
@@ -64,9 +65,9 @@ public class BasicSlice implements Slice {
         HashMap<String, List<String>> parents = new HashMap<>();
 
         for (Entity entity : entities) {
-            attributes.put(entity.uid, entity.attrs);
-            List<String> parentList = new ArrayList<>(entity.parents);
-            parents.put(entity.uid, parentList);
+            attributes.put(entity.getEuid().toString(), entity.attrs);
+            List<String> parentList = new ArrayList<String>(entity.getParents().stream().map(euid -> euid.toString()).collect(Collectors.toList()));
+            parents.put(entity.getEuid().toString(), parentList);
         }
 
         this.attributes = attributes;

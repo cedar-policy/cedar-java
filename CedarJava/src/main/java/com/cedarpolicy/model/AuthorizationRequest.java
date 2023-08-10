@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * An authorization query consists of a principal, action, and resource as well as a context mapping
- * strings to Cedar values. When evaluating the query against a slice, the authorization engine
+ * An authorization request consists of a principal, action, and resource as well as a context mapping
+ * strings to Cedar values. When evaluating the request against a slice, the authorization engine
  * determines if the policies allow for the given principal to perform the given action against the
  * given resource.
  *
@@ -35,24 +35,24 @@ import java.util.Optional;
  * class).
  */
 public class AuthorizationRequest {
-    /** EUID of the principal in the query. */
+    /** EUID of the principal in the request. */
     @JsonProperty("principal")
     public final Optional<String> principalEUID;
-    /** EUID of the action in the query. */
+    /** EUID of the action in the request. */
     @JsonProperty("action")
     public final String actionEUID;
-    /** EUID of the resource in the query. */
+    /** EUID of the resource in the request. */
     @JsonProperty("resource")
     public final Optional<String> resourceEUID;
 
-    /** Key/Value map representing the context of the query. */
+    /** Key/Value map representing the context of the request. */
     public final Optional<Map<String, Value>> context;
 
     /** JSON object representing the Schema. */
     public final Optional<Schema> schema;
 
     /**
-     * Create an authorization query from the EUIDs and Context.
+     * Create an authorization request from the EUIDs and Context.
      *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
@@ -78,7 +78,7 @@ public class AuthorizationRequest {
     }
 
     /**
-     * Create a query in the empty context.
+     * Create a request in the empty context.
      *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
@@ -97,6 +97,6 @@ public class AuthorizationRequest {
     /** Readable string representation. */
     @Override
     public String toString() {
-        return "Query(" + principalEUID + ",\t" + actionEUID + ",\t" + resourceEUID + ")";
+        return "Request(" + principalEUID + ",\t" + actionEUID + ",\t" + resourceEUID + ")";
     }
 }

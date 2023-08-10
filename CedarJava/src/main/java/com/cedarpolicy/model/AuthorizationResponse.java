@@ -25,21 +25,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * The result of processing an AuthorizationQuery. The answer to the query is contained in the
+ * The result of processing an AuthorizationRequest. The answer to the request is contained in the
  * decision field. Decision will be set to NoDecision in the event of a parse error in submitted
  * slice. The reasons field contains all the policies that caused Cedar to make a decision. The
  * field advice contains the Advice String for each policy in reasons. The field errors contains a
- * list of errors encountered during query processing. Some errors will still result in a decision
+ * list of errors encountered during request processing. Some errors will still result in a decision
  * being reached, please see the Cedar Spec for more information.
  */
 public final class AuthorizationResponse {
 
-    /** The three possible results of query evaluation. */
+    /** The three possible results of request evaluation. */
     public enum Decision {
-        /** Represents an authorization query that is allowed. */
+        /** Represents an authorization request that is allowed. */
         @JsonProperty("Allow")
         Allow,
-        /** Represents an authorization query that is denied. */
+        /** Represents an authorization request that is denied. */
         @JsonProperty("Deny")
         Deny,
 
@@ -48,7 +48,7 @@ public final class AuthorizationResponse {
         NoDecision
     }
 
-    /** The reasons and errors from a query evaluation. */
+    /** The reasons and errors from a request evaluation. */
     public static class Diagnostics {
         /**
          * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny,
@@ -63,7 +63,7 @@ public final class AuthorizationResponse {
          * Read the reasons and errors from a JSON object.
          *
          * @param reason Reasons (e.g., matching policies)
-         * @param errors Errors encountered checking the query
+         * @param errors Errors encountered checking the request
          */
         @SuppressFBWarnings
         public Diagnostics(
@@ -76,15 +76,15 @@ public final class AuthorizationResponse {
 
     /** Internal representation of the response from a query evaluation. */
     public static class InterfaceResponse {
-        
+
         private final Decision decision;
 
         private final Diagnostics diagnostics;
-
+    
         /**
          * Read the response from a JSON object.
          *
-         * @param decision authorization decision for the given query
+         * @param decision authorization decision for the given request
          * @param diagnostics a collection of policies that contributed to the result and any errors
          *     that might have happened during evaluation
          */
@@ -98,7 +98,7 @@ public final class AuthorizationResponse {
     }
 
     /**
-     * Construct an authorization result.
+     * Construct an authorization response.
      *
      * @param response response returned by the authorization engine
      */
@@ -108,15 +108,15 @@ public final class AuthorizationResponse {
         this.diagnostics = response.diagnostics;
     }
 
-    /** Result of query evaluation. */
+    /** Result of request evaluation. */
     private final Decision decision;
 
     private final Diagnostics diagnostics;
 
     /**
-     * Result of the query evaluation.
+     * Result of the request evaluation.
      *
-     * @return {@link Decision} that contains the result for a given query
+     * @return {@link Decision} that contains the result for a given request
      */
     public Decision getDecision() {
         return decision;
@@ -135,7 +135,7 @@ public final class AuthorizationResponse {
     /**
      * Set of errors and warnings returned by Cedar.
      *
-     * @return list with errors that happened for a given Query
+     * @return list with errors that happened for a given Request
      */
     public java.util.List<String> getErrors() {
         return diagnostics.errors;
@@ -144,7 +144,7 @@ public final class AuthorizationResponse {
     /**
      * Check authorization decision.
      *
-     * @return true if the query evaluated to Allow.
+     * @return true if the request evaluated to Allow.
      */
     public boolean isAllowed() {
         return this.decision == Decision.Allow;
@@ -153,7 +153,7 @@ public final class AuthorizationResponse {
     /**
      * Check if the evaluator was able to reach a decision.
      *
-     * @return true if the query evaluated to either Allow or Deny.
+     * @return true if the request evaluated to either Allow or Deny.
      */
     public boolean reachedDecision() {
         return this.decision != Decision.NoDecision;

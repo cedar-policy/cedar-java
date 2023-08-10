@@ -60,7 +60,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -68,7 +68,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -77,7 +77,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("owner", new EntityUID(principal));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -102,13 +102,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /** Tests a randomly generated attribute for resource. */
@@ -119,7 +119,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -127,7 +127,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -138,7 +138,7 @@ public class IntegrationTests {
         while (resourceAttributes.size() < count) {
             resourceAttributes.put(Utils.strings(), Utils.primStrings());
         }
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
         /*
@@ -179,16 +179,16 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
-    /** Tests a randomly generated with one bad attribute for resource Result: Deny. */
+    /** Tests a randomly generated with one bad attribute for resource Response: Deny. */
     @Property(tries = 50)
     public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 50) int count) {
         Set<Entity> entities = new HashSet<>();
@@ -196,7 +196,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -204,7 +204,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -216,7 +216,7 @@ public class IntegrationTests {
             resourceAttributes.put(Utils.strings(), Utils.primStrings());
         }
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
         /*
@@ -263,13 +263,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertFalse(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertFalse(response.isAllowed());
     }
 
     /** Tests a long expression that crashes the JNI if Rust doesn't spawn a new thread. */
@@ -280,7 +280,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -288,7 +288,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -297,7 +297,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
         String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };";
@@ -306,13 +306,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
      /** Tests a long expression that is denied for nearing the stack overflow limit. */
@@ -323,7 +323,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -331,7 +331,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -340,7 +340,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
         String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };";
@@ -349,13 +349,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertFalse(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertFalse(response.isAllowed());
     }
 
     /** Tests a single attribute: resource.owner. */
@@ -366,7 +366,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -374,7 +374,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -382,7 +382,7 @@ public class IntegrationTests {
         String resourceId = "photo.jpg";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("owner", new EntityUID(principal));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -392,7 +392,7 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         Optional.of(principal),
                         action,
@@ -400,9 +400,9 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.empty());
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /** Test IpAddress extension. */
@@ -414,7 +414,7 @@ public class IntegrationTests {
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("ip", new IpAddress("192.168.0.24"));
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -422,7 +422,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -430,7 +430,7 @@ public class IntegrationTests {
         String resourceId = "photo.jpg";
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -455,13 +455,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /** Test Decimal extension. */
@@ -473,7 +473,7 @@ public class IntegrationTests {
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("val", new Decimal("1.0000"));
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -481,7 +481,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -489,7 +489,7 @@ public class IntegrationTests {
         String resourceId = "photo.jpg";
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -514,13 +514,13 @@ public class IntegrationTests {
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /** Use template slots to tests a single attribute: resource.owner. */
@@ -531,7 +531,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -539,7 +539,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -548,7 +548,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("owner", new EntityUID(principal));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -590,13 +590,13 @@ public class IntegrationTests {
 
         Slice slice = new BasicSlice(policies, entities, templates, templateInstantiations);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 
     /** Test using schema parsing. */
@@ -607,7 +607,7 @@ public class IntegrationTests {
         String principalId = "alice";
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -615,7 +615,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -624,7 +624,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("owner", new EntityUID(principal));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -653,7 +653,7 @@ public class IntegrationTests {
         // `isAuthorized()` to throw a `BadRequestException`.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         Optional.of(principal),
                         action,
@@ -661,7 +661,7 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")));
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        Assertions.assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(query, slice));
+        Assertions.assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(request, slice));
     }
 
     /** Test using schema parsing. */
@@ -673,7 +673,7 @@ public class IntegrationTests {
         String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("foo", new PrimString("bar"));
-        Set<String> principalParents = new HashSet<>();
+        Set<JsonEUID> principalParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(e);
 
@@ -681,7 +681,7 @@ public class IntegrationTests {
         String actionId = "view";
         String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<String> actionParents = new HashSet<>();
+        Set<JsonEUID> actionParents = new HashSet<>();
         Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(act);
 
@@ -690,7 +690,7 @@ public class IntegrationTests {
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("owner", new EntityUID(principal));
-        Set<String> resourceParents = new HashSet<>();
+        Set<JsonEUID> resourceParents = new HashSet<>();
         e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(e);
 
@@ -718,7 +718,7 @@ public class IntegrationTests {
         // Schema says resource.owner is a User, so we should not get a parse failure.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
-        AuthorizationRequest query =
+        AuthorizationRequest request =
                 new AuthorizationRequest(
                         Optional.of(principal),
                         action,
@@ -726,8 +726,8 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")));
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse result =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(query, slice));
-        Assertions.assertTrue(result.isAllowed());
+        AuthorizationResponse response =
+                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        Assertions.assertTrue(response.isAllowed());
     }
 }

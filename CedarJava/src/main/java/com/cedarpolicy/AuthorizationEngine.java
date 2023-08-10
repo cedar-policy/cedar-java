@@ -18,15 +18,15 @@ package com.cedarpolicy;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.ValidationQuery;
-import com.cedarpolicy.model.ValidationResult;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.Slice;
 
 /**
  * Implementations of the AuthorizationEngine interface invoke Cedar to respond to an authorization
- * request. Such a request includes the query information and the relevant slice of the policy for
+ * or validation request. For authorization, the input includes the relevant slice of the policy for
  * Cedar to consider. Clients can provide a slice in the form of Java objects constructed by the
  * API, which will be converted to JSON internally. It is the client’s responsibility to ensure that
  * all relevant policy information is within the slice.
@@ -37,30 +37,30 @@ import com.cedarpolicy.model.slice.Slice;
  */
 public interface AuthorizationEngine {
     /**
-     * Asks whether the given AuthorizationQuery <code>q</code> is approved by the policies and
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the policies and
      * entity hierarchy given in the <code>slice</code>.
      *
-     * @param q The query to evaluate
+     * @param request The request to evaluate
      * @param slice The slice to evaluate against
-     * @return The result of the query evaluation
+     * @return The result of the request evaluation
      * @throws BadRequestException if any errors were found in the syntax of the policies.
-     * @throws AuthException On failure to make the authorization query. Note that errors inside the
+     * @throws AuthException On failure to make the authorization request. Note that errors inside the
      *     authorization engine are included in the <code>errors</code> field on the
      *     AuthorizationResponse.
      */
-    AuthorizationResponse isAuthorized(AuthorizationRequest q, Slice slice) throws AuthException;
+    AuthorizationResponse isAuthorized(AuthorizationRequest request, Slice slice) throws AuthException;
 
     /**
-     * Asks whether the policies in the given {@link ValidationQuery} <code>q</code> are correct
+     * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct
      * when validated against the schema it describes.
      *
-     * @param q The query containing the policies to validate and the schema to validate them
+     * @param request The request containing the policies to validate and the schema to validate them
      *     against.
-     * @return A {@link ValidationResult} describing any validation errors found in the policies.
+     * @return A {@link ValidationResponse} describing any validation errors found in the policies.
      * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException if any internal errors occurred while validating the policies.
      */
-    ValidationResult validate(ValidationQuery q) throws AuthException;
+    ValidationResponse validate(ValidationRequest request) throws AuthException;
 
     /**
      * Get the Cedar language major version (e.g., "1.2") used by this CedarJava library.

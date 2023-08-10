@@ -22,18 +22,18 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Objects;
 
-/** Result of a validation query. */
-public final class ValidationResult {
+/** Result of a validation request. */
+public final class ValidationResponse {
     private final List<Note> notes;
 
     /**
-     * Construct a validation query result.
+     * Construct a validation response.
      *
      * @param notes Notes.
      */
     @JsonCreator
     @SuppressFBWarnings
-    public ValidationResult(@JsonProperty("notes") List<Note> notes) {
+    public ValidationResponse(@JsonProperty("notes") List<Note> notes) {
         if (notes == null) {
             throw new NullPointerException("notes");
         }
@@ -42,7 +42,7 @@ public final class ValidationResult {
     }
 
     /**
-     * Get notes from a validation query.
+     * Get notes from a validation response.
      *
      * @return The notes.
      */
@@ -54,10 +54,10 @@ public final class ValidationResult {
     /** Test equals. */
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof ValidationResult)) {
+        if (!(o instanceof ValidationResponse)) {
             return false;
         } else {
-            return notes.equals(((ValidationResult) o).notes);
+            return notes.equals(((ValidationResponse) o).notes);
         }
     }
 
@@ -69,7 +69,7 @@ public final class ValidationResult {
 
     /** Readable string representation. */
     public String toString() {
-        return "ValidationResult(notes=" + this.getNotes() + ")";
+        return "ValidationResponse(notes=" + this.getNotes() + ")";
     }
 
     /** Note for a specific policy. */

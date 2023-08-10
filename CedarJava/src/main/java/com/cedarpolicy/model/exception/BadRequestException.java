@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * An exception which is thrown when Cedar encounters an error in a supplied query which caused it
+ * An exception which is thrown when Cedar encounters an error in a supplied request which caused it
  * to stop processing; for example, a syntax error in a policy string.
  */
 public class BadRequestException extends AuthException {

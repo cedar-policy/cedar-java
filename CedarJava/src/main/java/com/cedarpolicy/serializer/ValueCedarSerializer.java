@@ -30,7 +30,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 /** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
