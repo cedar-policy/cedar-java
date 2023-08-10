@@ -55,7 +55,7 @@ public class JSONTests {
 
     /** Test. */
     @Test
-    public void testAuthResult() {
+    public void testAuthResponse() {
         String src =
                 "{ \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } }";
         try {
@@ -68,7 +68,7 @@ public class JSONTests {
 
     /** Test. */
     @Test
-    public void testQuery() {
+    public void testRequest() {
         AuthorizationRequest q = new AuthorizationRequest("gandalf", "opens", "moria", new HashMap<String, Value>());
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode c = JsonNodeFactory.instance.objectNode();

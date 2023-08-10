@@ -15,7 +15,7 @@
  */
 
 /**
- * This module holds the interface passed to / recieved from Cedar
+ * This module holds the interface passed to / received from Cedar
  *
  * <p>We query Cedar for authorization or validation.
  *
