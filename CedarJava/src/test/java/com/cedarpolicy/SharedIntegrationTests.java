@@ -18,9 +18,16 @@ package com.cedarpolicy;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
@@ -176,28 +183,27 @@ public class SharedIntegrationTests {
      * files in this array will be executed as integration tests.
      */
     private static final String[] JSON_TEST_FILES = {
-//        "tests/example_use_cases_doc/1a.json",
-//        "tests/example_use_cases_doc/2a.json",
-//        "tests/example_use_cases_doc/2b.json",
-//        "tests/example_use_cases_doc/2c.json",
-//        "tests/example_use_cases_doc/3a.json",
-//        "tests/example_use_cases_doc/3b.json",
-//        "tests/example_use_cases_doc/3c.json",
-//        // "tests/example_use_cases_doc/4a.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4c.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4d.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4e.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/4f.json", // currently disabled due to action attributes
-//        // "tests/example_use_cases_doc/5b.json", // currently disabled due to action attributes
-//        // Need to change extension handling to match natural JSON CRs
-//        "tests/ip/1.json",
-//        "tests/ip/2.json",
-//        "tests/ip/3.json",
-//        "tests/multi/1.json",
-//        "tests/multi/2.json",
-//        // "tests/multi/3.json", // currently disabled because it uses action attributes
-//        // "tests/multi/4.json", // currently disabled because it uses action attributes
-//        // "tests/multi/5.json", // currently disabled because it uses action attributes
+       "tests/example_use_cases_doc/1a.json",
+       "tests/example_use_cases_doc/2a.json",
+       "tests/example_use_cases_doc/2b.json",
+       "tests/example_use_cases_doc/2c.json",
+       "tests/example_use_cases_doc/3a.json",
+       "tests/example_use_cases_doc/3b.json",
+       "tests/example_use_cases_doc/3c.json",
+       "tests/example_use_cases_doc/4a.json",
+       // "tests/example_use_cases_doc/4c.json", // currently disabled because it uses action attributes
+       "tests/example_use_cases_doc/4d.json",
+       "tests/example_use_cases_doc/4e.json",
+       "tests/example_use_cases_doc/4f.json",
+       "tests/example_use_cases_doc/5b.json",
+       "tests/ip/1.json",
+       "tests/ip/2.json",
+       "tests/ip/3.json",
+       "tests/multi/1.json",
+       "tests/multi/2.json",
+       "tests/multi/3.json",
+       "tests/multi/4.json",
+       "tests/multi/5.json",
     };
 
     /**
@@ -222,9 +228,6 @@ public class SharedIntegrationTests {
            stream
                    // ignore non-JSON files
                    .filter(path -> path.getFileName().toString().endsWith(".json"))
-                   //TODO: fix this
-                   //Parsing of one policy in our corpus tests is broken due to a `;` in a string. Disable for now:
-                   .filter(p -> !p.getFileName().toString().endsWith("54d561c25c3da949ee5e512f2ccd85af57ba9502.json"))
                    // ignore files that start with policies_, entities_, or schema_
                    .filter(
                            path ->
@@ -262,7 +265,12 @@ public class SharedIntegrationTests {
 
         return DynamicContainer.dynamicContainer(
                 jsonFile,
-                test.queries.stream()
+                Stream.concat(
+                    Stream.of(DynamicTest.dynamicTest(
+                                jsonFile + ": validate",
+                                () ->
+                                    executeJsonValidationTest(policies, schema, test.shouldValidate))),
+                    test.queries.stream()
                         .map(
                                 request ->
                                         DynamicTest.dynamicTest(
@@ -270,7 +278,7 @@ public class SharedIntegrationTests {
                                                 () ->
                                                         executeJsonRequestTest(
                                                                 entities, policies, request,
-                                                                schema))));
+                                                                schema)))));
     }
 
     /**
@@ -280,23 +288,48 @@ public class SharedIntegrationTests {
      * does not explicit separate policies in a file other than by semicolons.
      */
     private Set<Policy> loadPolicies(String policiesFile) throws IOException {
-        // Get a list of the policy sources for the individual policies in the file by splitting the
-        // full policy source
-        // on semicolons. This will break if a semicolon shows up in a string or comment.
-        String[] policiesStrings =
-                String.join("\n", Files.readAllLines(resolveIntegrationTestPath(policiesFile)))
-                        .split(";");
+        String policiesSrc = String.join("\n", Files.readAllLines(resolveIntegrationTestPath(policiesFile)));
+
+        // Get a list of the policy sources for the individual policies in the
+        // file by splitting the full policy source on semicolons. This will 
+        // break if a semicolon shows up in a string, eid, or comment.
+        String[] policyStrings = policiesSrc.split(";");
+        // Some of the corpus tests contain semicolons in strings and/or eids.
+        // A simple way to check if the code above did the wrong thing in this case
+        // is to check for unmatched, unescaped quotes in the resulting policies.
+        for (String policyString : policyStrings) {
+            if (hasUnmatchedQuote(policyString)) {
+                policyStrings = null;
+            }
+        }
+        
         Set<Policy> policies = new HashSet<>();
-        for (int i = 0; i < policiesStrings.length; i++) {
-            // The policy source doesn't include an explicit policy id, but the expected output
-            // implicitly assumes policies are numbered by their position in file.
-            String policyId = "policy" + i;
-            String policySrc = policiesStrings[i];
-            if (!policySrc.trim().isEmpty()) {
-                policies.add(new Policy(policySrc + ";", policyId));
+        if (policyStrings == null) {
+            // This case will only be reached for corpus tests.
+            // The corpus tests all consist of a single policy, so it is fine to use
+            // the full policy source as a single policy.
+            policies.add(new Policy(policiesSrc, "policy0"));
+        } else {
+            for (int i = 0; i < policyStrings.length; i++) {
+                // The policy source doesn't include an explicit policy id, but the expected output
+                // implicitly assumes policies are numbered by their position in file.
+                String policyId = "policy" + i;
+                String policySrc = policyStrings[i];
+                if (!policySrc.trim().isEmpty()) {
+                    policies.add(new Policy(policySrc + ";", policyId));
+                }
             }
         }
         return policies;
+    }
+
+    /** Check for unmatched quotes. */
+    private Boolean hasUnmatchedQuote(String s) {
+        // Ignore escaped quotes, i.e. \"
+        // Note that backslashes in the regular expression have to be double escaped.
+        String new_s = s.replaceAll("\\\\\"", "");
+        long count = new_s.chars().filter(ch -> ch == '\"').count();
+        return (count % 2 == 1);
     }
 
     /** Load the schema file. */
@@ -338,9 +371,27 @@ public class SharedIntegrationTests {
     }
 
     /**
+     * Check that the outcome of validation matches the expected result.
+     */
+    private void executeJsonValidationTest(Set<Policy> policies, Schema schema, Boolean shouldValidate) throws AuthException {
+        AuthorizationEngine auth = new BasicAuthorizationEngine();
+        ValidationRequest validationQuery = new ValidationRequest(schema, policies);
+        try {
+            ValidationResponse result = auth.validate(validationQuery);
+            if (shouldValidate) {
+                assertTrue(result.getNotes().isEmpty());
+            }
+        } catch (BadRequestException e) {
+            // A `BadRequestException` is the results of a parsing error.
+            // Some of our corpus tests fail to parse, so this is safe to ignore.
+            assertFalse(shouldValidate);
+        }
+    }
+
+    /**
      * This method implements the main test logic and assertions for each request. Given a set of
      * entities, set of policies, and a JsonRequest object, it executes the described request and checks
-     * that the result is equal to the excepted result.
+     * that the result is equal to the expected result.
      */
     private void executeJsonRequestTest(
             Set<Entity> entities, Set<Policy> policies, JsonRequest request, Schema schema) {
@@ -350,20 +401,20 @@ public class SharedIntegrationTests {
                         request.principal == null ? Optional.empty() : Optional.of(request.principal),
                         request.action,
                         request.resource == null ? Optional.empty() : Optional.of(request.resource),
-                         Optional.of(request.context),
+                        Optional.of(request.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
         AuthorizationResponse response = assertDoesNotThrow(() -> auth.isAuthorized(authRequest, slice));
 
         assertEquals(request.decision, response.getDecision());
-        //Errors can disagree if e.g.,
-        // <[error occurred while evaluating policy `policy0`: wrong number of arguments provided to extension function isInRange: expected 2, got 0]>
-        // but was: <[couldn't parse policy with id policy0, poorly formed: invalid syntax, expected function, found isInRange]>
-        // This skips ~48 tests. Of course, the authorization decision will be the same, even though the error may be different
-        //TODO: fix this
-        if(response.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("couldn't parse policy with id"))) {
-            assertEquals(request.errors, response.getErrors());
+        if(response.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("poorly formed"))) {
+            // convert to a HashSet to allow reordering of error messages
+            assertEquals(new HashSet<>(request.errors), new HashSet<>(response.getErrors()));
             assertEquals(new HashSet<>(request.reasons), response.getReasons());
+        } else {
+            // In the case of parse errors ("poorly formed..."), errors may disagree but the
+            // decision should be `Deny`.
+            assertEquals(request.decision, Decision.Deny);
         }
     }
 }
