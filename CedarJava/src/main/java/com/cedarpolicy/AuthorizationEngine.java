@@ -26,7 +26,7 @@ import com.cedarpolicy.model.slice.Slice;
 
 /**
  * Implementations of the AuthorizationEngine interface invoke Cedar to respond to an authorization
- * request. Such a request includes the query information and the relevant slice of the policy for
+ * or validation request. For authorization, the input includes the relevant slice of the policy for
  * Cedar to consider. Clients can provide a slice in the form of Java objects constructed by the
  * API, which will be converted to JSON internally. It is the client’s responsibility to ensure that
  * all relevant policy information is within the slice.
@@ -37,30 +37,30 @@ import com.cedarpolicy.model.slice.Slice;
  */
 public interface AuthorizationEngine {
     /**
-     * Asks whether the given AuthorizationQuery <code>q</code> is approved by the policies and
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the policies and
      * entity hierarchy given in the <code>slice</code>.
      *
-     * @param q The query to evaluate
+     * @param request The request to evaluate
      * @param slice The slice to evaluate against
-     * @return The result of the query evaluation
-     * @throws AuthException On failure to make the authorization query. Note that errors inside the
+     * @return The result of the request evaluation
+     * @throws AuthException On failure to make the authorization request. Note that errors inside the
      *     authorization engine are included in the <code>errors</code> field on the
-     *     AuthorizationResult. Note: This error interface will likely change in the future. We will
+     *     AuthorizationResponse. Note: This error interface will likely change in the future. We will
      *     likely unify the error handling story.
      */
-    AuthorizationResponse isAuthorized(AuthorizationRequest q, Slice slice) throws AuthException;
+    AuthorizationResponse isAuthorized(AuthorizationRequest request, Slice slice) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct
      * when validated against the schema it describes.
      *
-     * @param q The query containing the policies to validate and the schema to validate them
+     * @param request The request containing the policies to validate and the schema to validate them
      *     against.
      * @return A {@link ValidationResponse} describing any validation errors found in the policies.
      * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException if any internal errors occurred while validating the policies.
      */
-    ValidationResponse validate(ValidationRequest q) throws AuthException;
+    ValidationResponse validate(ValidationRequest request) throws AuthException;
 
     /**
      * Get the Cedar language major version (e.g., "1.2") used by this CedarJava library.

@@ -111,27 +111,27 @@ public class SharedIntegrationTests {
         @JsonProperty("should_validate")
         public boolean shouldValidate;
 
-        /** List of queries with their expected result. */
-        public List<JsonQuery> queries;
+        /** List of requests with their expected result. */
+        public List<JsonRequest> requests;
     }
 
-    /** Directly corresponds to the structure of a query in the JSON formatted tests files. */
+    /** Directly corresponds to the structure of a request in the JSON formatted tests files. */
     @SuppressWarnings("visibilitymodifier")
     @JsonDeserialize
-    private static class JsonQuery {
-        /** Textual description of the query. */
+    private static class JsonRequest {
+        /** Textual description of the request. */
         public String desc;
 
-        /** Principal entity uid used for the query. */
+        /** Principal entity uid used for the request. */
         public String principal;
 
-        /** Action entity uid used for the query. */
+        /** Action entity uid used for the request. */
         public String action;
 
-        /** Resource entity uid used for the query. */
+        /** Resource entity uid used for the request. */
         public String resource;
 
-        /** Context map used for the query. */
+        /** Context map used for the request. */
         public Map<String, Value> context;
 
         /** The expected decision that should be returned by the authorization engine. */
@@ -247,7 +247,7 @@ public class SharedIntegrationTests {
     }
 
     /**
-     * Generates a test container for all the test queries in a json file. Each query is its own
+     * Generates a test container for all the test requests in a json file. Each request is its own
      * test, and all the test in the json file are grouped into the returned container.
      */
     private DynamicContainer loadJsonTests(String jsonFile) throws IOException {
@@ -262,14 +262,14 @@ public class SharedIntegrationTests {
 
         return DynamicContainer.dynamicContainer(
                 jsonFile,
-                test.queries.stream()
+                test.requests.stream()
                         .map(
-                                query ->
+                                request ->
                                         DynamicTest.dynamicTest(
-                                                jsonFile + ": " + query.desc,
+                                                jsonFile + ": " + request.desc,
                                                 () ->
-                                                        executeJsonQueryTest(
-                                                                entities, policies, query,
+                                                        executeJsonRequestTest(
+                                                                entities, policies, request,
                                                                 schema))));
     }
 
@@ -341,32 +341,32 @@ public class SharedIntegrationTests {
     }
 
     /**
-     * This method implements the main test logic and assertions for each query. Given a set of
-     * entities, set of policies, and a JsonQuery object, it executes the described query and checks
+     * This method implements the main test logic and assertions for each request. Given a set of
+     * entities, set of policies, and a JsonRequest object, it executes the described request and checks
      * that the result is equal to the excepted result.
      */
-    private void executeJsonQueryTest(
-            Set<Entity> entities, Set<Policy> policies, JsonQuery query, Schema schema) {
+    private void executeJsonRequestTest(
+            Set<Entity> entities, Set<Policy> policies, JsonRequest request, Schema schema) {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
-        AuthorizationRequest authQuery =
+        AuthorizationRequest authRequest =
                 new AuthorizationRequest(
-                        query.principal == null ? Optional.empty() : Optional.of(query.principal),
-                        query.action,
-                        query.resource == null ? Optional.empty() : Optional.of(query.resource),
-                         Optional.of(query.context),
+                        request.principal == null ? Optional.empty() : Optional.of(request.principal),
+                        request.action,
+                        request.resource == null ? Optional.empty() : Optional.of(request.resource),
+                         Optional.of(request.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
-        AuthorizationResponse result = assertDoesNotThrow(() -> auth.isAuthorized(authQuery, slice));
+        AuthorizationResponse response = assertDoesNotThrow(() -> auth.isAuthorized(authRequest, slice));
 
-        assertEquals(query.decision, result.getDecision());
+        assertEquals(request.decision, response.getDecision());
         //Errors can disagree if e.g.,
         // <[error occurred while evaluating policy `policy0`: wrong number of arguments provided to extension function isInRange: expected 2, got 0]>
         // but was: <[couldn't parse policy with id policy0, poorly formed: invalid syntax, expected function, found isInRange]>
         // This skips ~48 tests. Of course, the authorization decision will be the same, even though the error may be different
         //TODO: fix this
-        if(result.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("couldn't parse policy with id"))) {
-            assertEquals(query.errors, result.getErrors());
-            assertEquals(new HashSet<>(query.reasons), result.getReasons());
+        if(response.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("couldn't parse policy with id"))) {
+            assertEquals(request.errors, response.getErrors());
+            assertEquals(new HashSet<>(request.reasons), response.getReasons());
         }
     }
 }

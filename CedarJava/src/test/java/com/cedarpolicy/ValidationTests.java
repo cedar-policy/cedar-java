@@ -47,8 +47,8 @@ public class ValidationTests {
     @Test
     public void givenEmptySchemaAndNoPolicyReturnsValid() {
         givenSchema(EMPTY_SCHEMA);
-        ValidationResponse result = whenValidated();
-        thenIsValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
     }
 
     /** Test. */
@@ -62,8 +62,8 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == Photo::\"VacationPhoto94.jpg\""
                         + ");");
-        ValidationResponse result = whenValidated();
-        thenIsValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
     }
 
     /** Test. */
@@ -77,8 +77,8 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == User::\"bob\""
                         + ");");
-        ValidationResponse result = whenValidated();
-        thenIsNotValid(result);
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
     }
 
     /** Test. */
@@ -99,34 +99,34 @@ public class ValidationTests {
     }
 
     private ValidationResponse whenValidated() {
-        ValidationRequest query = new ValidationRequest(schema, policies);
-        return assertDoesNotThrow(() -> engine.validate(query));
+        ValidationRequest request = new ValidationRequest(schema, policies);
+        return assertDoesNotThrow(() -> engine.validate(request));
     }
 
-    private void thenIsValid(ValidationResponse result) {
+    private void thenIsValid(ValidationResponse response) {
         assertTrue(
-                result.getNotes().isEmpty(),
+                response.getNotes().isEmpty(),
                 () -> {
                     String notes =
-                            result.getNotes().stream()
+                            response.getNotes().stream()
                                     .map(
                                             note ->
                                                     String.format(
                                                             "in policy %s: %s",
                                                             note.getPolicyId(), note.getNote()))
                                     .collect(Collectors.joining("\n"));
-                    return "Expected valid result but got an invalid one with notes:\n" + notes;
+                    return "Expected valid response but got an invalid one with notes:\n" + notes;
                 });
     }
 
-    private void thenIsNotValid(ValidationResponse result) {
-        assertFalse(result.getNotes().isEmpty());
+    private void thenIsNotValid(ValidationResponse response) {
+        assertFalse(response.getNotes().isEmpty());
     }
 
     private AuthException whenValidatingThrows() {
-        ValidationRequest query = new ValidationRequest(schema, policies);
+        ValidationRequest request = new ValidationRequest(schema, policies);
         try {
-            engine.validate(query);
+            engine.validate(request);
         } catch (AuthException e) {
             return e;
         }

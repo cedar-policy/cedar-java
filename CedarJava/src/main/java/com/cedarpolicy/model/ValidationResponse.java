@@ -22,12 +22,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Objects;
 
-/** Result of a validation query. */
+/** Result of a validation request. */
 public final class ValidationResponse {
     private final List<Note> notes;
 
     /**
-     * Construct a validation query result.
+     * Construct a validation response.
      *
      * @param notes Notes.
      */
@@ -42,7 +42,7 @@ public final class ValidationResponse {
     }
 
     /**
-     * Get notes from a validation query.
+     * Get notes from a validation response.
      *
      * @return The notes.
      */

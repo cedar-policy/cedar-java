@@ -20,7 +20,6 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
@@ -50,14 +49,14 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
             throws AuthException {
-        LOG.trace("Making an isAuthorized query:\n{}\nwith slice\n{}", q, slice);
+        LOG.trace("Making an isAuthorized request:\n{}\nwith slice\n{}", q, slice);
         final AuthorizationRequest request = new AuthorizationRequest(q, slice);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
 
     @Override
     public ValidationResponse validate(ValidationRequest q) throws AuthException {
-        LOG.trace("Making a validate query:\n{}", q);
+        LOG.trace("Making a validate request:\n{}", q);
         return call("ValidateOperation", ValidationResponse.class, q);
     }
 
@@ -108,13 +107,13 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     private static final class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
         @JsonProperty public final Slice slice;
 
-        AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest query, Slice slice) {
+        AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
             super(
-                    query.principalEUID,
-                    query.actionEUID,
-                    query.resourceEUID,
-                    query.context,
-                    query.schema);
+                    request.principalEUID,
+                    request.actionEUID,
+                    request.resourceEUID,
+                    request.context,
+                    request.schema);
             this.slice = slice;
         }
     }
@@ -138,8 +137,8 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
      * Call out to the Rust implementation.
      *
      * @param call Call type ("AuthorizationOperation" or "ValidateOperation").
-     * @param input Query input in JSON format as a String
-     * @return The query result (permit / deny for authorization, valid / invalid for validation)
+     * @param input Request input in JSON format as a String
+     * @return The response (permit / deny for authorization, valid / invalid for validation)
      */
     private static native String callCedarJNI(String call, String input);
 

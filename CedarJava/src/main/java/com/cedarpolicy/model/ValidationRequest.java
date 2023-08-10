@@ -27,9 +27,9 @@ public final class ValidationRequest {
     private final Map<String, String> policySet;
 
     /**
-     * Construct a validation query.
+     * Construct a validation request.
      *
-     * @param schema Schema for the query
+     * @param schema Schema for the request
      * @param policySet Map of Policy ID to policy.
      */
     @SuppressFBWarnings
