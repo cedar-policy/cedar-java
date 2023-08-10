@@ -29,14 +29,8 @@ public class JsonEUID {
     @JsonProperty("id")
     public final String id;
 
-
-    /** Readable string representation. */
-    public String toString() {
-        return type+"::"+id;
-    }
-
     /** String representation in valid Cedar syntax. */
-    public String toCedar() {
+    public String toString() {
         return type+"::\""+id+"\"";
     }
 

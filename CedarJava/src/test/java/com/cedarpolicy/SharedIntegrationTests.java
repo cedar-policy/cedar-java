@@ -348,13 +348,10 @@ public class SharedIntegrationTests {
             value = "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
             justification = "Initialized by Jackson.")
     private Entity loadEntity(JsonEntity je) {
-        HashSet<String> parents = new HashSet<String>();
-        je.parents.forEach(p -> parents.add(p.toString()));
-
         HashSet<JsonEUID> parentEUIDs = new HashSet<>();
         parentEUIDs.addAll(je.parents);
 
-        return new Entity(je.uid, je.attrs, parents, parentEUIDs);
+        return new Entity(je.uid, je.attrs, parentEUIDs);
     }
 
     /**
