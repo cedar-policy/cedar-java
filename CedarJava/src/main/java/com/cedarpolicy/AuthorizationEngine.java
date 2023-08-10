@@ -18,8 +18,8 @@ package com.cedarpolicy;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.ValidationQuery;
-import com.cedarpolicy.model.ValidationResult;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.Slice;
@@ -51,16 +51,16 @@ public interface AuthorizationEngine {
     AuthorizationResponse isAuthorized(AuthorizationRequest q, Slice slice) throws AuthException;
 
     /**
-     * Asks whether the policies in the given {@link ValidationQuery} <code>q</code> are correct
+     * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct
      * when validated against the schema it describes.
      *
      * @param q The query containing the policies to validate and the schema to validate them
      *     against.
-     * @return A {@link ValidationResult} describing any validation errors found in the policies.
+     * @return A {@link ValidationResponse} describing any validation errors found in the policies.
      * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException if any internal errors occurred while validating the policies.
      */
-    ValidationResult validate(ValidationQuery q) throws AuthException;
+    ValidationResponse validate(ValidationRequest q) throws AuthException;
 
     /**
      * Get the Cedar language major version (e.g., "1.2") used by this CedarJava library.

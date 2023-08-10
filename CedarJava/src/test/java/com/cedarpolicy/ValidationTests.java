@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.cedarpolicy.model.ValidationQuery;
-import com.cedarpolicy.model.ValidationResult;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
@@ -47,7 +47,7 @@ public class ValidationTests {
     @Test
     public void givenEmptySchemaAndNoPolicyReturnsValid() {
         givenSchema(EMPTY_SCHEMA);
-        ValidationResult result = whenValidated();
+        ValidationResponse result = whenValidated();
         thenIsValid(result);
     }
 
@@ -62,7 +62,7 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == Photo::\"VacationPhoto94.jpg\""
                         + ");");
-        ValidationResult result = whenValidated();
+        ValidationResponse result = whenValidated();
         thenIsValid(result);
     }
 
@@ -77,7 +77,7 @@ public class ValidationTests {
                         + "    action == Action::\"viewPhoto\","
                         + "    resource == User::\"bob\""
                         + ");");
-        ValidationResult result = whenValidated();
+        ValidationResponse result = whenValidated();
         thenIsNotValid(result);
     }
 
@@ -98,12 +98,12 @@ public class ValidationTests {
         this.policies.put(id, policy);
     }
 
-    private ValidationResult whenValidated() {
-        ValidationQuery query = new ValidationQuery(schema, policies);
+    private ValidationResponse whenValidated() {
+        ValidationRequest query = new ValidationRequest(schema, policies);
         return assertDoesNotThrow(() -> engine.validate(query));
     }
 
-    private void thenIsValid(ValidationResult result) {
+    private void thenIsValid(ValidationResponse result) {
         assertTrue(
                 result.getNotes().isEmpty(),
                 () -> {
@@ -119,12 +119,12 @@ public class ValidationTests {
                 });
     }
 
-    private void thenIsNotValid(ValidationResult result) {
+    private void thenIsNotValid(ValidationResponse result) {
         assertFalse(result.getNotes().isEmpty());
     }
 
     private AuthException whenValidatingThrows() {
-        ValidationQuery query = new ValidationQuery(schema, policies);
+        ValidationRequest query = new ValidationRequest(schema, policies);
         try {
             engine.validate(query);
         } catch (AuthException e) {

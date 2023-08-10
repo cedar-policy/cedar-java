@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Result of a validation query. */
-public final class ValidationResult {
+public final class ValidationResponse {
     private final List<Note> notes;
 
     /**
@@ -33,7 +33,7 @@ public final class ValidationResult {
      */
     @JsonCreator
     @SuppressFBWarnings
-    public ValidationResult(@JsonProperty("notes") List<Note> notes) {
+    public ValidationResponse(@JsonProperty("notes") List<Note> notes) {
         if (notes == null) {
             throw new NullPointerException("notes");
         }
@@ -54,10 +54,10 @@ public final class ValidationResult {
     /** Test equals. */
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof ValidationResult)) {
+        if (!(o instanceof ValidationResponse)) {
             return false;
         } else {
-            return notes.equals(((ValidationResult) o).notes);
+            return notes.equals(((ValidationResponse) o).notes);
         }
     }
 
@@ -69,7 +69,7 @@ public final class ValidationResult {
 
     /** Readable string representation. */
     public String toString() {
-        return "ValidationResult(notes=" + this.getNotes() + ")";
+        return "ValidationResponse(notes=" + this.getNotes() + ")";
     }
 
     /** Note for a specific policy. */

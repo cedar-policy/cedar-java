@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.ValidationQuery;
-import com.cedarpolicy.model.ValidationResult;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
@@ -56,9 +56,9 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     @Override
-    public ValidationResult validate(ValidationQuery q) throws AuthException {
+    public ValidationResponse validate(ValidationRequest q) throws AuthException {
         LOG.trace("Making a validate query:\n{}", q);
-        return call("ValidateOperation", ValidationResult.class, q);
+        return call("ValidateOperation", ValidationResponse.class, q);
     }
 
     private static <REQ, RESP> RESP call(String operation, Class<RESP> responseClass, REQ request)
