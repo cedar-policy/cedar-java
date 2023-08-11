@@ -194,7 +194,7 @@ public class ParserTest {
          */
         List<Entity> actions = ActionGen.getEntities();
         entities.addAll(actions);
-        String action = actions.get(0).getEuid().toString();
+        String action = actions.get(0).getEUID().toString();
         /*
          *  Generate a random Resource
          */
@@ -233,7 +233,7 @@ public class ParserTest {
 
         Assertions.assertTrue(response.isAllowed());
         String actionList =
-                "[" + actions.stream().map(x -> x.getEuid().toString()).collect(Collectors.joining(",")) + "]";
+                "[" + actions.stream().map(x -> x.getEUID().toString()).collect(Collectors.joining(",")) + "]";
         String p2 =
                 "permit(\n"
                         + "principal=="
@@ -253,7 +253,7 @@ public class ParserTest {
         Slice slice2 = new BasicSlice(policies, entities);
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
-        action = actions.get(index).getEuid().toString();
+        action = actions.get(index).getEUID().toString();
         AuthorizationRequest request2 =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext2);

@@ -40,7 +40,7 @@ public class Entity {
     /**
      * Create an entity from JsonEUID and unwrapped JSON values.
      *
-     * @param uid Euid of the Entity.
+     * @param uid EUID of the Entity.
      * @param attributes Key/Value map of attributes.
      * @param parentsEUID Set of parent entities' EUIDs.
      */
@@ -73,7 +73,7 @@ public class Entity {
      * Get entity uid in JsonEUID format
      * @return Entity UID in JsonEUID format
      */
-    public JsonEUID getEuid() {
+    public JsonEUID getEUID() {
         return euid;
     }
 
