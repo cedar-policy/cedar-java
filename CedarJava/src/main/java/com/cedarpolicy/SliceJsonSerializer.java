@@ -58,7 +58,7 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
         public final Set<JsonEUID> parents;
 
         JsonEntity(Entity e) {
-            this.uid = e.getEuid();
+            this.uid = e.getEUID();
             this.attrs = e.attrs;
             this.parents = e.getParents();
         }

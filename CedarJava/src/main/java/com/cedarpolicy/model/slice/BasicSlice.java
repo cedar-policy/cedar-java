@@ -65,9 +65,9 @@ public class BasicSlice implements Slice {
         HashMap<String, List<String>> parents = new HashMap<>();
 
         for (Entity entity : entities) {
-            attributes.put(entity.getEuid().toString(), entity.attrs);
+            attributes.put(entity.getEUID().toString(), entity.attrs);
             List<String> parentList = new ArrayList<String>(entity.getParents().stream().map(euid -> euid.toString()).collect(Collectors.toList()));
-            parents.put(entity.getEuid().toString(), parentList);
+            parents.put(entity.getEUID().toString(), parentList);
         }
 
         this.attributes = attributes;

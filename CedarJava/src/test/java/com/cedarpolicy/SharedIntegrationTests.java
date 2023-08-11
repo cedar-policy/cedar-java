@@ -341,8 +341,8 @@ public class SharedIntegrationTests {
     }
 
     /**
-     * Create an entity from escaped Euids. The escape sequence "__expr" is used as the key for each
-     * Euid.
+     * Create an Entity from a (possibly escaped) EUID. If needed, the escape sequence "__entity" is used as the key for
+     * each EUID.
      */
     @SuppressFBWarnings(
             value = "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",

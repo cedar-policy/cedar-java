@@ -34,7 +34,7 @@ public final class ActionGen {
         List<Entity> actions = new ArrayList<>();
         String actionType = "Action";
         String actionId = Utils.strings();
-        String actionEuid = actionType+"::\"" + actionId + "\"";
+        String actionEUID = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
         Set<JsonEUID> actionParents = new HashSet<>();
         Entity e = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
@@ -43,8 +43,8 @@ public final class ActionGen {
 
         for (int i = 0; i < count; i++) {
             actionId = Utils.strings();
-            actionEuid = "Action::\"" + actionId + "\"";
-            if (!e.getEuid().toString().equals(actionEuid)) {
+            actionEUID = "Action::\"" + actionId + "\"";
+            if (!e.getEUID().toString().equals(actionEUID)) {
                 e.parentsEUIDs.add(new JsonEUID(actionType, actionId));
             }
             actionAttributes = new HashMap<>();
