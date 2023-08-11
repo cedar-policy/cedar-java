@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.value.CedarList;
-import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.EntityUid;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
@@ -110,9 +110,9 @@ public class JSONTests {
 
     /** Test. */
     @Test
-    public void testEntityUID() {
+    public void testEntityUid() {
         String text = "silver::\"jakob\"";
-        EntityUID uid = new EntityUID(text);
+        EntityUid uid = new EntityUid(text);
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "jakob");
@@ -124,25 +124,25 @@ public class JSONTests {
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> new EntityUID(invalidNamespace),
-                        "Expected EntityUID() to throw, but it didn't");
+                        () -> new EntityUid(invalidNamespace),
+                        "Expected EntityUid() to throw, but it didn't");
         assertTrue(
                 thrown.getMessage()
                         .contentEquals(
-                                "Input string is not a valid EntityUID " + invalidNamespace));
+                                "Input string is not a valid EntityUid " + invalidNamespace));
 
-        String invalidEID = "User::\"ali\"ce\"";
+        String invalidEid = "User::\"ali\"ce\"";
         thrown =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> new EntityUID(invalidEID),
-                        "Expected EntityUID() to throw, but it didn't");
+                        () -> new EntityUid(invalidEid),
+                        "Expected EntityUid() to throw, but it didn't");
         assertTrue(
                 thrown.getMessage()
-                        .contentEquals("Input string is not a valid EntityUID " + invalidEID));
+                        .contentEquals("Input string is not a valid EntityUid " + invalidEid));
 
-        String validEID = "User::\"ali\\\"ce\"";
-        uid = new EntityUID(validEID);
+        String validEid = "User::\"ali\\\"ce\"";
+        uid = new EntityUid(validEid);
         n = JsonNodeFactory.instance.objectNode();
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "ali\\\"ce");
@@ -152,8 +152,8 @@ public class JSONTests {
 
         String weirdType = "a";
         String weirdId = "";
-        String weirdEID = weirdType+"::\""+weirdId+"\"";
-        uid = new EntityUID(weirdEID);
+        String weirdEid = weirdType+"::\""+weirdId+"\"";
+        uid = new EntityUid(weirdEid);
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", weirdId);
         inner.put("type", weirdType);
@@ -163,9 +163,9 @@ public class JSONTests {
 
     /** Test. */
     @Test
-    public void testLongEntityUID() {
+    public void testLongEntityUid() {
         String text = "long::john::silver::\"donut\"";
-        EntityUID uid = new EntityUID(text);
+        EntityUid uid = new EntityUid(text);
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "donut");

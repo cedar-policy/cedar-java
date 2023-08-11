@@ -20,7 +20,7 @@ import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;
-import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.EntityUid;
 import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
@@ -86,14 +86,14 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                     if (escapeType == EscapeType.ENTITY) {
                         JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
                         if (val.isTextual()) {
-                            return new EntityUID(val.textValue());
+                            return new EntityUid(val.textValue());
                         } else if(val.isObject() && val.has("id") && val.has("type")) {
                             int num_fields = 0;
                             for(Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
                                 num_fields++;
                             }
                             if(num_fields == 2) {
-                                return new EntityUID(val.get("type").textValue(), val.get("id").textValue());
+                                return new EntityUid(val.get("type").textValue(), val.get("id").textValue());
                             }
                         }
                             throw new InvalidValueDeserializationException(parser,

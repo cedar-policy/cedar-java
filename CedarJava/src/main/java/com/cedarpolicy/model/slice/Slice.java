@@ -33,21 +33,21 @@ public interface Slice {
     /**
      * Get the policy set.
      *
-     * @return Map from policyIDs to Policy source strings.
+     * @return Map from policyIds to Policy source strings.
      */
     Map<String, String> getPolicies();
 
     /**
      * Get the attribute map.
      *
-     * @return Map from EUIDs to attribute key/value maps.
+     * @return Map from euids to attribute key/value maps.
      */
     Map<String, Map<String, Value>> getAttributes();
 
     /**
      * Get the parent map.
      *
-     * @return Map from EUIDs to parent EUIDs.
+     * @return Map from euids to parent euids.
      */
     Map<String, List<String>> getParents();
 
@@ -61,14 +61,14 @@ public interface Slice {
     /**
      * Get the template policies.
      *
-     * @return Map from template policy ID to template policy
+     * @return Map from template policy id to template policy
      */
     Map<String, String> getTemplates();
 
     /**
      * Get the template instantiations.
      *
-     * @return List of template instatiations
+     * @return List of template instantiations
      */
     List<TemplateInstantiation> getTemplateInstantiations();
 }

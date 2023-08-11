@@ -24,7 +24,7 @@ import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.serializer.JsonEuid;
 import com.cedarpolicy.value.Value;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,8 +57,8 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
+        Set<JsonEuid> principalParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(principalType, principalId), principalAttributes, principalParents));
 
         /*
          *  Generate a random Action
@@ -67,8 +67,8 @@ public class ParserTest {
         String actionId = Utils.strings();
         String action = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
+        Set<JsonEuid> actionParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(actionType, actionId), actionAttributes, actionParents));
 
         /*
          *  Generate a random Resource
@@ -77,8 +77,8 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
+        Set<JsonEuid> resourceParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(resourceType, resourceId), resourceAttributes, resourceParents));
         /*
          *  Generate a universal permit policy
          */
@@ -114,8 +114,8 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
+        Set<JsonEuid> principalParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(principalType, principalId), principalAttributes, principalParents));
 
         /*
          *  Generate a random Action
@@ -124,8 +124,8 @@ public class ParserTest {
         String actionId = Utils.strings();
         String action = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
+        Set<JsonEuid> actionParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(actionType, actionId), actionAttributes, actionParents));
 
         /*
          *  Generate a random Resource
@@ -134,8 +134,8 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
+        Set<JsonEuid> resourceParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(resourceType, resourceId), resourceAttributes, resourceParents));
 
         /*
          *  Generate a universal permit policy
@@ -186,8 +186,8 @@ public class ParserTest {
         String principalId = Utils.strings();
         String principal = principalType+"::\"" + principalId + "\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
+        Set<JsonEuid> principalParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(principalType, principalId), principalAttributes, principalParents));
 
         /*
          *  Generate a random Action
@@ -202,8 +202,8 @@ public class ParserTest {
         String resourceId = Utils.strings();
         String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
+        Set<JsonEuid> resourceParents = new HashSet<>();
+        entities.add(new Entity(new JsonEuid(resourceType, resourceId), resourceAttributes, resourceParents));
         /*
          *  Generate a universal permit policy
          */

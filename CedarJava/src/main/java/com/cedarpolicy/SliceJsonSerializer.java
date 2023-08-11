@@ -18,7 +18,7 @@ package com.cedarpolicy;
 
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.serializer.JsonEuid;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -49,13 +49,13 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
 
     private static class JsonEntity {
         /** Entity uid for the entity. */
-        @SuppressFBWarnings public final JsonEUID uid;
+        @SuppressFBWarnings public final JsonEuid uid;
 
         /** Entity attributes, where the value string is a Cedar literal value. */
         @SuppressFBWarnings public final Map<String, Value> attrs;
 
         /** Set of direct parent entities of this entity. */
-        public final Set<JsonEUID> parents;
+        public final Set<JsonEuid> parents;
 
         JsonEntity(Entity e) {
             this.uid = e.getEuid();

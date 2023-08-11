@@ -33,7 +33,7 @@ import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.serializer.JsonEuid;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -163,7 +163,7 @@ public class SharedIntegrationTests {
         @SuppressFBWarnings(
                 value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
                 justification = "Initialized by Jackson.")
-        public JsonEUID uid;
+        public JsonEuid uid;
 
         /** Entity attributes, where the value string is a Cedar literal value. */
         @SuppressFBWarnings(
@@ -175,7 +175,7 @@ public class SharedIntegrationTests {
         @SuppressFBWarnings(
                 value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
                 justification = "Initialized by Jackson.")
-        public List<JsonEUID> parents;
+        public List<JsonEuid> parents;
     }
 
     /**
@@ -341,17 +341,17 @@ public class SharedIntegrationTests {
     }
 
     /**
-     * Create an entity from escaped Euids. The escape sequence "__expr" is used as the key for each
-     * Euid.
+     * Create an entity from escaped euids. The escape sequence "__expr" is used as the key for each
+     * euid.
      */
     @SuppressFBWarnings(
             value = "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
             justification = "Initialized by Jackson.")
     private Entity loadEntity(JsonEntity je) {
-        HashSet<JsonEUID> parentEUIDs = new HashSet<>();
-        parentEUIDs.addAll(je.parents);
+        HashSet<JsonEuid> parentEuids = new HashSet<>();
+        parentEuids.addAll(je.parents);
 
-        return new Entity(je.uid, je.attrs, parentEUIDs);
+        return new Entity(je.uid, je.attrs, parentEuids);
     }
 
     /**

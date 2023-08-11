@@ -31,19 +31,19 @@ import java.util.Optional;
  *
  * <p>An optional schema can be provided, but will not be used for validation unless you call
  * validate(). The schema is provided to allow parsing Entities from JSON without escape sequences
- * (in general, you don't need to worry about this if you construct your entities via the EntityUID
+ * (in general, you don't need to worry about this if you construct your entities via the EntityUid
  * class).
  */
 public class AuthorizationRequest {
-    /** EUID of the principal in the request. */
+    /** euid of the principal in the request. */
     @JsonProperty("principal")
-    public final Optional<String> principalEUID;
-    /** EUID of the action in the request. */
+    public final Optional<String> principalEuid;
+    /** euid of the action in the request. */
     @JsonProperty("action")
-    public final String actionEUID;
-    /** EUID of the resource in the request. */
+    public final String actionEuid;
+    /** euid of the resource in the request. */
     @JsonProperty("resource")
-    public final Optional<String> resourceEUID;
+    public final Optional<String> resourceEuid;
 
     /** Key/Value map representing the context of the request. */
     public final Optional<Map<String, Value>> context;
@@ -52,23 +52,23 @@ public class AuthorizationRequest {
     public final Optional<Schema> schema;
 
     /**
-     * Create an authorization request from the EUIDs and Context.
+     * Create an authorization request from the euids and Context.
      *
-     * @param principalEUID Principal's EUID.
-     * @param actionEUID Action's EUID.
-     * @param resourceEUID Resource's EUID.
+     * @param principalEuid Principal's euid.
+     * @param actionEuid Action's euid.
+     * @param resourceEuid Resource's euid.
      * @param context Key/Value context.
      * @param schema Schema (optional).
      */
     public AuthorizationRequest(
-            Optional<String> principalEUID,
-            String actionEUID,
-            Optional<String> resourceEUID,
+            Optional<String> principalEuid,
+            String actionEuid,
+            Optional<String> resourceEuid,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema) {
-        this.principalEUID = principalEUID;
-        this.actionEUID = actionEUID;
-        this.resourceEUID = resourceEUID;
+        this.principalEuid = principalEuid;
+        this.actionEuid = actionEuid;
+        this.resourceEuid = resourceEuid;
         if (!context.isPresent() || context.get() == null) {
             this.context = Optional.empty();
         } else {
@@ -80,16 +80,16 @@ public class AuthorizationRequest {
     /**
      * Create a request in the empty context.
      *
-     * @param principalEUID Principal's EUID.
-     * @param actionEUID Action's EUID.
-     * @param resourceEUID Resource's EUID.
+     * @param principalEuid Principal's euid.
+     * @param actionEuid Action's euid.
+     * @param resourceEuid Resource's euid.
      * @param context Key/Value context.
      */
-    public AuthorizationRequest(String principalEUID, String actionEUID, String resourceEUID, Map<String, Value> context) {
+    public AuthorizationRequest(String principalEuid, String actionEuid, String resourceEuid, Map<String, Value> context) {
         this(
-                Optional.of(principalEUID),
-                actionEUID,
-                Optional.of(resourceEUID),
+                Optional.of(principalEuid),
+                actionEuid,
+                Optional.of(resourceEuid),
                 Optional.of(context),
                 Optional.empty());
     }
@@ -97,6 +97,6 @@ public class AuthorizationRequest {
     /** Readable string representation. */
     @Override
     public String toString() {
-        return "Request(" + principalEUID + ",\t" + actionEUID + ",\t" + resourceEUID + ")";
+        return "Request(" + principalEuid + ",\t" + actionEuid + ",\t" + resourceEuid + ")";
     }
 }

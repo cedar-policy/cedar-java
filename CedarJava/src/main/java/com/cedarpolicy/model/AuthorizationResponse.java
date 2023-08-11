@@ -51,7 +51,7 @@ public final class AuthorizationResponse {
     /** The reasons and errors from a request evaluation. */
     public static class Diagnostics {
         /**
-         * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny,
+         * Set of policyId's that caused the decision. For example, when a policy evaluates to Deny,
          * all deny policies that evaluated to True will appear in Reasons.
          */
         private ImmutableSet<String> reason;
@@ -104,7 +104,7 @@ public final class AuthorizationResponse {
     }
 
     /**
-     * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny, all
+     * Set of policyId's that caused the decision. For example, when a policy evaluates to Deny, all
      * deny policies that evaluated to True will appear in Reasons.
      *
      * @return list with the policy ids that contributed to the decision

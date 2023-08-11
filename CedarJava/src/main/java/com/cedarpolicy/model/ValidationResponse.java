@@ -80,7 +80,7 @@ public final class ValidationResponse {
         /**
          * Create note from JSON.
          *
-         * @param policyId Policy ID to which note applies.
+         * @param policyId Policy id to which note applies.
          * @param note The Note.
          */
         @JsonCreator
@@ -90,9 +90,9 @@ public final class ValidationResponse {
         }
 
         /**
-         * Get the policy ID.
+         * Get the policy id.
          *
-         * @return The policy ID.
+         * @return The policy id.
          */
         public String getPolicyId() {
             return this.policyId;

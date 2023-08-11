@@ -16,7 +16,7 @@
 
 package com.cedarpolicy.model.slice;
 
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.serializer.JsonEuid;
 import com.cedarpolicy.value.Value;
 
 import java.util.*;
@@ -25,36 +25,36 @@ import java.util.stream.Collectors;
 /**
  * An entity is the kind of object about which authorization decisions are made; principals,
  * actions, and resources are all a kind of entity. Each entity is defined by its entity type, a
- * unique identifier (UID), zero or more attributes mapped to values, and zero or more parent
+ * unique identifier (uid), zero or more attributes mapped to values, and zero or more parent
  * entities.
  */
 public class Entity {
-    private final JsonEUID euid;
+    private final JsonEuid euid;
 
     /** Key/Value attribute map. */
     public final Map<String, Value> attrs;
 
-    /** Set of entity EUIDs that are parents to this entity. */
-    public final Set<JsonEUID> parentsEUIDs;
+    /** Set of entity uids that are parents to this entity. */
+    public final Set<JsonEuid> parentsEuids;
 
     /**
-     * Create an entity from JsonEUID and unwrapped JSON values.
+     * Create an entity from JsonEuid and unwrapped JSON values.
      *
-     * @param uid Euid of the Entity.
+     * @param uid euid of the Entity.
      * @param attributes Key/Value map of attributes.
-     * @param parentsEUID Set of parent entities' EUIDs.
+     * @param parentsEuid Set of parent entities' euids.
      */
-    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<JsonEUID> parentsEUIDs) {
+    public Entity(JsonEuid uid, Map<String, Value> attributes, Set<JsonEuid> parentsEuids) {
         this.attrs = new HashMap<>(attributes);
         this.euid = uid;
-        this.parentsEUIDs = parentsEUIDs;
+        this.parentsEuids = parentsEuids;
     }
 
     @Override
     public String toString() {
         String parentStr = "";
-        if (!parentsEUIDs.isEmpty()) {
-            List<String> parentStrs = new ArrayList<String>(parentsEUIDs.stream().map(euid -> euid.toString()).collect(Collectors.toList()));
+        if (!parentsEuids.isEmpty()) {
+            List<String> parentStrs = new ArrayList<String>(parentsEuids.stream().map(euid -> euid.toString()).collect(Collectors.toList()));
             parentStr = "\n\tparents:\n\t\t" + String.join("\n\t\t", parentStrs);
         }
         String attributeStr = "";
@@ -70,18 +70,18 @@ public class Entity {
 
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get entity uid in JsonEuid format
+     * @return Entity uid in JsonEuid format
      */
-    public JsonEUID getEuid() {
+    public JsonEuid getEuid() {
         return euid;
     }
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get entity uid in JsonEuid format
+     * @return Entity uid in JsonEuid format
      */
-    public Set<JsonEUID> getParents() {
-        return parentsEUIDs;
+    public Set<JsonEuid> getParents() {
+        return parentsEuids;
     }
 }

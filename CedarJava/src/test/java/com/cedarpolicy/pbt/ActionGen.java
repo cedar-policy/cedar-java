@@ -17,7 +17,7 @@
 package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.model.slice.Entity;
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.serializer.JsonEuid;
 import com.cedarpolicy.value.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,8 +36,8 @@ public final class ActionGen {
         String actionId = Utils.strings();
         String actionEuid = actionType+"::\"" + actionId + "\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
+        Set<JsonEuid> actionParents = new HashSet<>();
+        Entity e = new Entity(new JsonEuid(actionType, actionId), actionAttributes, actionParents);
         actions.add(e);
         int count = Arbitraries.integers().between(10, 100).sample();
 
@@ -45,11 +45,11 @@ public final class ActionGen {
             actionId = Utils.strings();
             actionEuid = "Action::\"" + actionId + "\"";
             if (!e.getEuid().toString().equals(actionEuid)) {
-                e.parentsEUIDs.add(new JsonEUID(actionType, actionId));
+                e.parentsEuids.add(new JsonEuid(actionType, actionId));
             }
             actionAttributes = new HashMap<>();
             actionParents = new HashSet<>();
-            actions.add(new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents));
+            actions.add(new Entity(new JsonEuid(actionType, actionId), actionAttributes, actionParents));
         }
         return actions;
     }

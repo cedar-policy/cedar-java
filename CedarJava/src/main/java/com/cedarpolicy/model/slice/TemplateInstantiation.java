@@ -35,7 +35,7 @@ public class TemplateInstantiation {
     /**
      * Template Instantiation.
      *
-     * @param templateId the template ID.
+     * @param templateId the template id.
      * @param resultPolicyId the id of the resulting policy.
      * @param instantiations the instantiations.
      */
@@ -49,7 +49,7 @@ public class TemplateInstantiation {
         this.instantiations = ImmutableList.copyOf(instantiations);
     }
 
-    /** Get the template ID. */
+    /** Get the template id. */
     public String getTemplateId() {
         return templateId;
     }

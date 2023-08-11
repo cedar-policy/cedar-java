@@ -109,9 +109,9 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
 
         AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
             super(
-                    request.principalEUID,
-                    request.actionEUID,
-                    request.resourceEUID,
+                    request.principalEuid,
+                    request.actionEuid,
+                    request.resourceEuid,
                     request.context,
                     request.schema);
             this.slice = slice;

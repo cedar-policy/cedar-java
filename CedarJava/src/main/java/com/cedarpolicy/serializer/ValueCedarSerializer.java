@@ -20,7 +20,7 @@ import com.cedarpolicy.model.exception.InvalidValueSerializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;
-import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.EntityUid;
 import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
@@ -43,14 +43,14 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
     public void serialize(
             Value value, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        if (value instanceof EntityUID) {
+        if (value instanceof EntityUid) {
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName(ENTITY_ESCAPE_SEQ);
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName("id");
-            jsonGenerator.writeString(((EntityUID) value).getId());
+            jsonGenerator.writeString(((EntityUid) value).getId());
             jsonGenerator.writeFieldName("type");
-            jsonGenerator.writeString(((EntityUID) value).getType());
+            jsonGenerator.writeString(((EntityUid) value).getType());
             jsonGenerator.writeEndObject();
             jsonGenerator.writeEndObject();
         } else if (value instanceof PrimString) {

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /** Represent JSON format of Entity Unique Identifier. */
 @JsonDeserialize
-public class JsonEUID {
+public class JsonEuid {
     /** euid (__entity is used as escape sequence in JSON). */
     @JsonProperty("type")
     public final String type;
@@ -35,17 +35,17 @@ public class JsonEUID {
     }
 
     /**
-     * Build JsonEUID.
+     * Build JsonEuid.
      *
      * @param type Entity Type.
-     * @param id   Entity ID.
+     * @param id   Entity id.
      */
-    public JsonEUID(String type, String id) {
+    public JsonEuid(String type, String id) {
         this.type = type; this.id = id;
     }
 
-    /** Build JsonEUID (default constructor needed by Jackson). */
-    public JsonEUID() {
+    /** Build JsonEuid (default constructor needed by Jackson). */
+    public JsonEuid() {
         this.type = ""; this.id = "";
     }
 }

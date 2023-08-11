@@ -16,7 +16,6 @@
 
 package com.cedarpolicy.model.slice;
 
-import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -59,7 +58,7 @@ public class BasicSlice implements Slice {
         // final
         this.policies = new HashMap<>();
         for (Policy p : policies) {
-            this.policies.put(p.policyID, p.policySrc);
+            this.policies.put(p.policyId, p.policySrc);
         }
         HashMap<String, Map<String, Value>> attributes = new HashMap<>();
         HashMap<String, List<String>> parents = new HashMap<>();
@@ -75,7 +74,7 @@ public class BasicSlice implements Slice {
         this.entities = entities;
 
         this.templatePolicies =
-                templates.stream().collect(Collectors.toMap(p -> p.policyID, p -> p.policySrc));
+                templates.stream().collect(Collectors.toMap(p -> p.policyId, p -> p.policySrc));
         this.templateInstantiations = new ArrayList<TemplateInstantiation>(templateInstantiations);
     }
 

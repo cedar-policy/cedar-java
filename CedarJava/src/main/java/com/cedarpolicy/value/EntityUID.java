@@ -22,19 +22,19 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
+ * Represents a Cedar Entity Unique Identifier. An entity uid contains both the entity type and a unique
  * identifier for the entity formatted as <code>TYPE::"ID"</code>.
  */
-public class EntityUID extends Value {
+public class EntityUid extends Value {
 
-    private static class EUIDValidator {
+    private static class EuidValidator {
         // Any char except {'\','"'} or escaped slash `\\` or escaped quote `\"` or unicode `\u0000`
         // We need to escape twice, once for Java and once for the Regex
         private static final String anyCharExceptSlashOrQuote = "[^\\\"\\\\]";
         private static final String escapedSlash = "\\\\\\\\";
         private static final String escapedQuote = "\\\\\\\"";
         private static final String unicodeEscapedPattern = "\\\\u[A-Fa-f0-9]{4,6}";
-        private static final Pattern entityUIDPattern =
+        private static final Pattern entityUidPattern =
                 Pattern.compile(
                         "^([A-Za-z_]([A-Za-z0-9_])*::)+\"("
                                 + anyCharExceptSlashOrQuote
@@ -47,12 +47,12 @@ public class EntityUID extends Value {
                                 + ")*\"$");
         private static final long MAXLENGTH = 1024;
 
-        public static boolean validEntityUID(String id) {
+        public static boolean validEntityUid(String id) {
             if (id == null || id.isEmpty()) return false;
             id = id.trim();
             if (id.length() > MAXLENGTH) return false;
             try {
-                Matcher matcher = entityUIDPattern.matcher(id);
+                Matcher matcher = entityUidPattern.matcher(id);
                 return matcher.matches();
             } catch (PatternSyntaxException ex) {
                 return false;
@@ -71,14 +71,14 @@ public class EntityUID extends Value {
 
 
     /**
-     * Build EntityUID.
+     * Build EntityUid.
      *
-     * @param euid Entity Unique ID as a string.
+     * @param euid euid as a string.
      *     <p>Note, we limit euids to 1024 chars.
      */
-    public EntityUID(String euid) throws IllegalArgumentException {
-        if (!EUIDValidator.validEntityUID(euid)) {
-            throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
+    public EntityUid(String euid) throws IllegalArgumentException {
+        if (!EuidValidator.validEntityUid(euid)) {
+            throw new IllegalArgumentException("Input string is not a valid EntityUid " + euid);
         }
 
         this.euid = euid;
@@ -87,16 +87,16 @@ public class EntityUID extends Value {
     }
 
     /**
-     * Build EntityUID.
+     * Build EntityUid.
      *
-     * @param type Type component of Entity Unique ID.
-     * @param id Id component of Entity Unique ID.
+     * @param type Type component of euid.
+     * @param id id component of euid.
      *     <p>Note, we limit euids to 1024 chars.
      */
-    public EntityUID(String type, String id) throws IllegalArgumentException {
+    public EntityUid(String type, String id) throws IllegalArgumentException {
         String euid = type + "::\""+id+"\"";
-        if (!EUIDValidator.validEntityUID(euid)) {
-            throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
+        if (!EuidValidator.validEntityUid(euid)) {
+            throw new IllegalArgumentException("Input string is not a valid EntityUid " + euid);
         }
         this.euid = euid;
         this.type = Optional.of(type);
@@ -115,7 +115,7 @@ public class EntityUID extends Value {
         return euid;
     }
 
-    /** Get the type of the EUID. */
+    /** Get the type of the euid. */
     public String getType() {
         if(!this.type.isEmpty()) {
             return this.type.get();
@@ -123,7 +123,7 @@ public class EntityUID extends Value {
         return this.euid.substring(0, this.euid.length()-this.getId().length()-4);
     }
 
-    /** Get the ID of the EUID. */
+    /** Get the id of the euid. */
     public String getId() {
         if(!this.id.isEmpty()) {
             return this.id.get();

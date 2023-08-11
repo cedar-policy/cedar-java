@@ -19,16 +19,16 @@ package com.cedarpolicy.model.slice;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Entity type and ID. */
+/** Entity type and id. */
 public class EntityTypeAndId {
     private final String ty; //We use `ty` to match the JSON format expected by the Rust code
     private final String eid;
 
     /**
-     * Construct Entity type and ID.
+     * Construct Entity type and id.
      *
      * @param ty Type string.
-     * @param eid EID string.
+     * @param eid Eid string.
      */
     @JsonCreator
     public EntityTypeAndId(@JsonProperty("ty") String ty, @JsonProperty("eid") String eid) {
@@ -41,7 +41,7 @@ public class EntityTypeAndId {
         return ty;
     }
 
-    /** Get entity ID. */
+    /** Get entity id. */
     public String getEid() {
         return eid;
     }

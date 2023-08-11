@@ -22,33 +22,33 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Policy {
     /** Policy string. */
     public final String policySrc;
-    /** Policy ID. */
-    public final String policyID;
+    /** Policy id. */
+    public final String policyId;
 
     /**
      * Creates a Cedar policy object.
      *
      * @param policy String containing the source code of a Cedar policy in the Cedar policy
      *     language.
-     * @param policyID The id of this policy. Must be unique. Note: We may flip the order of the
+     * @param policyId The id of this policy. Must be unique. Note: We may flip the order of the
      *     arguments here for idiomatic reasons.
      */
     public Policy(
-            @JsonProperty("policySrc") String policy, @JsonProperty("policyID") String policyID)
+            @JsonProperty("policySrc") String policy, @JsonProperty("policyId") String policyId)
             throws NullPointerException {
 
         if (policy == null) {
             throw new NullPointerException("Failed to construct policy from null string");
         }
-        if (policyID == null) {
-            throw new NullPointerException("Failed to construct policy with null ID");
+        if (policyId == null) {
+            throw new NullPointerException("Failed to construct policy with null id");
         }
         this.policySrc = policy;
-        this.policyID = policyID;
+        this.policyId = policyId;
     }
 
     @Override
     public String toString() {
-        return "// Policy ID: " + policyID + "\n" + policySrc;
+        return "// Policy id: " + policyId + "\n" + policySrc;
     }
 }

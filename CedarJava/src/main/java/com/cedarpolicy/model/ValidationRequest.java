@@ -35,7 +35,7 @@ public final class ValidationRequest {
      * Construct a validation request.
      *
      * @param schema Schema for the request
-     * @param policySet Map of Policy ID to policy.
+     * @param policySet Map of policy id to policy.
      */
     @SuppressFBWarnings
     public ValidationRequest(Schema schema, Map<String, String> policySet) {
@@ -63,7 +63,7 @@ public final class ValidationRequest {
         this.schema = schema;
         this.policySet = new HashMap<>();
         for (Policy p : policySet) {
-            this.policySet.put(p.policyID, p.policySrc);
+            this.policySet.put(p.policyId, p.policySrc);
         }
     }
 
@@ -79,7 +79,7 @@ public final class ValidationRequest {
     /**
      * Get the policy set.
      *
-     * @return Map of policy ID to policy.
+     * @return Map of policy id to policy.
      */
     @SuppressFBWarnings
     public Map<String, String> getPolicySet() {
