@@ -16,7 +16,6 @@
 
 package com.cedarpolicy;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -394,7 +393,7 @@ public class SharedIntegrationTests {
      * that the result is equal to the expected result.
      */
     private void executeJsonRequestTest(
-            Set<Entity> entities, Set<Policy> policies, JsonRequest request, Schema schema) {
+            Set<Entity> entities, Set<Policy> policies, JsonRequest request, Schema schema) throws AuthException {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authRequest =
                 new AuthorizationRequest(
@@ -404,14 +403,14 @@ public class SharedIntegrationTests {
                         Optional.of(request.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
-        AuthorizationResponse response = assertDoesNotThrow(() -> auth.isAuthorized(authRequest, slice));
-
-        assertEquals(request.decision, response.getDecision());
-        if(response.getErrors().stream().noneMatch(errorMsg -> errorMsg.contains("poorly formed"))) {
+        
+        try {
+            AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
+            assertEquals(request.decision, response.getDecision());
             // convert to a HashSet to allow reordering of error messages
             assertEquals(new HashSet<>(request.errors), new HashSet<>(response.getErrors()));
             assertEquals(new HashSet<>(request.reasons), response.getReasons());
-        } else {
+        } catch (BadRequestException e) {
             // In the case of parse errors ("poorly formed..."), errors may disagree but the
             // decision should be `Deny`.
             assertEquals(request.decision, Decision.Deny);
