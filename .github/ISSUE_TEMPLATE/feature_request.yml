@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea for Cedar
+description: Suggest an idea for CedarJava
 labels: [pending-triage, feature-request]
 
 body:
@@ -11,12 +11,9 @@ body:
   - type: dropdown
     attributes:
       label: Category
-      description: What component of Cedar does this feature relate to?
+      description: What component of CedarJava does this feature relate to?
       multiple: true
       options:
-        - Cedar language features
-        - Cedar validation features
-        - Cedar syntax changes/additions
         - User level API changes
         - Internal refactors/changes
         - Documentation and code comments
