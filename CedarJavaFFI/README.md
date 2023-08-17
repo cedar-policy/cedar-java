@@ -1,26 +1,32 @@
-## CedarJavaFFI
+# CedarJavaFFI
+
 Bindings to allow calling the core Cedar functions (`is_authorized` and `validate`) from Java.
 
 ## Usage
 
 ### Build
+
 You can build the code with
+
 ```shell
 cargo build
 ```
 
+Note that the `main` branch expects that the [cedar](https://github.com/cedar-policy/cedar) repository is cloned locally in the top-level directory (`..`). `release/x.x.x` branches use a version of `cedar-policy` available on [crates.io](https://crates.io/crates/cedar-policy).
+
 ### Run
+
 You can test the code with
+
 ```shell
 cargo test
 ```
-
 
 Typically you will want to use `../CedarJava` in your project and won't care about `CedarJavaFFI`.
 
 ## Security
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](../CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 
