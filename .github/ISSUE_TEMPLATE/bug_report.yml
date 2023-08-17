@@ -13,9 +13,9 @@ body:
       label: |
         Before opening, please confirm:
       options:
-        - label: I have [searched for duplicate or closed issues](https://github.com/cedar-policy/cedar/issues?q=is%3Aissue+).
+        - label: I have [searched for duplicate or closed issues](https://github.com/cedar-policy/cedar-java/issues?q=is%3Aissue+).
           required: true
-        - label: I have read the guide for [submitting bug reports](https://github.com/cedar-policy/cedar/blob/main/CONTRIBUTING.md#bug-reports).
+        - label: I have read the guide for [submitting bug reports](https://github.com/cedar-policy/cedar-java/blob/main/CONTRIBUTING.md#bug-reports).
           required: true
         - label: I have done my best to include a minimal, self-contained set of instructions for consistently reproducing the issue.
           required: true
