@@ -21,6 +21,8 @@ plugins {
     // JaCoCo for coverage metrics and reports of Java source files. Read more at:
     // https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
+
+    id 'maven-publish'
 }
 
 /*
@@ -91,26 +93,22 @@ test {
 
 
 
-// For releasing to Maven central
-apply plugin: 'maven'
-apply plugin: 'signing'
+// task javadocJar(type: Jar) {
+//     classifier = 'javadoc'
+//     from javadoc
+// }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
+// task sourcesJar(type: Jar) {
+//     classifier = 'sources'
+//     from sourceSets.main.allSource
+// }
+// artifacts {
+//     archives javadocJar, sourcesJar
+// }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
-}
+// signing {
+//     sign configurations.archives
+// }
 
 uploadArchives {
   repositories {
@@ -154,4 +152,40 @@ uploadArchives {
       }
     }
   }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'CedarJava'
+                description = 'Java bindings for Cedar policy language.'
+                url = 'https://www.cedarpolicy.com'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'CedarLangTeam'
+                        name 'Cedar Team'
+                        email 'cedar-sonatype-team@amazon.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/cedar-policy/cedar-java.git'
+                    developerConnection = 'scm:git:https://github.com/cedar-policy/cedar-java.git'
+                    url = 'https://github.com/cedar-policy/cedar-java'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            authentication = authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
+    }
 }
