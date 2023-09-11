@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.serializer;
 
+import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
 import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
@@ -52,88 +53,92 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
     public Value deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         final JsonNode node = parser.getCodec().readTree(parser);
         final ObjectMapper mapper = (ObjectMapper) parser.getCodec();
-        if (node.canConvertToLong()) {
-            return new PrimLong(node.asLong());
-        } else if (node.isBoolean()) {
-            return new PrimBool(node.asBoolean());
-        } else if (node.isTextual()) {
-            return new PrimString(node.asText());
-        } else if (node.isArray()) {
-            CedarList myNode = new CedarList();
-            Iterator<JsonNode> iter = node.elements();
-            while (iter.hasNext()) {
-                myNode.add(mapper.treeToValue(iter.next(), Value.class));
-            }
-            return myNode;
-        } else if (node.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> iter = node.fields();
-            // Do two passes, one to check if it is an escaped entity or extension and a second to
-            // write into a
-            // map
-            EscapeType escapeType = EscapeType.UNRECOGNIZED;
-            int count = 0;
-            while (iter.hasNext()) {
-                count++;
-                Map.Entry<String, JsonNode> entry = iter.next();
-                if (entry.getKey().equals(ENTITY_ESCAPE_SEQ)) {
-                    escapeType = EscapeType.ENTITY;
-                } else if (entry.getKey().equals(EXTENSION_ESCAPE_SEQ)) {
-                    escapeType = EscapeType.EXTENSION;
+        try {
+            if (node.canConvertToLong()) {
+                return new PrimLong(node.asLong());
+            } else if (node.isBoolean()) {
+                return new PrimBool(node.asBoolean());
+            } else if (node.isTextual()) {
+                return new PrimString(node.asText());
+            } else if (node.isArray()) {
+                CedarList myNode = new CedarList();
+                Iterator<JsonNode> iter = node.elements();
+                while (iter.hasNext()) {
+                    myNode.add(mapper.treeToValue(iter.next(), Value.class));
                 }
-            }
-            if (escapeType != EscapeType.UNRECOGNIZED) {
-                if (count == 1) {
-                    if (escapeType == EscapeType.ENTITY) {
-                        JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
-                        if (val.isTextual()) {
-                            return new EntityUID(val.textValue());
-                        } else if(val.isObject() && val.has("id") && val.has("type")) {
-                            int num_fields = 0;
-                            for(Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
-                                num_fields++;
+                return myNode;
+            } else if (node.isObject()) {
+                Iterator<Map.Entry<String, JsonNode>> iter = node.fields();
+                // Do two passes, one to check if it is an escaped entity or extension and a second to
+                // write into a
+                // map
+                EscapeType escapeType = EscapeType.UNRECOGNIZED;
+                int count = 0;
+                while (iter.hasNext()) {
+                    count++;
+                    Map.Entry<String, JsonNode> entry = iter.next();
+                    if (entry.getKey().equals(ENTITY_ESCAPE_SEQ)) {
+                        escapeType = EscapeType.ENTITY;
+                    } else if (entry.getKey().equals(EXTENSION_ESCAPE_SEQ)) {
+                        escapeType = EscapeType.EXTENSION;
+                    }
+                }
+                if (escapeType != EscapeType.UNRECOGNIZED) {
+                    if (count == 1) {
+                        if (escapeType == EscapeType.ENTITY) {
+                            JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
+                            if (val.isTextual()) {
+                                return new EntityUID(val.textValue());
+                            } else if (val.isObject() && val.has("id") && val.has("type")) {
+                                int num_fields = 0;
+                                for (Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
+                                    num_fields++;
+                                }
+                                if (num_fields == 2) {
+                                    return new EntityUID(val.get("type").textValue(), val.get("id").textValue());
+                                }
                             }
-                            if(num_fields == 2) {
-                                return new EntityUID(val.get("type").textValue(), val.get("id").textValue());
-                            }
-                        }
                             throw new InvalidValueDeserializationException(parser,
                                     "Not textual node: " + node.toString(), node.asToken(), Map.class);
-                    } else {
-                        JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
-                        JsonNode fn = val.get("fn");
-                        if (!fn.isTextual()) {
-                            throw new InvalidValueDeserializationException(parser,
-                                    "Not textual node: " + fn.toString(), node.asToken(), Map.class);
-                        }
-                        JsonNode arg = val.get("arg");
-                        if (!arg.isTextual()) {
-                            throw new InvalidValueDeserializationException(parser,
-                                    "Not textual node: " + arg.toString(), node.asToken(), Map.class);
-                        }
-
-                        if (fn.textValue().equals("ip")) {
-                            return new IpAddress(arg.textValue());
-                        } else if (fn.textValue().equals("decimal")) {
-                            return new Decimal(arg.textValue());
                         } else {
-                            throw new InvalidValueDeserializationException(parser,
-                                    "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
+                            JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
+                            JsonNode fn = val.get("fn");
+                            if (!fn.isTextual()) {
+                                throw new InvalidValueDeserializationException(parser,
+                                        "Not textual node: " + fn.toString(), node.asToken(), Map.class);
+                            }
+                            JsonNode arg = val.get("arg");
+                            if (!arg.isTextual()) {
+                                throw new InvalidValueDeserializationException(parser,
+                                        "Not textual node: " + arg.toString(), node.asToken(), Map.class);
+                            }
+
+                            if (fn.textValue().equals("ip")) {
+                                return new IpAddress(arg.textValue());
+                            } else if (fn.textValue().equals("decimal")) {
+                                return new Decimal(arg.textValue());
+                            } else {
+                                throw new InvalidValueDeserializationException(parser,
+                                        "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
+                            }
                         }
+                    } else {
+                        throw new InvalidValueDeserializationException(parser,
+                                "More than one K,V pair with {__entity, __extn}: " + node.toString(), node.asToken(), Map.class);
                     }
-                } else {
-                    throw new InvalidValueDeserializationException(parser,
-                            "More than one K,V pair with {__entity, __extn}: " + node.toString(), node.asToken(), Map.class);
                 }
+                CedarMap myMap = new CedarMap();
+                iter = node.fields();
+                while (iter.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = iter.next();
+                    myMap.put(entry.getKey(), mapper.treeToValue(entry.getValue(), Value.class));
+                }
+                return myMap;
+            } else {
+                throw new InvalidValueDeserializationException(parser, node.toString(), node.asToken(), Object.class);
             }
-            CedarMap myMap = new CedarMap();
-            iter = node.fields();
-            while (iter.hasNext()) {
-                Map.Entry<String, JsonNode> entry = iter.next();
-                myMap.put(entry.getKey(), mapper.treeToValue(entry.getValue(), Value.class));
-            }
-            return myMap;
-        } else {
-            throw new InvalidValueDeserializationException(parser, node.toString(), node.asToken(), Object.class);
+        } catch (StackOverflowError e) {
+            throw new DeserializationRecursionDepthException("Stack overflow while deserializing value. " + e.toString());
         }
     }
 }
