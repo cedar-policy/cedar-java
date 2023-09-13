@@ -22,7 +22,9 @@ plugins {
     // https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
 
+    // For publishing
     id 'maven-publish'
+    id 'signing'
 }
 
 /*
@@ -91,72 +93,18 @@ test {
     }
 }
 
-
-
-// task javadocJar(type: Jar) {
-//     classifier = 'javadoc'
-//     from javadoc
-// }
-
-// task sourcesJar(type: Jar) {
-//     classifier = 'sources'
-//     from sourceSets.main.allSource
-// }
-// artifacts {
-//     archives javadocJar, sourcesJar
-// }
-
-// signing {
-//     sign configurations.archives
-// }
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-      repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: ossrhUsername, password: ossrhPassword)
-      }
-
-      pom.project {
-        name 'Cedar Java'
-        packaging 'jar'
-        description 'Java bindings for the Cedar authorization language.'
-        url 'https://www.cedarpolicy.com'
-
-        scm {
-          connection 'scm:git:https://github.com/cedar-policy/cedar-java.git'
-          developerConnection 'scm:git:https://github.com/cedar-policy/cedar-java.git'
-          url 'https://github.com/cedar-policy/cedar-java'
-        }
-
-        licenses {
-          license {
-            name 'The Apache License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-
-        developers {
-          developer {
-            id 'CedarLangTeam'
-            name 'Cedar Team'
-            email 'cedar-sonatype-team@amazon.com'
-          }
-        }
-      }
-    }
-  }
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'com.cedarpolicy'
+            artifactId = 'library'
+            version = '2.3'
             pom {
                 name = 'CedarJava'
                 description = 'Java bindings for Cedar policy language.'
@@ -169,9 +117,9 @@ publishing {
                 }
                 developers {
                     developer {
-                        id 'CedarLangTeam'
-                        name 'Cedar Team'
-                        email 'cedar-sonatype-team@amazon.com'
+                        id = 'cedar'
+                        name = 'Cedar Team'
+                        email = 'cedar-sonatype-team@amazon.com'
                     }
                 }
                 scm {
@@ -184,8 +132,15 @@ publishing {
     }
     repositories {
         maven {
-            url = layout.buildDirectory.dir("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            authentication = authentication(userName: ossrhUsername, password: ossrhPassword)
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
         }
     }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
