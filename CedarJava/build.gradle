@@ -104,7 +104,7 @@ publishing {
             from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '2.3'
+            version = '2.3.3'
             pom {
                 name = 'CedarJava'
                 description = 'Java bindings for Cedar policy language.'
