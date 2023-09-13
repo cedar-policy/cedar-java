@@ -103,7 +103,7 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             groupId = 'com.cedarpolicy'
-            artifactId = 'library'
+            artifactId = 'cedar-java'
             version = '2.3'
             pom {
                 name = 'CedarJava'
