@@ -42,7 +42,7 @@ public class Entity {
      *
      * @param uid EUID of the Entity.
      * @param attributes Key/Value map of attributes.
-     * @param parentsEUID Set of parent entities' EUIDs.
+     * @param parentsEUIDs Set of parent entities' EUIDs.
      */
     public Entity(JsonEUID uid, Map<String, Value> attributes, Set<JsonEUID> parentsEUIDs) {
         this.attrs = new HashMap<>(attributes);
