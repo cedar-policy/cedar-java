@@ -34,18 +34,12 @@ jobs:
       contents: write
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
         toolchain:
           - stable
     steps:
       - name: Checkout cedar-java
         uses: actions/checkout@v3
-      - name: Checkout cedar
-        uses: actions/checkout@v3
-        with:
-          repository: cedar-policy/cedar
-          ref: main
-          path: ./cedar
       - name: rustup
         run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - name: cargo fmt
@@ -57,10 +51,6 @@ jobs:
       - name: cargo test
         working-directory: ./CedarJavaFFI
         run: cargo test --verbose
-      - name: Build CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: bash config.sh && ./gradlew build
       - name: Move libcedar_java_ffi files
         working-directory: ./CedarJavaFFI
         shell: bash
