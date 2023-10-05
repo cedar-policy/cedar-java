@@ -24,7 +24,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{thread, str::FromStr};
+use std::{str::FromStr, thread};
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
@@ -118,7 +118,6 @@ struct JavaInterfaceCall {
     arguments: String,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 struct ParseEUIDCall {
     euid: String,
@@ -130,21 +129,25 @@ struct ParseEUIDOutput {
     id: String,
 }
 
-/// public string-based JSON interfaced to be invoked by FFIs. In the policies portion of
-/// the `RecvdSlice`, you can either pass a `Map<String, String>` where the values are all single policies,
-/// or a single String which is a concatenation of multiple policies. If you choose the latter,
-/// policy id's will be auto-generated for you in the format `policyX` where X is a Whole Number (zero or a positive int)
+/// public string-based JSON interfaced to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
+/// returns a serialized `ParseEUIDOutput`
 pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
-    match serde_json::from_str::<ParseEUIDCall>(input)
-    {
-        Err(e) => InterfaceResult::fail_internally(format!("error parsing call to parse EntityUID: {e:}")),
-        Ok(euid_call) => match cedar_policy::EntityUid::from_str(euid_call.euid.as_str()){
-            Ok(euid) => match serde_json::to_string(&ParseEUIDOutput{ty : euid.type_name().to_string(), id: euid.id().to_string()}) {
-                Ok(s) => InterfaceResult::succeed(s),
-                Err(e) => InterfaceResult::fail_internally(format!("error serializing EntityUID: {e:}"))
-            }
-            Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}"))
+    match serde_json::from_str::<ParseEUIDCall>(input) {
+        Err(e) => {
+            InterfaceResult::fail_internally(format!("error parsing call to parse EntityUID: {e:}"))
         }
+        Ok(euid_call) => match cedar_policy::EntityUid::from_str(euid_call.euid.as_str()) {
+            Ok(euid) => match serde_json::to_string(&ParseEUIDOutput {
+                ty: euid.type_name().to_string(),
+                id: euid.id().to_string(),
+            }) {
+                Ok(s) => InterfaceResult::succeed(s),
+                Err(e) => {
+                    InterfaceResult::fail_internally(format!("error serializing EntityUID: {e:}"))
+                }
+            },
+            Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}")),
+        },
     }
 }
 
@@ -154,10 +157,7 @@ mod test {
 
     #[test]
     fn parse_entityuid() {
-        let result = call_cedar(
-            "ParseEntityUidOperation",
-            r#"{"euid": "User::\"Alice\""} "#,
-        );
+        let result = call_cedar("ParseEntityUidOperation", r#"{"euid": "User::\"Alice\""} "#);
         assert_success(result);
     }
 
