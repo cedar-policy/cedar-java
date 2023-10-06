@@ -129,7 +129,7 @@ struct ParseEUIDOutput {
     id: String,
 }
 
-/// public string-based JSON interfaced to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
+/// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
 /// returns a serialized `ParseEUIDOutput`
 pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
     match serde_json::from_str::<ParseEUIDCall>(input) {
