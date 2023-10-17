@@ -182,41 +182,34 @@ public class ParserTest {
         /*
          *  Generate a random principal
          */
-        String principalType = "User";
-        String principalId = Utils.strings();
-        String principal = principalType+"::\"" + principalId + "\"";
-        Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents));
+        var principal = new EntityGen("User").arbitraryEntity();
+        entities.add(principal);
 
         /*
          *  Generate a random Action
          */
-        List<Entity> actions = ActionGen.getEntities();
+        var gen = new EntityGen("Action");
+        List<Entity> actions = gen.arbitraryEntities();
         entities.addAll(actions);
-        String action = actions.get(0).getEUID().toString();
+        var action = actions.get(0);
         /*
          *  Generate a random Resource
          */
-        String resourceType = "Resource";
-        String resourceId = Utils.strings();
-        String resource = resourceType+"::\"" + resourceId + "\"";
-        Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        entities.add(new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents));
+        var resource = new EntityGen("resource").arbitraryEntity();
+        entities.add(resource);
         /*
          *  Generate a universal permit policy
          */
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID()
                         + "\n"
                         + ");";
         Policy policy = new Policy(p, ids);
@@ -226,24 +219,27 @@ public class ParserTest {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext);
+                        principal.getEUID().toString(), 
+                        action.getEUID().toString(), 
+                        resource.getEUID().toString(), 
+                        currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
 
         Assertions.assertTrue(response.isAllowed());
         String actionList =
-                "[" + actions.stream().map(x -> x.getEUID().toString()).collect(Collectors.joining(",")) + "]";
+                "[" + actions.stream().map(a -> a.getEUID().toString()).collect(Collectors.joining(",")) + "]";
         String p2 =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID()
                         + ",\n"
                         + "action in"
                         + actionList
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID()
                         + "\n"
                         + ");";
 
@@ -253,10 +249,10 @@ public class ParserTest {
         Slice slice2 = new BasicSlice(policies, entities);
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
-        action = actions.get(index).getEUID().toString();
+        action = actions.get(index);
         AuthorizationRequest request2 =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext2);
+                        principal.getEUID().toString(), action.getEUID().toString(), resource.getEUID().toString(), currentContext2);
         AuthorizationResponse response2 =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request2, slice2));
         Assertions.assertTrue(response2.isAllowed());
