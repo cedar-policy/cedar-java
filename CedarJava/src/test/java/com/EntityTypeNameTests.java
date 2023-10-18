@@ -69,12 +69,12 @@ public class EntityTypeNameTests {
 
     @Test
     public void nullSafety() { 
-        try { 
-            EntityTypeName.parse(null);
-            assertTrue(false);
-        } catch (NullPointerException e) { 
-            assertTrue(true);
-        }
+        assertFalse(EntityTypeName.parse(null).isPresent());
+    }
+
+    @Property
+    public void equalNull(@ForAll @From("multiLevelName") EntityTypeName n) { 
+        assertFalse(n.equals(null));
     }
 
     @Test

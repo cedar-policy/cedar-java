@@ -134,49 +134,42 @@ struct ParseEUIDOutput {
 
 #[jni_fn("com.cedarpolicy.value.EntityTypeName")]
 pub fn parseEntityTypeName<'a>(mut env: JNIEnv<'a>, _: JClass, src_string: JString<'a>) -> jvalue {
-    if src_string.is_null() {
-        throw_null_ptr_exception(env)
-    } else {
-        match parse_entity_type_name_internal(&mut env, src_string) {
-            Ok(v) => v.as_jni(),
-            Err(e) => {
-                // If we already generated an exception, then let that go up the stack
-                // Otherwise, generate a cedar InternalException and return null
-                if !env.exception_check().unwrap_or_default() {
-                    env.throw_new(
-                        "com/cedarpolicy/model/exception/InternalException",
-                        format!("Internal JNI Error: {e}"),
-                    )
-                    .unwrap();
-                }
-                JValueOwned::Object(JObject::null()).as_jni()
+    match parse_entity_type_name_internal(&mut env, src_string) {
+        Ok(v) => v.as_jni(),
+        Err(e) => {
+            // If we already generated an exception, then let that go up the stack
+            // Otherwise, generate a cedar InternalException and return null
+            if !env.exception_check().unwrap_or_default() {
+                env.throw_new(
+                    "com/cedarpolicy/model/exception/InternalException",
+                    format!("Internal JNI Error: {e}"),
+                )
+                .unwrap();
             }
+            JValueOwned::Object(JObject::null()).as_jni()
         }
     }
-}
-
-fn throw_null_ptr_exception(mut env: JNIEnv<'_>) -> jvalue {
-    env.throw_new("java/lang/NullPointerException", "Null Pointer Exception")
-        .unwrap();
-    JValueGen::Object(JObject::null()).as_jni()
 }
 
 fn parse_entity_type_name_internal<'a>(
     env: &mut JNIEnv<'a>,
     src_string: JString<'a>,
 ) -> Result<JValueOwned<'a>, Box<dyn Error>> {
-    let jstring = env.get_string(&src_string)?;
-    let src = jstring.to_str()?;
-    let r: Result<EntityTypeName, _> = src.parse();
-    match r {
-        Ok(etype) => build_entity_type_object(env, etype),
-        _ => Ok(env.call_static_method(
-            "java/util/Optional",
-            "empty",
-            "()Ljava/util/Optional;",
-            &[],
-        )?),
+    if src_string.is_null() {
+        build_empty(env)
+    } else {
+        let jstring = env.get_string(&src_string)?;
+        let src = jstring.to_str()?;
+        let r: Result<EntityTypeName, _> = src.parse();
+        match r {
+            Ok(etype) => build_entity_type_object(env, etype),
+            _ => build_empty(env),
+        }
     }
+}
+
+fn build_empty<'a>(env: &mut JNIEnv<'a>) -> Result<JValueOwned<'a>, Box<dyn Error>> {
+    Ok(env.call_static_method("java/util/Optional", "empty", "()Ljava/util/Optional;", &[])?)
 }
 
 fn build_entity_type_object<'a>(

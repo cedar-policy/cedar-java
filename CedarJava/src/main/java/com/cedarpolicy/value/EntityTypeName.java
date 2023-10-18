@@ -56,6 +56,9 @@ public final class EntityTypeName {
 
 
     public boolean equals(Object rhs) { 
+        if (rhs == null) { 
+            return false;
+        }
         if (rhs == this) {
             return true;
         }
