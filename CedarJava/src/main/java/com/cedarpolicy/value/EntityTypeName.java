@@ -3,8 +3,10 @@ package com.cedarpolicy.value;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**  Object representing a Cedar entity type 
     An entity type has two components: 
@@ -23,34 +25,42 @@ public final class EntityTypeName {
         this.basename= basename;
     }
 
+    public EntityUID of(String id) {
+        return new EntityUID(this, id);
+    }
+
+    public EntityUID of(EntityIdentifier id) {
+        return new EntityUID(this, id);
+    }
+
     /** 
      * Get the namespace components in order from the root
      * Ex: the namespace `foo::bar::baz` would be returned in the order: `foo`, `bar`, `baz`
      */
-    public Stream<String> namespaceComponents() {
+    public Stream<String> getNamespaceComponents() {
         return namespace.stream();
+    }
+
+    public List<String> getNamespace() {
+        return namespace;
     }
 
     /** 
      * Get the namespace component has a string
      * This is equivalent to `toString` ignoring the basename.
      */
-    public String namespaceAsString() {
+    public String getNamespaceAsString() {
         return namespace.stream().collect(Collectors.joining("::"));
     }
 
     public String toString() {
-        if (namespace.isEmpty()) { 
-            return basename;
-        } else { 
-            return namespaceAsString() + "::" + basename;
-        }
+        return getEntityTypeNameRepr(this);
     }
 
     /** 
      * Get the basename of this entity type
      */
-    public String baseName() {
+    public String getBaseName() {
         return basename;
     }
 
@@ -84,4 +94,5 @@ public final class EntityTypeName {
     }
 
     private static native Optional<EntityTypeName> parseEntityTypeName(String src);
+    private static native String getEntityTypeNameRepr(EntityTypeName type);
 }

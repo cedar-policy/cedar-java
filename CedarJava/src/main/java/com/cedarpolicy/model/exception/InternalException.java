@@ -25,6 +25,12 @@ import java.util.List;
 public class InternalException extends AuthException {
     private final List<String> errors;
 
+    public InternalException(String error) {
+        super("Internal error: " + error);
+        this.errors = new ArrayList<>();
+        this.errors.add(error);
+    }
+
     /**
      * Internal exception from Rust library.
      *

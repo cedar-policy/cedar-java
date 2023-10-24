@@ -30,15 +30,15 @@ public class EntityTypeNameTests {
     public void simpleExample() {
         var o = EntityTypeName.parse("hello");
         assertTrue(o.isPresent());
-        assertEquals(o.get().baseName(), "hello");
+        assertEquals(o.get().getBaseName(), "hello");
     }
 
     @Test
     public void simpleWithNamespace() {
         var o = EntityTypeName.parse("hello::world");
         assertTrue(o.isPresent());
-        assertEquals(o.get().baseName(), "world");
-        var l = o.get().namespaceComponents().collect(Collectors.toList());
+        assertEquals(o.get().getBaseName(), "world");
+        var l = o.get().getNamespaceComponents().collect(Collectors.toList());
         assertEquals(l.size(), 1);
         assertEquals(l.get(0), "hello");
     }
@@ -47,8 +47,8 @@ public class EntityTypeNameTests {
     public void simpleWithNestedNamespace() {
         var o = EntityTypeName.parse("com::cedarpolicy::value::EntityTypeName");
         assertTrue(o.isPresent());
-        assertEquals(o.get().baseName(), "EntityTypeName");
-        var l = o.get().namespaceComponents().collect(Collectors.toList());
+        assertEquals(o.get().getBaseName(), "EntityTypeName");
+        var l = o.get().getNamespaceComponents().collect(Collectors.toList());
         assertEquals(l.size(), 3);
         assertEquals(l.get(0), "com");
         assertEquals(l.get(1), "cedarpolicy");
@@ -69,7 +69,10 @@ public class EntityTypeNameTests {
 
     @Test
     public void nullSafety() { 
-        assertFalse(EntityTypeName.parse(null).isPresent());
+        assertThrows(NullPointerException.class, 
+        () -> EntityTypeName.parse(null),
+        "Null pointer exception should be thrown"
+        );
     }
 
     @Property
@@ -103,7 +106,7 @@ public class EntityTypeNameTests {
     
 
     @Provide
-    Arbitrary<EntityTypeName> multiLevelName() { 
+    public static Arbitrary<EntityTypeName> multiLevelName() { 
         Arbitrary<List<String>> namespace = validName().collect(lst -> lst.size() >= 1 );
         return namespace.map(parts -> 
             EntityTypeName
@@ -114,7 +117,7 @@ public class EntityTypeNameTests {
     }
 
     @Provide
-    Arbitrary<String> validName() { 
+    public static Arbitrary<String> validName() { 
         var first = Arbitraries.chars().alpha();
         var rest = Arbitraries.strings().alpha().numeric().ofMinLength(0);
         return Combinators.combine(first, rest).as((f,r) -> f + r);

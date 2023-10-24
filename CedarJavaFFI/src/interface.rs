@@ -18,16 +18,23 @@ use cedar_policy::{
     frontend::{
         is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
     },
-    EntityTypeName,
+    EntityUid,
 };
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
-    sys::{jobject, jstring, jvalue},
+    sys::{jstring, jvalue},
     JNIEnv,
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
 use std::{error::Error, str::FromStr, thread};
+
+use crate::{
+    objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
+    utils::{get_string, raise_npe},
+};
+
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
@@ -132,79 +139,19 @@ struct ParseEUIDOutput {
     id: String,
 }
 
-#[jni_fn("com.cedarpolicy.value.EntityTypeName")]
-pub fn parseEntityTypeName<'a>(mut env: JNIEnv<'a>, _: JClass, src_string: JString<'a>) -> jvalue {
-    match parse_entity_type_name_internal(&mut env, src_string) {
-        Ok(v) => v.as_jni(),
-        Err(e) => {
-            // If we already generated an exception, then let that go up the stack
-            // Otherwise, generate a cedar InternalException and return null
-            if !env.exception_check().unwrap_or_default() {
-                env.throw_new(
-                    "com/cedarpolicy/model/exception/InternalException",
-                    format!("Internal JNI Error: {e}"),
-                )
-                .unwrap();
-            }
-            JValueOwned::Object(JObject::null()).as_jni()
-        }
+fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
+    // If we already generated an exception, then let that go up the stack
+    // Otherwise, generate a cedar InternalException and return null
+    if !env.exception_check().unwrap_or_default() {
+        // We have to unwrap here as we're doing exception handling
+        // If we don't have the heap space to create an exception, the only valid move in ending the process
+        env.throw_new(
+            "com/cedarpolicy/model/exception/InternalException",
+            format!("Internal JNI Error: {e}"),
+        )
+        .unwrap();
     }
-}
-
-fn parse_entity_type_name_internal<'a>(
-    env: &mut JNIEnv<'a>,
-    src_string: JString<'a>,
-) -> Result<JValueOwned<'a>, Box<dyn Error>> {
-    if src_string.is_null() {
-        build_empty(env)
-    } else {
-        let jstring = env.get_string(&src_string)?;
-        let src = jstring.to_str()?;
-        let r: Result<EntityTypeName, _> = src.parse();
-        match r {
-            Ok(etype) => build_entity_type_object(env, etype),
-            _ => build_empty(env),
-        }
-    }
-}
-
-fn build_empty<'a>(env: &mut JNIEnv<'a>) -> Result<JValueOwned<'a>, Box<dyn Error>> {
-    Ok(env.call_static_method("java/util/Optional", "empty", "()Ljava/util/Optional;", &[])?)
-}
-
-fn build_entity_type_object<'a>(
-    env: &mut JNIEnv<'a>,
-    etype: EntityTypeName,
-) -> Result<JValueOwned<'a>, Box<dyn Error>> {
-    let basename_str = env.new_string(etype.basename())?;
-    let basename_value = JValueGen::Object(basename_str.as_ref());
-    let namespace_array = env.new_object("java/util/ArrayList", "()V", &[])?;
-    for part in etype.namespace_components() {
-        let part_str = env.new_string(part)?;
-        let part_ref = JValueGen::Object(part_str.as_ref());
-        env.call_method(
-            &namespace_array,
-            "add",
-            "(Ljava/lang/Object;)Z",
-            &[part_ref],
-        )?;
-    }
-    let namespace_array_value = JValueGen::Object(&namespace_array);
-
-    let entity_type_obj = env.new_object(
-        "com/cedarpolicy/value/EntityTypeName",
-        "(Ljava/util/List;Ljava/lang/String;)V",
-        &[namespace_array_value, basename_value],
-    )?;
-
-    let optional_obj = env.call_static_method(
-        "java/util/Optional",
-        "of",
-        "(Ljava/lang/Object;)Ljava/util/Optional;",
-        &[JValueGen::Object(&entity_type_obj)],
-    )?;
-
-    Ok(optional_obj)
+    JValueOwned::Object(JObject::null()).as_jni()
 }
 
 /// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
@@ -226,6 +173,123 @@ pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
             },
             Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}")),
         },
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityIdentifier")]
+pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
+    match get_entity_identifier_repr_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn get_entity_identifier_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let eid = JEntityId::cast(env, obj)?;
+        let repr = eid.get_string_repr();
+        let jstring = env.new_string(repr)?.into();
+        Ok(JValueGen::Object(jstring))
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityTypeName")]
+pub fn parseEntityTypeName<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JString<'a>) -> jvalue {
+    match parse_entity_type_name_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+pub fn parse_entity_type_name_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JString<'a>,
+) -> Result<JValueGen<JObject<'a>>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let jstring = env.get_string(&obj)?;
+        let src = get_string(jstring);
+        JEntityTypeName::parse(env, &src).map(Into::into)
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityTypeName")]
+pub fn getEntityTypeNameRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
+    match get_entity_type_name_repr_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn get_entity_type_name_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let etype = JEntityTypeName::cast(env, obj)?;
+        let repr = etype.get_string_repr(env)?;
+        Ok(env.new_string(repr)?.into())
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityUID")]
+pub fn parseEntityUID<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JString<'a>) -> jvalue {
+    let r = match parse_entity_uid_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    };
+    r
+}
+
+fn parse_entity_uid_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let jstring = env.get_string(&obj)?;
+        let src = get_string(jstring);
+        let obj = JEntityUID::parse(env, &src)?;
+        Ok(obj.into())
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityUID")]
+pub fn getEUIDRepr<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    type_name: JObject<'a>,
+    id: JObject<'a>,
+) -> jvalue {
+    let r = match get_euid_repr_internal(&mut env, type_name, id) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    };
+    r
+}
+
+fn get_euid_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    type_name: JObject<'a>,
+    id: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if type_name.is_null() || id.is_null() {
+        raise_npe(env)
+    } else {
+        let etype = JEntityTypeName::cast(env, type_name)?.get_rust_repr(env)?;
+        let id = JEntityId::cast(env, id)?.get_rust_repr();
+        let euid = EntityUid::from_type_name_and_id(etype, id);
+        let jstring = env.new_string(euid.to_string())?;
+        Ok(jstring.into())
     }
 }
 

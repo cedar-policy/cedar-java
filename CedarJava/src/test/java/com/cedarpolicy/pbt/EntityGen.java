@@ -18,6 +18,8 @@ package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.value.EntityIdentifier;
+import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import java.util.ArrayList;
@@ -32,28 +34,28 @@ import net.jqwik.api.Arbitraries;
 /** Generate random actions for testing. */
 public final class EntityGen {
 
-    private List<String> ids;
-    private String type;
+    private List<EntityIdentifier> ids;
+    private EntityTypeName type;
 
-    public EntityGen(String type) {
+    public EntityGen(EntityTypeName type) {
         this.type = type;
         ids = new ArrayList<>();
     }
 
-    private JsonEUID arbitraryEntityId() {
+    private EntityUID arbitraryEntityId() {
         // Generate Id's until we find one not in the generated set
-        String id;
+        EntityIdentifier id;
         while (true) {
-            id = Utils.strings();
+            id = new EntityIdentifier(Utils.strings());
             if (isUnique(id)) {
                 break;
             }
         }
         this.ids.add(id);
-        return new JsonEUID(type, id);
+        return new EntityUID(type, id);
     }
 
-    private boolean isUnique(String id) {
+    private boolean isUnique(EntityIdentifier id) {
         return !ids.contains(id);
     }
 
