@@ -31,7 +31,7 @@ use std::{error::Error, str::FromStr, thread};
 
 use crate::{
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
-    utils::{get_string, raise_npe},
+    utils::raise_npe,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
@@ -144,7 +144,7 @@ fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
     // Otherwise, generate a cedar InternalException and return null
     if !env.exception_check().unwrap_or_default() {
         // We have to unwrap here as we're doing exception handling
-        // If we don't have the heap space to create an exception, the only valid move in ending the process
+        // If we don't have the heap space to create an exception, the only valid move is ending the process
         env.throw_new(
             "com/cedarpolicy/model/exception/InternalException",
             format!("Internal JNI Error: {e}"),
@@ -214,7 +214,7 @@ pub fn parse_entity_type_name_internal<'a>(
         raise_npe(env)
     } else {
         let jstring = env.get_string(&obj)?;
-        let src = get_string(jstring);
+        let src = String::from(jstring);
         JEntityTypeName::parse(env, &src).map(Into::into)
     }
 }
@@ -257,7 +257,7 @@ fn parse_entity_uid_internal<'a>(
         raise_npe(env)
     } else {
         let jstring = env.get_string(&obj)?;
-        let src = get_string(jstring);
+        let src = String::from(jstring);
         let obj = JEntityUID::parse(env, &src)?;
         Ok(obj.into())
     }

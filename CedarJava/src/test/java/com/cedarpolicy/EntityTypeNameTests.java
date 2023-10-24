@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.lang.NullPointerException;
+import java.text.Collator;
+
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Combinators;
@@ -25,6 +27,17 @@ import org.junit.jupiter.api.Test;
 import com.cedarpolicy.value.EntityTypeName;
 
 public class EntityTypeNameTests {
+
+    private static String[] KEYWORDS = new String[] {
+        "true",
+        "false",
+        "if",
+        "then",
+        "else",
+        "in",
+        "like",
+        "has"
+    };
 
     @Test
     public void simpleExample() {
@@ -75,6 +88,14 @@ public class EntityTypeNameTests {
         );
     }
 
+    @Test
+    public void rejectsKeywords() {
+        for (var keyword : KEYWORDS) {
+            var src = "Foo::" + keyword + "::Bar";
+            assertFalse(EntityTypeName.parse(src).isPresent());
+        }
+    }
+
     @Property
     public void equalNull(@ForAll @From("multiLevelName") EntityTypeName n) { 
         assertFalse(n.equals(null));
@@ -108,19 +129,33 @@ public class EntityTypeNameTests {
     @Provide
     public static Arbitrary<EntityTypeName> multiLevelName() { 
         Arbitrary<List<String>> namespace = validName().collect(lst -> lst.size() >= 1 );
-        return namespace.map(parts -> 
-            EntityTypeName
-                .parse(parts
-                    .stream()
-                    .collect(Collectors.joining("::")))
-                .get());
+        return namespace.map(parts -> parse(parts));
+    }
+
+    public static EntityTypeName parse(List<String> parts) {
+        var src = parts.stream().collect(Collectors.joining("::"));
+        var o = EntityTypeName.parse(src);
+        if (o.isPresent()) {
+            return o.get();
+        } else {
+            throw new Error("Couldn't parse: `" + src + "`");
+        }
     }
 
     @Provide
     public static Arbitrary<String> validName() { 
         var first = Arbitraries.chars().alpha();
         var rest = Arbitraries.strings().alpha().numeric().ofMinLength(0);
-        return Combinators.combine(first, rest).as((f,r) -> f + r);
+        return Combinators.combine(first, rest).as((f,r) -> f + r).filter(str -> !isKeyword(str));
+    }
+
+    private static boolean isKeyword(String s) {
+        for (var keyword : KEYWORDS) {
+            if (keyword.equals(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

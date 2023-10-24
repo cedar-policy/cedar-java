@@ -24,7 +24,6 @@ import com.cedarpolicy.serializer.JsonEUID;
  * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
  * identifier for the entity formatted as <code>TYPE::"ID"</code>.
  */
-
 public final class EntityUID extends Value {
     private final EntityTypeName type;
     private final EntityIdentifier id;
@@ -34,20 +33,38 @@ public final class EntityUID extends Value {
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
     }
 
+    /**
+     * Construct an EntityUID from a tyep name and an id
+     * @param type the Entity Type of this EUID
+     * @param id the id portion of the EUID
+     */
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
         this.id = id;
         this.repr = getEUIDRepr(type, id);
     }
 
+    /**
+     * Construct an EntityUID from a tyep name and an id
+     * @param type the Entity Type of this EUID
+     * @param id the id portion of the EUID
+     */
     public EntityUID(EntityTypeName type, String id) {
         this(type, new EntityIdentifier(id));
     }
 
+    /**
+     * Get the Type of this EUID
+     * @return The EntityTypeName portion of this EUID
+     */
     public EntityTypeName getType() {
         return type;
     }
 
+    /**
+     * Get the ID of this EUID
+     * @return The EntityIdentifier portion of this EUID
+     */
     public EntityIdentifier getId() {
         return id;
     }

@@ -1,26 +1,13 @@
-use std::str::Utf8Error;
-
-use itertools::Itertools;
 use jni::{
     objects::{JClass, JObject, JValueGen, JValueOwned},
-    strings::JavaStr,
     JNIEnv,
 };
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-pub fn get_string(jstring: JavaStr<'_, '_, '_>) -> String {
-    jstring.into()
-    // match jstring.to_str() {
-    //     Ok(s) => Ok(s),
-    //     Err(e) => {
-    //         let bytes = jstring.to_bytes().to_vec();
-    //         Err(Box::new(InternalJNIError::UnicodeError(e, bytes)))
-    //     }
-    // }
-}
-
+/// Queries the environment to check if `obj` belongs to the `name` class
+/// Errors if it does not
 pub fn assert_is_class<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>, name: &str) -> Result<()> {
     if obj.is_null() {
         raise_npe(env)?;
@@ -44,13 +31,15 @@ pub fn assert_is_class<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>, name: &str) 
     }
 }
 
+/// Get the name of a class as a String
 pub fn get_class_name<'a>(env: &mut JNIEnv<'a>, class: JClass<'a>) -> Result<String> {
     let result = env.call_method(class, "toString", "()Ljava/lang/String;", &[])?;
     let obj = get_object_ref(result)?.into();
     let jstring = env.get_string(&obj)?;
-    Ok(get_string(jstring))
+    Ok(jstring.into())
 }
 
+/// JNI Errors and internal invariant violations
 #[derive(Debug, Error)]
 pub enum InternalJNIError {
     #[error("Internal invariant violated, expected member of type `{0}`")]
@@ -61,10 +50,9 @@ pub enum InternalJNIError {
     NullPointer,
     #[error("Index out of bounds")]
     IndexOutOfBounds,
-    #[error("Error decoding string from java: {0} Contained these bytes: [{}]", .1.iter().map(|byte| format!("{:#04x}", byte)).join(", "))]
-    UnicodeError(Utf8Error, Vec<u8>),
 }
 
+/// Given a Java value, extracts the object reference if it exists, otherwise errors
 pub fn get_object_ref(v: JValueGen<JObject<'_>>) -> Result<JObject<'_>> {
     match v {
         JValueGen::Object(o) => Ok(o),
@@ -72,6 +60,7 @@ pub fn get_object_ref(v: JValueGen<JObject<'_>>) -> Result<JObject<'_>> {
     }
 }
 
+/// Raises a null-pointer exception (java.lang.NullPointerException)
 pub fn raise_npe<'a>(env: &mut JNIEnv<'a>) -> Result<JValueOwned<'a>> {
     env.throw_new("java/lang/NullPointerException", "Null Pointer Exception")?;
     Ok(JValueGen::Object(JObject::null()))

@@ -9,13 +9,18 @@ use jni::{
     JNIEnv,
 };
 
+/// Typed wrapper for Java lists
+/// (java.util.List)
 #[derive(Debug)]
 pub struct List<'a, T> {
+    /// Underlying Java object
     obj: JObject<'a>,
+    /// ZST for tracking type info
     marker: PhantomData<T>,
 }
 
 impl<'a, T: Object<'a>> List<'a, T> {
+    /// Construct an empty array list, which will serve as a list
     pub fn new(env: &mut JNIEnv<'a>) -> Result<Self> {
         let obj = env.new_object("java/util/ArrayList", "()V", &[])?;
         Ok(Self {
@@ -24,13 +29,15 @@ impl<'a, T: Object<'a>> List<'a, T> {
         })
     }
 
+    /// Add an item to the back of the list
     pub fn add(&mut self, env: &mut JNIEnv<'a>, v: T) -> Result<()> {
         let value = JValueGen::Object(v.as_ref());
         env.call_method(&self.obj, "add", "(Ljava/lang/Object;)Z", &[value])?;
         Ok(())
     }
 
-    // We can't check this as I don't see a way to list a class's interfaces
+    /// Cast from an untyped java object to this wrapper
+    /// We can't check this as I don't see a way to list a class's interfaces
     pub fn cast_unchecked(obj: JObject<'a>) -> Self {
         Self {
             obj,
@@ -38,6 +45,7 @@ impl<'a, T: Object<'a>> List<'a, T> {
         }
     }
 
+    /// Get the object at position `i`, throws an exception if out-of-bounds
     pub fn get(&self, env: &mut JNIEnv<'a>, i: i32) -> Result<T> {
         let v = env.call_method(
             &self.obj,
@@ -53,6 +61,7 @@ impl<'a, T: Object<'a>> List<'a, T> {
         }
     }
 
+    /// Iterate over the elements in the list
     pub fn iter(&self, env: &mut JNIEnv<'a>) -> Result<impl Iterator<Item = T>> {
         let max = match env.call_method(&self.obj, "size", "()I", &[])? {
             JValueGen::Int(x) => Ok(x),
