@@ -63,7 +63,7 @@ public final class EntityTypeName {
     }
 
     /** 
-     * Get the namespace component has a string
+     * Get the namespace component as a string
      * This is equivalent to `toString` ignoring the basename.
      * @return String containing the namespace
      */
