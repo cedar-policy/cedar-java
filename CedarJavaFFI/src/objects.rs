@@ -11,8 +11,8 @@ use jni::{
     JNIEnv,
 };
 
-/// General trait for anything that's a wrapper around a  java object
-/// This let's us dynamically cast from a Java Object to our typed wrapper
+/// General trait for anything that's a wrapper around a java object.
+/// This lets us dynamically cast from a Java Object to our typed wrapper
 pub trait Object<'a>: Sized + AsRef<JObject<'a>> {
     /// Dynamically cast from an untyped object to our typed wrappers
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self>;
