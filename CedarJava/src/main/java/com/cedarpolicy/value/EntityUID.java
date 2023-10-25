@@ -45,7 +45,7 @@ public final class EntityUID extends Value {
     }
 
     /**
-     * Construct an EntityUID from a tyep name and an id
+     * Construct an EntityUID from a type name and an id
      * @param type the Entity Type of this EUID
      * @param id the id portion of the EUID
      */
