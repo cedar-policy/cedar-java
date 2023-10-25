@@ -24,7 +24,7 @@ pub fn assert_is_class<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>, name: &str) 
             "java/lang/ClassCastException",
             format!("{class_name} cannot be cast to {expected_class_name}"),
         )?;
-        Err(Box::new(InternalJNIError::TypeErorr {
+        Err(Box::new(InternalJNIError::TypeError {
             expected: expected_class_name,
             got: class_name,
         }))
