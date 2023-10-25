@@ -34,7 +34,7 @@ public final class EntityTypeName {
     /**
      * Construct an EntityUID of this type
      * @param id The EntityIdentifier for the new EntityUID
-     * @return An EntityUID with this time and the supplied EntityIdentifier
+     * @return An EntityUID with this type and the supplied EntityIdentifier
      */
     public EntityUID of(String id) {
         return new EntityUID(this, id);
