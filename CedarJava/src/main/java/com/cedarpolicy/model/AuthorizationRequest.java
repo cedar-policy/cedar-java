@@ -39,7 +39,8 @@ import java.util.Optional;
 public class AuthorizationRequest {
     /** EUID of the principal in the request. */
     @JsonProperty("principal")
-    public final Optional<EntityUID> principalEUID; /** EUID of the action in the request. */
+    public final Optional<EntityUID> principalEUID; 
+    /** EUID of the action in the request. */
     @JsonProperty("action")
     public final EntityUID actionEUID;
     /** EUID of the resource in the request. */
