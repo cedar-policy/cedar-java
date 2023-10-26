@@ -97,7 +97,7 @@ public class AuthorizationRequest {
     }
 
     /**
-     * Create a request in the empty context.
+     * Create a request without a schema.
      *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.

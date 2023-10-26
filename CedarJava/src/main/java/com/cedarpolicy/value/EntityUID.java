@@ -17,6 +17,7 @@
 package com.cedarpolicy.value;
 
 import java.util.Optional;
+import java.util.Objects;
 
 import com.cedarpolicy.serializer.JsonEUID;
 
@@ -27,7 +28,6 @@ import com.cedarpolicy.serializer.JsonEUID;
 public final class EntityUID extends Value {
     private final EntityTypeName type;
     private final EntityIdentifier id;
-    private final String repr;
 
     static { 
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
@@ -41,7 +41,6 @@ public final class EntityUID extends Value {
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
         this.id = id;
-        this.repr = getEUIDRepr(type, id);
     }
 
     /**
@@ -72,7 +71,7 @@ public final class EntityUID extends Value {
 
     @Override
     public String toString() {
-        return this.repr;
+        return getEUIDRepr(type, id);
     }
 
     @Override
@@ -93,12 +92,12 @@ public final class EntityUID extends Value {
 
     @Override
     public int hashCode() {
-        return type.hashCode() + id.hashCode();
+        return Objects.hash(type, id);
     }
 
     @Override
     public String toCedarExpr() {
-        return this.repr;
+        return getEUIDRepr(type, id);
     }
 
 

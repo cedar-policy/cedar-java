@@ -60,11 +60,11 @@ public class EntityUIDTests {
     void nullSafety() {
         assertThrows(NullPointerException.class, () -> EntityUID.parse(null), "should throw NPE");
         EntityIdentifier null_id = null;
-        assertThrows(NullPointerException.class, () -> new EntityUID(null, null_id), "should throw NPE");
+        assertThrows(NullPointerException.class, () -> new EntityUID(null, null_id).toString(), "should throw NPE");
         var id = new EntityIdentifier("alice");
-        assertThrows(NullPointerException.class, () -> new EntityUID(null, id), "should throw NPE");
+        assertThrows(NullPointerException.class, () -> new EntityUID(null, id).toString(), "should throw NPE");
         var type = EntityTypeName.parse("Foo").get();
-        assertThrows(NullPointerException.class, () -> new EntityUID(type, null_id), "should throw NPE");
+        assertThrows(NullPointerException.class, () -> new EntityUID(type, null_id).toString(), "should throw NPE");
     }
 
     @Test

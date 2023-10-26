@@ -64,20 +64,15 @@ pub fn callCedarJNI(
     j_call: JString<'_>,
     j_input: JString<'_>,
 ) -> jstring {
-    let parsing_err = build_err_obj(&env, "parsing");
-    let getting_err = build_err_obj(&env, "getting");
-
     let j_call_str: String = match env.get_string(&j_call) {
         Ok(call_str) => call_str.into(),
-        _ => return getting_err,
+        _ => return build_err_obj(&env, "getting"),
     };
-    let j_call_str = j_call_str;
 
-    let j_input_str: String = match env.get_string(&j_input) {
+    let mut j_input_str: String = match env.get_string(&j_input) {
         Ok(s) => s.into(),
-        Err(_) => return parsing_err,
+        Err(_) => return build_err_obj(&env, "parsing"),
     };
-    let mut j_input_str = j_input_str;
     j_input_str.push(' ');
 
     let handle = thread::spawn(move || call_cedar_in_thread(j_call_str, j_input_str));

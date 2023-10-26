@@ -1,5 +1,6 @@
 package com.cedarpolicy.value;
 
+
 /**
  * Class representing Entity Identifiers.
  * All strings are valid Entity Identifiers

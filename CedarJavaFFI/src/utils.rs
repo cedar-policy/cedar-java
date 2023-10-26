@@ -42,21 +42,42 @@ pub fn get_class_name<'a>(env: &mut JNIEnv<'a>, class: JClass<'a>) -> Result<Str
 /// JNI Errors and internal invariant violations
 #[derive(Debug, Error)]
 pub enum InternalJNIError {
-    #[error("Internal invariant violated, expected member of type `{0}`")]
-    BadMemberType(&'static str),
+    #[error("Internal invariant violated, expected member of type `{expected}`, got `{got}`")]
+    BadMemberType {
+        expected: &'static str,
+        got: &'static str,
+    },
     #[error("Internal invariant violated. Object passed to jni function was of the wrong class. Expected: `{expected}`, got: `{got}`")]
-    TypeErorr { expected: String, got: String },
+    TypeError { expected: String, got: String },
     #[error("Null pointer")]
     NullPointer,
-    #[error("Index out of bounds")]
-    IndexOutOfBounds,
+    #[error("Index `{idx}` out of bounds for List of length `{len}`")]
+    IndexOutOfBounds { len: i32, idx: i32 },
 }
 
 /// Given a Java value, extracts the object reference if it exists, otherwise errors
 pub fn get_object_ref(v: JValueGen<JObject<'_>>) -> Result<JObject<'_>> {
     match v {
         JValueGen::Object(o) => Ok(o),
-        _ => Err(Box::new(InternalJNIError::BadMemberType("String"))),
+        _ => Err(Box::new(InternalJNIError::BadMemberType {
+            expected: "object",
+            got: value_type(v),
+        })),
+    }
+}
+
+pub fn value_type<T>(v: JValueGen<T>) -> &'static str {
+    match v {
+        JValueGen::Object(_) => "object",
+        JValueGen::Byte(_) => "byte",
+        JValueGen::Char(_) => "char",
+        JValueGen::Short(_) => "short",
+        JValueGen::Int(_) => "int",
+        JValueGen::Long(_) => "long",
+        JValueGen::Bool(_) => "bool",
+        JValueGen::Float(_) => "float",
+        JValueGen::Double(_) => "double",
+        JValueGen::Void => "void",
     }
 }
 

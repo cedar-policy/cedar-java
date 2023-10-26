@@ -86,7 +86,7 @@ impl<'a> JEntityTypeName<'a> {
     /// Get the namespace field
     pub fn get_namespace(&self, env: &mut JNIEnv<'a>) -> Result<List<'a, JString<'a>>> {
         let v = env.call_method(&self.obj, "getNamespace", "()Ljava/util/List;", &[])?;
-        Ok(List::cast_unchecked(get_object_ref(v)?))
+        List::cast_unchecked(get_object_ref(v)?, env)
     }
 
     /// Get the basename field

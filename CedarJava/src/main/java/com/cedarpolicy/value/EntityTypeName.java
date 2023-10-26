@@ -3,10 +3,10 @@ package com.cedarpolicy.value;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**  Object representing a Cedar entity type 
     An entity type has two components: 
@@ -99,7 +99,7 @@ public final class EntityTypeName {
     }
 
     public int hashCode() { 
-        return basename.hashCode() + namespace.hashCode();
+        return Objects.hash(basename, namespace);
     }
 
     /**

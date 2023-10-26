@@ -38,7 +38,7 @@ public class Entity {
     public final Set<EntityUID> parentsEUIDs;
 
     /**
-     * Create an entity from JsonEUID and unwrapped JSON values.
+     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
      *
      * @param uid EUID of the Entity.
      * @param attributes Key/Value map of attributes.
@@ -70,16 +70,16 @@ public class Entity {
 
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get the entity uid 
+     * @return Entity UID 
      */
     public EntityUID getEUID() {
         return euid;
     }
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get this Entities parents
+     * @return the set of parent EntityUIDs 
      */
     public Set<EntityUID> getParents() {
         return parentsEUIDs;
