@@ -32,7 +32,7 @@ jobs:
         working-directory: ./CedarJava
         shell: bash
         run: bash config.sh run_int_tests
-      - name: cargo rustc
+      - name: cargo build
         working-directory: ./CedarJavaFFI
         run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
       - name: cargo test
