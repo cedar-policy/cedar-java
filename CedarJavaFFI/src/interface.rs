@@ -95,7 +95,7 @@ pub fn callCedarJNI(
 /// The main JNI entry point
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
-    env.new_string("2.3")
+    env.new_string("3.0")
         .expect("error creating Java string")
         .into_raw()
 }
