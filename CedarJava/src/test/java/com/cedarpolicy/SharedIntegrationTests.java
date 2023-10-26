@@ -32,6 +32,7 @@ import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,6 +40,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,13 +132,13 @@ public class SharedIntegrationTests {
         public String desc;
 
         /** Principal entity uid used for the request. */
-        public String principal;
+        public JsonEUID principal;
 
         /** Action entity uid used for the request. */
-        public String action;
+        public JsonEUID action;
 
         /** Resource entity uid used for the request. */
-        public String resource;
+        public JsonEUID resource;
 
         /** Context map used for the request. */
         public Map<String, Value> context;
@@ -204,6 +207,7 @@ public class SharedIntegrationTests {
        "tests/multi/4.json",
        "tests/multi/5.json",
     };
+
 
     /**
      * This method is the main entry point for JUnit. It returns a list of containers, which contain
@@ -347,10 +351,14 @@ public class SharedIntegrationTests {
             value = "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
             justification = "Initialized by Jackson.")
     private Entity loadEntity(JsonEntity je) {
-        HashSet<JsonEUID> parentEUIDs = new HashSet<>();
-        parentEUIDs.addAll(je.parents);
 
-        return new Entity(je.uid, je.attrs, parentEUIDs);
+        Set<EntityUID> parents = je.parents
+            .stream()
+            .map(euid -> EntityUID.parseFromJson(euid).get())
+            .collect(Collectors.toSet());
+
+
+        return new Entity(EntityUID.parseFromJson(je.uid).get(), je.attrs, parents);
     }
 
     /**
@@ -397,15 +405,16 @@ public class SharedIntegrationTests {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authRequest =
                 new AuthorizationRequest(
-                        request.principal == null ? Optional.empty() : Optional.of(request.principal),
-                        request.action,
-                        request.resource == null ? Optional.empty() : Optional.of(request.resource),
+                    request.principal == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.principal).get()),
+                    EntityUID.parseFromJson(request.action).get(),
+                    request.resource == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.resource).get()),
                         Optional.of(request.context),
                         Optional.of(schema));
         Slice slice = new BasicSlice(policies, entities);
         
         try {
             AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
+            System.out.println(response.getErrors());
             assertEquals(request.decision, response.getDecision());
             // convert to a HashSet to allow reordering of error messages
             assertEquals(new HashSet<>(request.errors), new HashSet<>(response.getErrors()));

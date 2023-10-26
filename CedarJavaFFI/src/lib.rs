@@ -16,5 +16,8 @@
 
 #![forbid(unsafe_code)]
 mod interface;
+mod jlist;
+mod objects;
+mod utils;
 
 pub use interface::*;

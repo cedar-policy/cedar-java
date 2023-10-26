@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Serialize a slice. Only used internally by CedarJson */
 class SliceJsonSerializer extends JsonSerializer<Slice> {
@@ -58,9 +59,9 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
         public final Set<JsonEUID> parents;
 
         JsonEntity(Entity e) {
-            this.uid = e.getEUID();
+            this.uid = e.getEUID().asJson();
             this.attrs = e.attrs;
-            this.parents = e.getParents();
+            this.parents = e.getParents().stream().map(euid -> euid.asJson()).collect(Collectors.toSet());
         }
     }
 

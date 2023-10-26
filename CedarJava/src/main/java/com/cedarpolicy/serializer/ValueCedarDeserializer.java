@@ -18,9 +18,12 @@ package com.cedarpolicy.serializer;
 
 import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
 import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
+import com.cedarpolicy.model.slice.EntityTypeAndId;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;
+import com.cedarpolicy.value.EntityIdentifier;
+import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
@@ -87,15 +90,20 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                     if (count == 1) {
                         if (escapeType == EscapeType.ENTITY) {
                             JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
-                            if (val.isTextual()) {
-                                return new EntityUID(val.textValue());
-                            } else if (val.isObject() && val.has("id") && val.has("type")) {
+                            if (val.isObject() && val.has("id") && val.has("type")) {
                                 int num_fields = 0;
                                 for (Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
                                     num_fields++;
                                 }
                                 if (num_fields == 2) {
-                                    return new EntityUID(val.get("type").textValue(), val.get("id").textValue());
+                                    var id = new EntityIdentifier(val.get("id").textValue());
+                                    var type = EntityTypeName.parse(val.get("type").textValue());
+                                    if (type.isPresent()) {
+                                        return new EntityUID(type.get(), id);
+                                    } else {
+                                        var msg = "Invalid Entity Type" + val.get("type").textValue();
+                                        throw new InvalidValueDeserializationException(parser, msg, node.asToken(), Map.class);
+                                    }
                                 }
                             }
                             throw new InvalidValueDeserializationException(parser,

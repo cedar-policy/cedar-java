@@ -14,23 +14,33 @@
  * limitations under the License.
  */
 
-use cedar_policy::frontend::{
-    is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
+use cedar_policy::{
+    frontend::{
+        is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
+    },
+    EntityUid,
 };
 use jni::{
-    objects::{JClass, JString},
-    sys::jstring,
+    objects::{JClass, JObject, JString, JValueGen, JValueOwned},
+    sys::{jstring, jvalue},
     JNIEnv,
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{str::FromStr, thread};
+use std::{error::Error, str::FromStr, thread};
+
+use crate::{
+    objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
+    utils::raise_npe,
+};
+
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
 const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
-fn build_err_obj(env: JNIEnv<'_>, err: &str) -> jstring {
+fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
     env.new_string(
         serde_json::to_string(&InterfaceResult::fail_bad_request(vec![format!(
             "Failed {} Java string",
@@ -49,25 +59,20 @@ fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
 /// The main JNI entry point
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn callCedarJNI(
-    env: JNIEnv<'_>,
+    mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     j_call: JString<'_>,
     j_input: JString<'_>,
 ) -> jstring {
-    let parsing_err = || build_err_obj(env, "parsing");
-    let getting_err = || build_err_obj(env, "getting");
-
-    let j_call_str: String = match env.get_string(j_call) {
+    let j_call_str: String = match env.get_string(&j_call) {
         Ok(call_str) => call_str.into(),
-        _ => return getting_err(),
+        _ => return build_err_obj(&env, "getting"),
     };
-    let j_call_str = j_call_str.clone();
 
-    let j_input_str: String = match env.get_string(j_input) {
+    let mut j_input_str: String = match env.get_string(&j_input) {
         Ok(s) => s.into(),
-        Err(_) => return parsing_err(),
+        Err(_) => return build_err_obj(&env, "parsing"),
     };
-    let mut j_input_str = j_input_str.clone();
     j_input_str.push(' ');
 
     let handle = thread::spawn(move || call_cedar_in_thread(j_call_str, j_input_str));
@@ -129,6 +134,21 @@ struct ParseEUIDOutput {
     id: String,
 }
 
+fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
+    // If we already generated an exception, then let that go up the stack
+    // Otherwise, generate a cedar InternalException and return null
+    if !env.exception_check().unwrap_or_default() {
+        // We have to unwrap here as we're doing exception handling
+        // If we don't have the heap space to create an exception, the only valid move is ending the process
+        env.throw_new(
+            "com/cedarpolicy/model/exception/InternalException",
+            format!("Internal JNI Error: {e}"),
+        )
+        .unwrap();
+    }
+    JValueOwned::Object(JObject::null()).as_jni()
+}
+
 /// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
 /// returns a serialized `ParseEUIDOutput`
 pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
@@ -148,6 +168,123 @@ pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
             },
             Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}")),
         },
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityIdentifier")]
+pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
+    match get_entity_identifier_repr_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn get_entity_identifier_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let eid = JEntityId::cast(env, obj)?;
+        let repr = eid.get_string_repr();
+        let jstring = env.new_string(repr)?.into();
+        Ok(JValueGen::Object(jstring))
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityTypeName")]
+pub fn parseEntityTypeName<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JString<'a>) -> jvalue {
+    match parse_entity_type_name_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+pub fn parse_entity_type_name_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JString<'a>,
+) -> Result<JValueGen<JObject<'a>>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let jstring = env.get_string(&obj)?;
+        let src = String::from(jstring);
+        JEntityTypeName::parse(env, &src).map(Into::into)
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityTypeName")]
+pub fn getEntityTypeNameRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
+    match get_entity_type_name_repr_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn get_entity_type_name_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let etype = JEntityTypeName::cast(env, obj)?;
+        let repr = etype.get_string_repr(env)?;
+        Ok(env.new_string(repr)?.into())
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityUID")]
+pub fn parseEntityUID<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JString<'a>) -> jvalue {
+    let r = match parse_entity_uid_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    };
+    r
+}
+
+fn parse_entity_uid_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let jstring = env.get_string(&obj)?;
+        let src = String::from(jstring);
+        let obj = JEntityUID::parse(env, &src)?;
+        Ok(obj.into())
+    }
+}
+
+#[jni_fn("com.cedarpolicy.value.EntityUID")]
+pub fn getEUIDRepr<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    type_name: JObject<'a>,
+    id: JObject<'a>,
+) -> jvalue {
+    let r = match get_euid_repr_internal(&mut env, type_name, id) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    };
+    r
+}
+
+fn get_euid_repr_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    type_name: JObject<'a>,
+    id: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if type_name.is_null() || id.is_null() {
+        raise_npe(env)
+    } else {
+        let etype = JEntityTypeName::cast(env, type_name)?.get_rust_repr(env)?;
+        let id = JEntityId::cast(env, id)?.get_rust_repr();
+        let euid = EntityUid::from_type_name_and_id(etype, id);
+        let jstring = env.new_string(euid.to_string())?;
+        Ok(jstring.into())
     }
 }
 

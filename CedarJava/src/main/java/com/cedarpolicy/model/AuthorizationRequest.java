@@ -17,6 +17,8 @@
 package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
@@ -37,13 +39,13 @@ import java.util.Optional;
 public class AuthorizationRequest {
     /** EUID of the principal in the request. */
     @JsonProperty("principal")
-    public final Optional<String> principalEUID;
+    public final Optional<EntityUID> principalEUID; 
     /** EUID of the action in the request. */
     @JsonProperty("action")
-    public final String actionEUID;
+    public final EntityUID actionEUID;
     /** EUID of the resource in the request. */
     @JsonProperty("resource")
-    public final Optional<String> resourceEUID;
+    public final Optional<EntityUID> resourceEUID;
 
     /** Key/Value map representing the context of the request. */
     public final Optional<Map<String, Value>> context;
@@ -61,9 +63,9 @@ public class AuthorizationRequest {
      * @param schema Schema (optional).
      */
     public AuthorizationRequest(
-            Optional<String> principalEUID,
-            String actionEUID,
-            Optional<String> resourceEUID,
+            Optional<EntityUID> principalEUID,
+            EntityUID actionEUID,
+            Optional<EntityUID> resourceEUID,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema) {
         this.principalEUID = principalEUID;
@@ -85,7 +87,7 @@ public class AuthorizationRequest {
      * @param resourceEUID Resource's EUID.
      * @param context Key/Value context.
      */
-    public AuthorizationRequest(String principalEUID, String actionEUID, String resourceEUID, Map<String, Value> context) {
+    public AuthorizationRequest(EntityUID principalEUID, EntityUID actionEUID, EntityUID resourceEUID, Map<String, Value> context) {
         this(
                 Optional.of(principalEUID),
                 actionEUID,
@@ -93,6 +95,34 @@ public class AuthorizationRequest {
                 Optional.of(context),
                 Optional.empty());
     }
+
+    /**
+     * Create a request without a schema.
+     *
+     * @param principalEUID Principal's EUID.
+     * @param actionEUID Action's EUID.
+     * @param resourceEUID Resource's EUID.
+     * @param context Key/Value context.
+     */
+    public AuthorizationRequest(Entity principalEUID, Entity actionEUID, Entity resourceEUID, Map<String, Value> context) {
+        this(
+                Optional.of(principalEUID.getEUID()),
+                actionEUID.getEUID(),
+                Optional.of(resourceEUID.getEUID()),
+                Optional.of(context),
+                Optional.empty());
+    }
+
+    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource, Optional<Map<String, Value>> context, Optional<Schema> schema) {
+        this(
+            principal.map(e -> e.getEUID()),
+            action.getEUID(),
+            resource.map(e -> e.getEUID()),
+            context,
+            schema
+        );
+    }
+
 
     /** Readable string representation. */
     @Override

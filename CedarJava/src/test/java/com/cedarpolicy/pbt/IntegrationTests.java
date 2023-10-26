@@ -30,9 +30,9 @@ import com.cedarpolicy.model.slice.Instantiation;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.model.slice.TemplateInstantiation;
-import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimString;
 import com.cedarpolicy.value.Value;
@@ -52,50 +52,52 @@ import org.junit.jupiter.api.Test;
 
 /** Integration tests. */
 public class IntegrationTests {
+ 
+    final EntityTypeName principalType;
+    final EntityTypeName actionType;
+    final EntityTypeName resourceType;
+
+    public IntegrationTests() {
+        principalType = EntityTypeName.parse("User").get();
+        actionType = EntityTypeName.parse("Action").get();
+        resourceType = EntityTypeName.parse("Resource").get();
+    }
+
     /** Tests a single attribute: resource.owner. */
     @Test
     public void testResourceAttribute() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
-        String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        var principalParents = new HashSet<EntityUID>();
+        Entity principal = new Entity(principalType.of("alice"), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
-        String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(actionType.of("view"), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
-        String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        resourceAttributes.put("owner", new EntityUID(principal));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        resourceAttributes.put("owner", principal.getEUID());
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(resourceType.of("photo.jpg"), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID()
                         + "\n"
                         + ")\n"
                         + " when {\n"
                         + "resource.owner=="
-                        + principal
+                        + principal.getEUID()
                         + "};";
         Policy policy = new Policy(p, "001");
         Set<Policy> policies = new HashSet<>();
@@ -104,7 +106,7 @@ public class IntegrationTests {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
-                        principal, action, resource, currentContext);
+                        principal.getEUID(), action.getEUID(), resource.getEUID(), currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
@@ -115,32 +117,26 @@ public class IntegrationTests {
     @Property(tries = 50)
     public void testRandomResourceAttribute(@ForAll @IntRange(min = 1, max = 50) int count) {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set< EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         while (resourceAttributes.size() < count) {
             resourceAttributes.put(Utils.strings(), Utils.primStrings());
         }
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
         /*
          *      select random attributes
          */
@@ -161,13 +157,13 @@ public class IntegrationTests {
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID()
                         + "\n"
                         + ")\n"
                         + " when {\n"
@@ -192,33 +188,27 @@ public class IntegrationTests {
     @Property(tries = 50)
     public void testRandomResourceAttributeDeny(@ForAll @IntRange(min = 1, max = 50) int count) {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set< EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set< EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         while (resourceAttributes.size() < count) {
             resourceAttributes.put(Utils.strings(), Utils.primStrings());
         }
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set< EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
         /*
          *      select random attributes
          */
@@ -245,13 +235,13 @@ public class IntegrationTests {
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID().toString()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID().toString()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID().toString()
                         + "\n"
                         + ")\n"
                         + " when {\n"
@@ -276,30 +266,25 @@ public class IntegrationTests {
     @Test
     public void testLongExprRequiresRustThread() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
+
         String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };";
         Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
@@ -319,30 +304,24 @@ public class IntegrationTests {
     @Test
     public void testLongExprStackOverflowDeny() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
         String p = "permit( principal==User::\"alice\", action==Action::\"view\", resource==Resource::\"photo.jpg\" ) when { resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" && resource.name==\"my_photo\" };";
         Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
@@ -362,29 +341,24 @@ public class IntegrationTests {
     @Test
     public void testUnspecifiedResource() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        resourceAttributes.put("owner", new EntityUID(principal));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        resourceAttributes.put("owner", principal.getEUID());
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p = "permit(principal, action, resource);";
         Policy policy = new Policy(p, "001");
@@ -396,7 +370,7 @@ public class IntegrationTests {
                 new AuthorizationRequest(
                         Optional.of(principal),
                         action,
-                        Optional.empty(),
+                        Optional.of(resource),
                         Optional.of(currentContext),
                         Optional.empty());
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
@@ -409,41 +383,35 @@ public class IntegrationTests {
     @Test
     public void testIpAddressExtension() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("ip", new IpAddress("192.168.0.24"));
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID().toString()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID().toString()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID().toString()
                         + "\n"
                         + ")\n"
                         + " when {\n"
@@ -468,41 +436,35 @@ public class IntegrationTests {
     @Test
     public void testDecimalExtension() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("val", new Decimal("1.0000"));
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID().toString()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID().toString()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID().toString()
                         + "\n"
                         + ")\n"
                         + " when {\n"
@@ -527,30 +489,24 @@ public class IntegrationTests {
     @Test
     public void testTemplateResourceAttribute() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        resourceAttributes.put("owner", new EntityUID(principal));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        resourceAttributes.put("owner", principal.getEUID());
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         final String principalSlot = "?principal";
 
@@ -560,10 +516,10 @@ public class IntegrationTests {
                         + principalSlot
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID().toString()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID().toString()
                         + "\n"
                         + ")\n"
                         + " when {\n"
@@ -603,30 +559,24 @@ public class IntegrationTests {
     @Test
     public void testSchemaParsingDeny() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        resourceAttributes.put("owner", new EntityUID(principal));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        resourceAttributes.put("owner", principal.getEUID());
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p =
                 "permit(\n"
@@ -668,47 +618,41 @@ public class IntegrationTests {
     @Test
     public void testSchemaParsingAllow() {
         Set<Entity> entities = new HashSet<>();
-        String principalType = "User";
         String principalId = "alice";
-        String principal = principalType+"::\""+principalId+"\"";
         Map<String, Value> principalAttributes = new HashMap<>();
         principalAttributes.put("foo", new PrimString("bar"));
-        Set<JsonEUID> principalParents = new HashSet<>();
-        Entity e = new Entity(new JsonEUID(principalType, principalId), principalAttributes, principalParents);
-        entities.add(e);
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
 
-        String actionType = "Action";
         String actionId = "view";
-        String action = actionType+"::\""+actionId+"\"";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set<JsonEUID> actionParents = new HashSet<>();
-        Entity act = new Entity(new JsonEUID(actionType, actionId), actionAttributes, actionParents);
-        entities.add(act);
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
 
-        String resourceType = "Resource";
         String resourceId = "photo.jpg";
-        String resource = resourceType+"::\"" + resourceId + "\"";
         Map<String, Value> resourceAttributes = new HashMap<>();
-        resourceAttributes.put("owner", new EntityUID(principal));
-        Set<JsonEUID> resourceParents = new HashSet<>();
-        e = new Entity(new JsonEUID(resourceType, resourceId), resourceAttributes, resourceParents);
-        entities.add(e);
+        resourceAttributes.put("owner", principal.getEUID());
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
 
         String p =
                 "permit(\n"
                         + "principal=="
-                        + principal
+                        + principal.getEUID().toString()
                         + ",\n"
                         + "action=="
-                        + action
+                        + action.getEUID().toString()
                         + ",\n"
                         + "resource=="
-                        + resource
+                        + resource.getEUID().toString()
                         + "\n"
                         + ")\n"
                         + " when {\n"
                         + "resource.owner=="
-                        + principal
+                        + principal.getEUID().toString()
                         + "};";
         final String policyId = "ID0";
         Policy policy = new Policy(p, policyId);

@@ -16,7 +16,7 @@
 
 package com.cedarpolicy.model.slice;
 
-import com.cedarpolicy.serializer.JsonEUID;
+import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 
 import java.util.*;
@@ -29,22 +29,22 @@ import java.util.stream.Collectors;
  * entities.
  */
 public class Entity {
-    private final JsonEUID euid;
+    private final EntityUID euid;
 
     /** Key/Value attribute map. */
     public final Map<String, Value> attrs;
 
     /** Set of entity EUIDs that are parents to this entity. */
-    public final Set<JsonEUID> parentsEUIDs;
+    public final Set<EntityUID> parentsEUIDs;
 
     /**
-     * Create an entity from JsonEUID and unwrapped JSON values.
+     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
      *
      * @param uid EUID of the Entity.
      * @param attributes Key/Value map of attributes.
      * @param parentsEUID Set of parent entities' EUIDs.
      */
-    public Entity(JsonEUID uid, Map<String, Value> attributes, Set<JsonEUID> parentsEUIDs) {
+    public Entity(EntityUID uid, Map<String, Value> attributes, Set<EntityUID> parentsEUIDs) {
         this.attrs = new HashMap<>(attributes);
         this.euid = uid;
         this.parentsEUIDs = parentsEUIDs;
@@ -70,18 +70,18 @@ public class Entity {
 
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get the entity uid 
+     * @return Entity UID 
      */
-    public JsonEUID getEUID() {
+    public EntityUID getEUID() {
         return euid;
     }
 
     /**
-     * Get entity uid in JsonEUID format
-     * @return Entity UID in JsonEUID format
+     * Get this Entities parents
+     * @return the set of parent EntityUIDs 
      */
-    public Set<JsonEUID> getParents() {
+    public Set<EntityUID> getParents() {
         return parentsEUIDs;
     }
 }

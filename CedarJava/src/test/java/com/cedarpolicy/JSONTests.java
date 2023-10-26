@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cedarpolicy.model.AuthorizationRequest;
@@ -29,6 +30,7 @@ import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
@@ -71,14 +73,17 @@ public class JSONTests {
     /** Test. */
     @Test
     public void testRequest() {
-        AuthorizationRequest q = new AuthorizationRequest("gandalf", "opens", "moria", new HashMap<String, Value>());
+        var gandalf = new EntityUID(EntityTypeName.parse("Wizard").get(), "gandalf");
+        var opens = new EntityUID(EntityTypeName.parse("Action").get(), "opens");
+        var moria = new EntityUID(EntityTypeName.parse("Mines").get(), "moria");
+        AuthorizationRequest q = new AuthorizationRequest(gandalf, opens, moria, new HashMap<String, Value>());
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode c = JsonNodeFactory.instance.objectNode();
         n.set("context", c);
         n.set("schema", JsonNodeFactory.instance.nullNode());
-        n.set("principal", JsonNodeFactory.instance.textNode("gandalf"));
-        n.set("action", JsonNodeFactory.instance.textNode("opens"));
-        n.set("resource", JsonNodeFactory.instance.textNode("moria"));
+        n.set("principal", buildEuidObject("Wizard", "gandalf"));
+        n.set("action", buildEuidObject("Action", "opens"));
+        n.set("resource", buildEuidObject("Mines", "moria"));
         assertJSONEqual(n, q);
     }
 
@@ -114,7 +119,7 @@ public class JSONTests {
     @Test
     public void testEntityUID() {
         String text = "silver::\"jakob\"";
-        EntityUID uid = new EntityUID(text);
+        EntityUID uid = EntityUID.parse(text).get();
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "jakob");
@@ -123,31 +128,16 @@ public class JSONTests {
         assertJSONEqual(n, uid);
 
         String invalidNamespace = "Us,er::\"alice\"";
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new EntityUID(invalidNamespace),
-                        "Expected EntityUID() to throw, but it didn't");
-        assertTrue(
-                thrown.getMessage()
-                        .contentEquals(
-                                "Input string is not a valid EntityUID " + invalidNamespace));
+        assertFalse(EntityUID.parse(invalidNamespace).isPresent());
 
         String invalidEID = "User::\"ali\"ce\"";
-        thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> new EntityUID(invalidEID),
-                        "Expected EntityUID() to throw, but it didn't");
-        assertTrue(
-                thrown.getMessage()
-                        .contentEquals("Input string is not a valid EntityUID " + invalidEID));
+        assertFalse(EntityUID.parse(invalidEID).isPresent());
 
         String validEID = "User::\"ali\\\"ce\"";
-        uid = new EntityUID(validEID);
+        uid = EntityUID.parse(validEID).get();
         n = JsonNodeFactory.instance.objectNode();
         inner = JsonNodeFactory.instance.objectNode();
-        inner.put("id", "ali\\\"ce");
+        inner.put("id", "ali\"ce");
         inner.put("type", "User");
         n.put(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
@@ -155,7 +145,7 @@ public class JSONTests {
         String weirdType = "a";
         String weirdId = "";
         String weirdEID = weirdType+"::\""+weirdId+"\"";
-        uid = new EntityUID(weirdEID);
+        uid = EntityUID.parse(weirdEID).get();
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", weirdId);
         inner.put("type", weirdType);
@@ -163,11 +153,20 @@ public class JSONTests {
         assertJSONEqual(n, uid);
     }
 
+    private ObjectNode buildEuidObject(String type, String id) {
+        var n = JsonNodeFactory.instance.objectNode();
+        var inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", id);
+        inner.put("type", type);
+        n.put(ENTITY_ESCAPE_SEQ, inner);
+        return n;
+    }
+
     /** Test. */
     @Test
     public void testLongEntityUID() {
         String text = "long::john::silver::\"donut\"";
-        EntityUID uid = new EntityUID(text);
+        EntityUID uid = EntityUID.parse(text).get();
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "donut");

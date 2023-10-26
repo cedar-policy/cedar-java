@@ -48,9 +48,9 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
             jsonGenerator.writeFieldName(ENTITY_ESCAPE_SEQ);
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName("id");
-            jsonGenerator.writeString(((EntityUID) value).getId());
+            jsonGenerator.writeString(((EntityUID) value).getId().toString());
             jsonGenerator.writeFieldName("type");
-            jsonGenerator.writeString(((EntityUID) value).getType());
+            jsonGenerator.writeString(((EntityUID) value).getType().toString());
             jsonGenerator.writeEndObject();
             jsonGenerator.writeEndObject();
         } else if (value instanceof PrimString) {

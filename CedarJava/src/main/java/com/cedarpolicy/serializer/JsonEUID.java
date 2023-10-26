@@ -16,11 +16,17 @@
 
 package com.cedarpolicy.serializer;
 
+import com.cedarpolicy.model.exception.InvalidEUIDException;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.cedarpolicy.value.EntityUID;
 
 /** Represent JSON format of Entity Unique Identifier. */
 @JsonDeserialize
+@JsonSerialize
 public class JsonEUID {
     /** euid (__entity is used as escape sequence in JSON). */
     @JsonProperty("type")
@@ -30,8 +36,14 @@ public class JsonEUID {
     public final String id;
 
     /** String representation in valid Cedar syntax. */
+    @Override
     public String toString() {
-        return type+"::\""+id+"\"";
+        try {
+            var mapper = new ObjectMapper();
+            return mapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Internal invariant violated, json encoding failed: " + e.toString());
+        }
     }
 
     /**
@@ -42,6 +54,17 @@ public class JsonEUID {
      */
     public JsonEUID(String type, String id) {
         this.type = type; this.id = id;
+    }
+
+    public JsonEUID(String src) throws InvalidEUIDException {
+        var o = EntityUID.parse(src);
+        if (o.isPresent()) {
+            var x = o.get().asJson();
+            this.type = x.type;
+            this.id = x.id;
+        } else {
+            throw new InvalidEUIDException("Invalid EUID: `" + src + "`");
+        }
     }
 
     /** Build JsonEUID (default constructor needed by Jackson). */

@@ -17,118 +17,104 @@
 package com.cedarpolicy.value;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import java.util.Objects;
+
+import com.cedarpolicy.serializer.JsonEUID;
 
 /**
  * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
  * identifier for the entity formatted as <code>TYPE::"ID"</code>.
  */
-public class EntityUID extends Value {
+public final class EntityUID extends Value {
+    private final EntityTypeName type;
+    private final EntityIdentifier id;
 
-    private static class EUIDValidator {
-        // Any char except {'\','"'} or escaped slash `\\` or escaped quote `\"` or unicode `\u0000`
-        // We need to escape twice, once for Java and once for the Regex
-        private static final String anyCharExceptSlashOrQuote = "[^\\\"\\\\]";
-        private static final String escapedSlash = "\\\\\\\\";
-        private static final String escapedQuote = "\\\\\\\"";
-        private static final String unicodeEscapedPattern = "\\\\u[A-Fa-f0-9]{4,6}";
-        private static final Pattern entityUIDPattern =
-                Pattern.compile(
-                        "^([A-Za-z_]([A-Za-z0-9_])*::)+\"("
-                                + anyCharExceptSlashOrQuote
-                                + "|"
-                                + escapedSlash
-                                + "|"
-                                + escapedQuote
-                                + "|"
-                                + unicodeEscapedPattern
-                                + ")*\"$");
-        private static final long MAXLENGTH = 1024;
+    static { 
+        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+    }
 
-        public static boolean validEntityUID(String id) {
-            if (id == null || id.isEmpty()) return false;
-            id = id.trim();
-            if (id.length() > MAXLENGTH) return false;
+    /**
+     * Construct an EntityUID from a tyep name and an id
+     * @param type the Entity Type of this EUID
+     * @param id the id portion of the EUID
+     */
+    public EntityUID(EntityTypeName type, EntityIdentifier id) {
+        this.type = type;
+        this.id = id;
+    }
+
+    /**
+     * Construct an EntityUID from a type name and an id
+     * @param type the Entity Type of this EUID
+     * @param id the id portion of the EUID
+     */
+    public EntityUID(EntityTypeName type, String id) {
+        this(type, new EntityIdentifier(id));
+    }
+
+    /**
+     * Get the Type of this EUID
+     * @return The EntityTypeName portion of this EUID
+     */
+    public EntityTypeName getType() {
+        return type;
+    }
+
+    /**
+     * Get the ID of this EUID
+     * @return The EntityIdentifier portion of this EUID
+     */
+    public EntityIdentifier getId() {
+        return id;
+    }
+
+
+    @Override
+    public String toString() {
+        return getEUIDRepr(type, id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        } if (o == this) {
+            return true;
+        } else {
             try {
-                Matcher matcher = entityUIDPattern.matcher(id);
-                return matcher.matches();
-            } catch (PatternSyntaxException ex) {
+                var rhs = (EntityUID) o;
+                return this.type.equals(rhs.type) && this.id.equals(rhs.id);
+            } catch (ClassCastException e) {
                 return false;
             }
         }
     }
 
-    /** Entity uid. */
-    private final String euid;
-
-    /** Entity uid type. */
-    private final Optional<String> type;
-
-    /** Entity uid type. */
-    private final Optional<String> id;
-
-
-    /**
-     * Build EntityUID.
-     *
-     * @param euid Entity Unique ID as a string.
-     *     <p>Note, we limit euids to 1024 chars.
-     */
-    public EntityUID(String euid) throws IllegalArgumentException {
-        if (!EUIDValidator.validEntityUID(euid)) {
-            throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
-        }
-
-        this.euid = euid;
-        this.type = Optional.empty();
-        this.id = Optional.empty();
-    }
-
-    /**
-     * Build EntityUID.
-     *
-     * @param type Type component of Entity Unique ID.
-     * @param id Id component of Entity Unique ID.
-     *     <p>Note, we limit euids to 1024 chars.
-     */
-    public EntityUID(String type, String id) throws IllegalArgumentException {
-        String euid = type + "::\""+id+"\"";
-        if (!EUIDValidator.validEntityUID(euid)) {
-            throw new IllegalArgumentException("Input string is not a valid EntityUID " + euid);
-        }
-        this.euid = euid;
-        this.type = Optional.of(type);
-        this.id = Optional.of(id);
-    }
-
-    /** As String. */
     @Override
-    public String toString() {
-        return euid;
+    public int hashCode() {
+        return Objects.hash(type, id);
     }
 
-    /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     public String toCedarExpr() {
-        return euid;
+        return getEUIDRepr(type, id);
     }
 
-    /** Get the type of the EUID. */
-    public String getType() {
-        if(!this.type.isEmpty()) {
-            return this.type.get();
-        }
-        return this.euid.substring(0, this.euid.length()-this.getId().length()-4);
+
+    public static Optional<EntityUID> parse(String src) {
+        return parseEntityUID(src);
     }
 
-    /** Get the ID of the EUID. */
-    public String getId() {
-        if(!this.id.isEmpty()) {
-            return this.id.get();
-        }
-        String[] strs = this.euid.split("::");
-        return strs[strs.length-1].substring(1,strs[strs.length-1].length()-1);
+    public JsonEUID asJson() {
+        return new JsonEUID(type.toString(), id.toString());
     }
+
+    public static Optional<EntityUID> parseFromJson(JsonEUID euid) {
+        return EntityTypeName.parse(euid.type).map(type -> new EntityUID(type, new EntityIdentifier(euid.id)));
+    }
+
+    private static native Optional<EntityUID> parseEntityUID(String src);
+    private static native String getEUIDRepr(EntityTypeName type, EntityIdentifier id);
+
 }
+
