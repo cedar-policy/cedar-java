@@ -7,6 +7,7 @@ buildscript {
   dependencies {
     classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:5.0.14"
     classpath "gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9"
+    classpath 'org.owasp:dependency-check-gradle:8.4.1'
   }
 }
 
@@ -34,6 +35,8 @@ plugins {
 // SpotBugs for quality checks and reports of source files. Read more at:
 // https://spotbugs.readthedocs.io/en/stable/gradle.html
 apply plugin: 'com.github.spotbugs'
+
+apply plugin: 'org.owasp.dependencycheck'
 
 /*
  Configures the JaCoCo "jacoco" plugin. Remove this if you want to skip
