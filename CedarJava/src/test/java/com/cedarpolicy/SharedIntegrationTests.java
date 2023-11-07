@@ -143,6 +143,9 @@ public class SharedIntegrationTests {
         /** Context map used for the request. */
         public Map<String, Value> context;
 
+        /** Whether to enable request validation for this request. Default true */
+        public boolean enable_request_validation = true;
+
         /** The expected decision that should be returned by the authorization engine. */
         public AuthorizationResponse.Decision decision;
 
@@ -294,7 +297,7 @@ public class SharedIntegrationTests {
         String policiesSrc = String.join("\n", Files.readAllLines(resolveIntegrationTestPath(policiesFile)));
 
         // Get a list of the policy sources for the individual policies in the
-        // file by splitting the full policy source on semicolons. This will 
+        // file by splitting the full policy source on semicolons. This will
         // break if a semicolon shows up in a string, eid, or comment.
         String[] policyStrings = policiesSrc.split(";");
         // Some of the corpus tests contain semicolons in strings and/or eids.
@@ -305,7 +308,7 @@ public class SharedIntegrationTests {
                 policyStrings = null;
             }
         }
-        
+
         Set<Policy> policies = new HashSet<>();
         if (policyStrings == null) {
             // This case will only be reached for corpus tests.
@@ -408,10 +411,11 @@ public class SharedIntegrationTests {
                     request.principal == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.principal).get()),
                     EntityUID.parseFromJson(request.action).get(),
                     request.resource == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.resource).get()),
-                        Optional.of(request.context),
-                        Optional.of(schema));
+                    Optional.of(request.context),
+                    Optional.of(schema),
+                    request.enable_request_validation);
         Slice slice = new BasicSlice(policies, entities);
-        
+
         try {
             AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
             System.out.println(response.getErrors());

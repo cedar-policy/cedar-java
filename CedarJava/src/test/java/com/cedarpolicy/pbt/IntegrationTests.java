@@ -52,7 +52,7 @@ import org.junit.jupiter.api.Test;
 
 /** Integration tests. */
 public class IntegrationTests {
- 
+
     final EntityTypeName principalType;
     final EntityTypeName actionType;
     final EntityTypeName resourceType;
@@ -368,11 +368,10 @@ public class IntegrationTests {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
-                        Optional.of(principal),
+                        principal,
                         action,
-                        Optional.of(resource),
-                        Optional.of(currentContext),
-                        Optional.empty());
+                        resource,
+                        currentContext);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
@@ -599,7 +598,7 @@ public class IntegrationTests {
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
 
-        // Schema says resource.owner is a bool, so we should get a parse failure, which causes 
+        // Schema says resource.owner is a bool, so we should get a parse failure, which causes
         // `isAuthorized()` to throw a `BadRequestException`.
         Slice slice = new BasicSlice(policies, entities);
         Map<String, Value> currentContext = new HashMap<>();
@@ -609,7 +608,8 @@ public class IntegrationTests {
                         action,
                         Optional.of(resource),
                         Optional.of(currentContext),
-                        Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")));
+                        Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")),
+                        true);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         Assertions.assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(request, slice));
     }
@@ -668,7 +668,8 @@ public class IntegrationTests {
                         action,
                         Optional.of(resource),
                         Optional.of(currentContext),
-                        Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")));
+                        Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")),
+                        true);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
