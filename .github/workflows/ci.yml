@@ -42,3 +42,6 @@ jobs:
         working-directory: ./CedarJava
         shell: bash
         run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
+      - name: Dependency Check
+        working-directory: ./CedarJava
+        uses: dependency-check/Dependency-Check_Action@1.1.0
