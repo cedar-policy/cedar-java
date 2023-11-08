@@ -304,9 +304,9 @@ mod test {
             "AuthorizationOperation",
             r#"
 {
-  "principal": "User::\"alice\"",
-  "action": "Photo::\"view\"",
-  "resource": "Photo::\"photo\"",
+  "principal" : { "type" : "User", "id" : "alice" },
+  "action" : { "type" : "Photo", "id" : "view" },
+  "resource" : { "type" : "Photo", "id" : "photo" },
   "slice": {
     "policies": {},
     "entities": []
@@ -349,8 +349,8 @@ mod test {
               "template_instantiations": []
             },
             "principal": null,
-            "action": "Action::\"view\"",
-            "resource": "Resource::\"thing\""
+            "action" : { "type" : "Action", "id" : "view" },
+            "resource" : { "type" : "Resource", "id" : "thing" }
         }
         "#,
         );
@@ -372,8 +372,8 @@ mod test {
               "templates": {},
               "template_instantiations": []
             },
-            "principal": "User::\"alice\"",
-            "action": "Action::\"view\"",
+            "principal" : { "type" : "User", "id" : "alice" },
+            "action" : { "type" : "Action", "id" : "view" },
             "resource": null
         }
         "#,
@@ -386,11 +386,21 @@ mod test {
         let result = call_cedar(
             "AuthorizationOperation",
             r#"
-	             { "principal": "User::\"alice\""
-	             , "action" : "Photo::\"view\""
-	             , "resource" : "Photo::\"door\""
-	             , "context" : {}
-	             , "slice" : {
+            {
+                 "principal" : {
+                    "type" : "User",
+                    "id" : "alice"
+                },
+                "action" : {
+                    "type" : "Photo",
+                    "id" : "view"
+                },
+                "resource" : {
+                    "type" : "Photo",
+                    "id" : "door"
+                },
+	            "context" : {},
+	            "slice" : {
 	                   "policies" : {}
 	                 , "entities" : []
                      , "templates" : {
