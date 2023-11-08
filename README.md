@@ -3,7 +3,19 @@
 This repository contains the source code for a Java package `CedarJava` that supports using the [Cedar](https://www.cedarpolicy.com) policy language.
 It also contains source code for a Rust crate `CedarJavaFFI` that enables calling Cedar library functions (written in Rust) from Java.
 
-You can find build instructions and more information in the subfolders.
+
+## Getting Started
+You can find detailed build instructions and more information in the subfolders [CedarJavaFFI](https://github.com/cedar-policy/cedar-java/blob/main/CedarJavaFFI/README.md), [CedarJava](https://github.com/cedar-policy/cedar-java/blob/main/CedarJava/README.md).
+
+For typical use, you'll want something like:
+
+```shell
+cd CedarJavaFFI && cargo build
+cd ../CedarJava
+export CEDAR_INTEGRATION_TESTS_ROOT=/tmp #(assuming you don't want to run them)
+export CEDAR_JAVA_FFI_LIB=path_to_CedarJavaFFI/target/debug/libcedar_java_ffi.so #(or wherever you built CedarJavaFFI)
+gradle test
+```
 
 ## Notes
 
