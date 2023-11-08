@@ -5,7 +5,7 @@ It also contains source code for a Rust crate `CedarJavaFFI` that enables callin
 
 
 ## Getting Started
-You can find detailed build instructions and more information in the subfolders.
+You can find detailed build instructions and more information in the subfolders [CedarJavaFFI](https://github.com/cedar-policy/cedar-java/blob/main/CedarJavaFFI/README.md), [CedarJava](https://github.com/cedar-policy/cedar-java/blob/main/CedarJava/README.md).
 
 For typical use, you'll want something like:
 
