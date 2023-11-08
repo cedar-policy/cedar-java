@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- These are for compile time only dependencies (mostly spotbugs and findbugs) -->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+   <suppress>
+      <notes><![CDATA[
+      file name: AppleJavaExtensions-1.4.jar
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/com\.apple/AppleJavaExtensions@.*$</packageUrl>
+      <cpe>cpe:/a:apple:java</cpe>
+   </suppress>
+   <suppress>
+      <notes><![CDATA[
+      file name: bcel-findbugs-6.0.jar
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/com\.google\.code\.findbugs/bcel\-findbugs@.*$</packageUrl>
+      <cpe>cpe:/a:apache:commons_bcel</cpe>
+   </suppress>
+   <suppress>
+      <notes><![CDATA[
+      file name: bcel-6.5.0.jar
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/org\.apache\.bcel/bcel@.*$</packageUrl>
+      <cpe>cpe:/a:apache:commons_bcel</cpe>
+   </suppress>
+   <suppress>
+      <notes><![CDATA[
+      file name: dom4j-1.6.1.jar
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/dom4j/dom4j@.*$</packageUrl>
+      <cpe>cpe:/a:dom4j_project:dom4j</cpe>
+   </suppress>
+   <suppress>
+      <notes><![CDATA[
+      file name: dom4j-2.1.3.jar
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/org\.dom4j/dom4j@.*$</packageUrl>
+      <cpe>cpe:/a:dom4j_project:dom4j</cpe>
+   </suppress>
+   <suppress>
+        <notes><![CDATA[
+        file name: bcel-6.5.0.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.bcel/bcel@.*$</packageUrl>
+        <vulnerabilityName>CVE-2022-42920</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: dom4j-1.6.1.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/dom4j/dom4j@.*$</packageUrl>
+        <vulnerabilityName>CVE-2020-10683</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: dom4j-1.6.1.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/dom4j/dom4j@.*$</packageUrl>
+        <vulnerabilityName>CVE-2018-1000632</vulnerabilityName>
+    </suppress>
+</suppressions>

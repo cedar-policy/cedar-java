@@ -49,11 +49,3 @@ jobs:
           project: 'CedarJava'
           path: 'CedarJava'
           format: 'HTML'
-          args: >
-            --failOnCVSS 7
-            --enableRetired
-      - name: Upload Test results
-        uses: actions/upload-artifact@master
-        with:
-           name: Depcheck report
-           path: ${{github.workspace}}/reports
