@@ -113,7 +113,8 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.actionEUID,
                     request.resourceEUID,
                     request.context,
-                    request.schema);
+                    request.schema,
+                    request.enable_request_validation);
             this.slice = slice;
         }
     }
