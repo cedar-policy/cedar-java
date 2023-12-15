@@ -36,7 +36,8 @@ public class EntityTypeNameTests {
         "else",
         "in",
         "like",
-        "has"
+        "has",
+        "is"
     };
 
     @Test
@@ -81,8 +82,8 @@ public class EntityTypeNameTests {
     }
 
     @Test
-    public void nullSafety() { 
-        assertThrows(NullPointerException.class, 
+    public void nullSafety() {
+        assertThrows(NullPointerException.class,
         () -> EntityTypeName.parse(null),
         "Null pointer exception should be thrown"
         );
@@ -97,37 +98,37 @@ public class EntityTypeNameTests {
     }
 
     @Property
-    public void equalNull(@ForAll @From("multiLevelName") EntityTypeName n) { 
+    public void equalNull(@ForAll @From("multiLevelName") EntityTypeName n) {
         assertFalse(n.equals(null));
     }
 
     @Test
-    public void emptyString() { 
+    public void emptyString() {
         assertFalse(EntityTypeName.parse("").isPresent());
     }
 
-    @Property 
-    public void roundTrip(@ForAll @From("multiLevelName") EntityTypeName name) { 
-        var s = name.toString(); 
-        var o = EntityTypeName.parse(s); 
+    @Property
+    public void roundTrip(@ForAll @From("multiLevelName") EntityTypeName name) {
+        var s = name.toString();
+        var o = EntityTypeName.parse(s);
         assertTrue(o.isPresent());
-        assertEquals(o.get(), name); 
+        assertEquals(o.get(), name);
         assertEquals(o.get().hashCode(), name.hashCode());
         assertEquals(s, o.get().toString());
     }
 
-    @Property 
-    public void singleLevelRoundTrip(@ForAll @From("validName") String name) { 
+    @Property
+    public void singleLevelRoundTrip(@ForAll @From("validName") String name) {
         var o = EntityTypeName.parse(name);
         assertTrue(o.isPresent());
-        var e = o.get(); 
-        assertEquals(e.toString(), name); 
+        var e = o.get();
+        assertEquals(e.toString(), name);
         assertEquals(EntityTypeName.parse(e.toString()).get(), e);
     }
-    
+
 
     @Provide
-    public static Arbitrary<EntityTypeName> multiLevelName() { 
+    public static Arbitrary<EntityTypeName> multiLevelName() {
         Arbitrary<List<String>> namespace = validName().collect(lst -> lst.size() >= 1 );
         return namespace.map(parts -> parse(parts));
     }
@@ -143,7 +144,7 @@ public class EntityTypeNameTests {
     }
 
     @Provide
-    public static Arbitrary<String> validName() { 
+    public static Arbitrary<String> validName() {
         var first = Arbitraries.chars().alpha();
         var rest = Arbitraries.strings().alpha().numeric().ofMinLength(0);
         return Combinators.combine(first, rest).as((f,r) -> f + r).filter(str -> !isKeyword(str));

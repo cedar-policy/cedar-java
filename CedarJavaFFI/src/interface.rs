@@ -18,7 +18,7 @@ use cedar_policy::{
     frontend::{
         is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
     },
-    EntityUid,
+    EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
 };
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
@@ -27,7 +27,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{error::Error, str::FromStr, thread};
+use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
@@ -123,17 +123,6 @@ struct JavaInterfaceCall {
     arguments: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct ParseEUIDCall {
-    euid: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ParseEUIDOutput {
-    ty: String,
-    id: String,
-}
-
 fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
     // If we already generated an exception, then let that go up the stack
     // Otherwise, generate a cedar InternalException and return null
@@ -147,6 +136,17 @@ fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
         .unwrap();
     }
     JValueOwned::Object(JObject::null()).as_jni()
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ParseEUIDCall {
+    euid: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ParseEUIDOutput {
+    ty: String,
+    id: String,
 }
 
 /// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
@@ -168,6 +168,145 @@ pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
             },
             Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}")),
         },
+    }
+}
+
+/// public string-based JSON interface to parse a schema
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn parseSchema<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
+    match parse_schema_internal(&mut env, schema_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn parse_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    schema_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if schema_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let schema_jstring = env.get_string(&schema_jstr)?;
+        let schema_string = String::from(schema_jstring);
+        match Schema::from_str(&schema_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(_) => Ok(JValueGen::Object(env.new_string("Success")?.into())),
+        }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+pub fn parsePolicyJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
+    match parse_policy_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policy_text) => policy_text.as_jni(),
+    }
+}
+
+fn parse_policy_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+        match Policy::from_str(&policy_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(p) => {
+                let policy_text = format!("{}", p);
+                Ok(JValueGen::Object(env.new_string(&policy_text)?.into()))
+            }
+        }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+pub fn parsePolicyTemplateJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    template_jstr: JString<'a>,
+) -> jvalue {
+    match parse_policy_template_internal(&mut env, template_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(template_text) => template_text.as_jni(),
+    }
+}
+
+fn parse_policy_template_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    template_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if template_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let template_jstring = env.get_string(&template_jstr)?;
+        let template_string = String::from(template_jstring);
+        match Template::from_str(&template_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(template) => {
+                let template_text = template.to_string();
+                Ok(JValueGen::Object(env.new_string(&template_text)?.into()))
+            }
+        }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+pub fn validateTemplateLinkedPolicyJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    template_jstr: JString<'a>,
+    jprincipal_euid: JObject<'a>,
+    jresource_euid: JObject<'a>,
+) -> jvalue {
+    match validate_template_linked_policy_internal(
+        &mut env,
+        template_jstr,
+        jprincipal_euid,
+        jresource_euid,
+    ) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(v) => v.as_jni(),
+    }
+}
+
+fn validate_template_linked_policy_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    template_jstr: JString<'a>,
+    jprincipal_euid: JObject<'a>,
+    jresource_euid: JObject<'a>,
+) -> Result<JValueOwned<'a>> {
+    if template_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let template_jstring = env.get_string(&template_jstr)?;
+        let template_string = String::from(template_jstring);
+        let template = Template::from_str(&template_string)?;
+        let mut slots_map: HashMap<SlotId, EntityUid> = HashMap::new();
+
+        if !jprincipal_euid.is_null() {
+            slots_map.insert(
+                SlotId::principal(),
+                JEntityUID::cast(env, jprincipal_euid)?.get_rust_repr(),
+            );
+        }
+        if !jresource_euid.is_null() {
+            slots_map.insert(
+                SlotId::resource(),
+                JEntityUID::cast(env, jresource_euid)?.get_rust_repr(),
+            );
+        }
+
+        let template_id = template.id().clone();
+        let instantiated_id = PolicyId::from_str("x")?;
+        let mut policy_set = PolicySet::new();
+        policy_set.add_template(template)?;
+
+        policy_set.link(template_id, instantiated_id, slots_map)?;
+        Ok(JValueGen::Bool(1))
     }
 }
 
@@ -230,7 +369,7 @@ fn get_entity_type_name_repr_internal<'a>(
         raise_npe(env)
     } else {
         let etype = JEntityTypeName::cast(env, obj)?;
-        let repr = etype.get_string_repr(env)?;
+        let repr = etype.get_string_repr();
         Ok(env.new_string(repr)?.into())
     }
 }
@@ -280,7 +419,7 @@ fn get_euid_repr_internal<'a>(
     if type_name.is_null() || id.is_null() {
         raise_npe(env)
     } else {
-        let etype = JEntityTypeName::cast(env, type_name)?.get_rust_repr(env)?;
+        let etype = JEntityTypeName::cast(env, type_name)?.get_rust_repr();
         let id = JEntityId::cast(env, id)?.get_rust_repr();
         let euid = EntityUid::from_type_name_and_id(etype, id);
         let jstring = env.new_string(euid.to_string())?;

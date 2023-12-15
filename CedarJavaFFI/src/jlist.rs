@@ -5,7 +5,7 @@ use crate::{
     utils::{get_object_ref, value_type, InternalJNIError, Result},
 };
 use jni::{
-    objects::{JObject, JValueGen},
+    objects::{JObject, JString, JValueGen},
     JNIEnv,
 };
 
@@ -96,4 +96,19 @@ impl<'a, T> AsRef<JObject<'a>> for List<'a, T> {
     fn as_ref(&self) -> &JObject<'a> {
         &self.obj
     }
+}
+
+pub fn jstr_list_to_rust_vec<'a>(
+    env: &mut JNIEnv<'a>,
+    jlist: &List<'a, JString<'a>>,
+) -> Result<Vec<String>> {
+    let mut rust_vec = Vec::new();
+
+    for i in 0..jlist.size {
+        let element: JString<'a> = jlist.get(env, i)?;
+        let j_str = env.get_string(&element)?;
+        rust_vec.push(String::from(j_str));
+    }
+
+    Ok(rust_vec)
 }
