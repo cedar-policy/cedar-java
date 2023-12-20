@@ -16,11 +16,16 @@
 
 package com.cedarpolicy.model;
 
+import com.cedarpolicy.model.slice.Policy;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -46,6 +51,20 @@ public final class AuthorizationResponse {
         /** Indeterminate decision returned due to parsing errors. */
         @JsonProperty("NoDecision")
         NoDecision
+    }
+
+    private static class Payload {
+        public final Decision decision;
+        public final Set<Policy> residual;
+
+        public Payload(
+                @JsonProperty("Concrete") Decision decision,
+                @JsonProperty("Residual") Map<String, JsonNode> residual) {
+            this.decision = decision;
+            this.residual = residual != null ? residual.entrySet().stream()
+                    .map(e -> new Policy(e.getValue().toString(), e.getKey()))
+                    .collect(ImmutableSet.toImmutableSet()) : null;
+        }
     }
 
     /** The reasons and errors from a request evaluation. */
@@ -79,6 +98,8 @@ public final class AuthorizationResponse {
 
         private final Decision decision;
 
+        private final Set<Policy> residual;
+
         private final Diagnostics diagnostics;
     
         /**
@@ -91,8 +112,20 @@ public final class AuthorizationResponse {
         @SuppressFBWarnings
         public InterfaceResponse(
             @JsonProperty("decision") Decision decision,
+            @JsonProperty("payload") Payload payload,
             @JsonProperty("diagnostics") Diagnostics diagnostics) {
-            this.decision = decision;
+            if (payload != null) {
+                if (payload.residual != null) {
+                    this.residual = payload.residual;
+                    this.decision = Decision.NoDecision;
+                } else {
+                    this.residual = null;
+                    this.decision = payload.decision;
+                }
+            } else {
+                this.residual = null;
+                this.decision = decision;
+            }
             this.diagnostics = diagnostics;
         }
     }
@@ -105,12 +138,14 @@ public final class AuthorizationResponse {
     @JsonCreator
     public AuthorizationResponse(@JsonProperty("response") InterfaceResponse response) {
         this.decision = response.decision;
+        this.residual = response.residual;
         this.diagnostics = response.diagnostics;
     }
 
     /** Result of request evaluation. */
     private final Decision decision;
 
+    private final Set<Policy> residual;
     private final Diagnostics diagnostics;
 
     /**
@@ -120,6 +155,15 @@ public final class AuthorizationResponse {
      */
     public Decision getDecision() {
         return decision;
+    }
+
+    /**
+     * Residual policies from partial evaluation.
+     *
+     * @return Set of residual policies.
+     */
+    public Set<Policy> getResidual() {
+        return residual;
     }
 
     /**

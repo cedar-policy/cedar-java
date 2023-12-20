@@ -20,8 +20,10 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.exception.AuthException;
@@ -29,6 +31,7 @@ import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.slice.Slice;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,6 +55,14 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         LOG.trace("Making an isAuthorized request:\n{}\nwith slice\n{}", q, slice);
         final AuthorizationRequest request = new AuthorizationRequest(q, slice);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
+    }
+
+    @Override
+    public AuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
+            throws AuthException {
+        LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
+        final AuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
+        return call("AuthorizationPartialOperation", AuthorizationResponse.class, request);
     }
 
     @Override
@@ -104,7 +115,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         }
     }
 
-    private static final class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
+    private static class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
         @JsonProperty public final Slice slice;
 
         AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
@@ -116,6 +127,13 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.schema,
                     request.enable_request_validation);
             this.slice = slice;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    private static final class PartialAuthorizationRequest extends AuthorizationRequest {
+        PartialAuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
+            super(request, slice);
         }
     }
 

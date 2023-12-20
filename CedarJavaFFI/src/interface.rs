@@ -20,6 +20,8 @@ use cedar_policy::{
     },
     EntityUid,
 };
+#[cfg(feature = "partial-eval")]
+use cedar_policy::frontend::is_authorized::json_is_authorized_partial;
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
     sys::{jstring, jvalue},
@@ -37,6 +39,8 @@ use crate::{
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
+#[cfg(feature = "partial-eval")]
+const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
 const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
@@ -105,6 +109,7 @@ pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
         .into_raw()
 }
 
+#[cfg(not(feature = "partial-eval"))]
 fn call_cedar(call: &str, input: &str) -> String {
     let call = String::from(call);
     let input = String::from(input);
@@ -116,6 +121,21 @@ fn call_cedar(call: &str, input: &str) -> String {
     };
     serde_json::to_string(&result).expect("could not serialise response")
 }
+
+#[cfg(feature = "partial-eval")]
+fn call_cedar(call: &str, input: &str) -> String {
+    let call = String::from(call);
+    let input = String::from(input);
+    let result = match call.as_str() {
+        V0_AUTH_OP => json_is_authorized(&input),
+        V0_AUTH_PARTIAL_OP => json_is_authorized_partial(&input),
+        V0_VALIDATE_OP => json_validate(&input),
+        V0_PARSE_EUID_OP => json_parse_entity_uid(&input),
+        _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
+    };
+    serde_json::to_string(&result).expect("could not serialise response")
+}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JavaInterfaceCall {
@@ -424,6 +444,54 @@ mod test {
 	             }
 	          }
 	         "#,
+        );
+        assert_success(result);
+    }
+
+    #[cfg(feature = "partial-eval")]
+    #[test]
+    fn test_missing_resource_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationOperation",
+            r#"
+        {
+            "context": {},
+            "slice": {
+              "policies": {
+                "001": "permit(principal, action, resource);"
+              },
+              "entities": [],
+              "templates": {},
+              "template_instantiations": []
+            },
+            "principal" : { "type" : "User", "id" : "alice" },
+            "action" : { "type" : "Action", "id" : "view" }
+        }
+        "#,
+        );
+        assert_success(result);
+    }
+
+    #[cfg(feature = "partial-eval")]
+    #[test]
+    fn test_missing_principal_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationOperation",
+            r#"
+        {
+            "context": {},
+            "slice": {
+              "policies": {
+                "001": "permit(principal == User::\"alice\", action, resource);"
+              },
+              "entities": [],
+              "templates": {},
+              "template_instantiations": []
+            },
+            "action" : { "type" : "Action", "id" : "view" },
+            "resource" : { "type" : "Photo", "id" : "door" }
+        }
+        "#,
         );
         assert_success(result);
     }
