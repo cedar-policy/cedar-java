@@ -1,5 +1,5 @@
 use crate::{
-    jlist::List,
+    jlist::{jstr_list_to_rust_vec, List},
     utils::{assert_is_class, get_object_ref, Result},
 };
 use std::{marker::PhantomData, str::FromStr};
@@ -29,6 +29,7 @@ impl<'a> Object<'a> for JString<'a> {
 /// (com.cedarpolicy.value.EntityTypeName)
 pub struct JEntityTypeName<'a> {
     obj: JObject<'a>,
+    type_name: EntityTypeName,
 }
 
 impl<'a> JEntityTypeName<'a> {
@@ -38,6 +39,16 @@ impl<'a> JEntityTypeName<'a> {
         basename: JString<'a>,
         namespace: List<'a, JString<'a>>,
     ) -> Result<Self> {
+        let jstr_basename = env.get_string(&basename)?;
+        let basename_str = String::from(jstr_basename);
+        let mut full_type_name: Vec<String> = jstr_list_to_rust_vec(env, &namespace)?;
+        full_type_name.push(basename_str);
+        let has_namespace_component_with_colon = full_type_name.iter().any(|s| s.contains("::"));
+        if has_namespace_component_with_colon {
+            return Err("components of the type name cannot contain colons".into());
+        }
+        let full_ns_str: String = full_type_name.join("::");
+        let type_name: EntityTypeName = full_ns_str.parse()?;
         let obj = env
             .new_object(
                 "com/cedarpolicy/value/EntityTypeName",
@@ -48,39 +59,17 @@ impl<'a> JEntityTypeName<'a> {
                 ],
             )
             .unwrap();
-        Ok(Self { obj })
+        Ok(Self { obj, type_name })
     }
 
     /// Get the string representation for this EntityTYpeName
-    pub fn get_string_repr(&self, env: &mut JNIEnv<'a>) -> Result<String> {
-        self.get_rust_repr(env)
-            .map(|etype| EntityTypeName::to_string(&etype))
+    pub fn get_string_repr(&self) -> String {
+        self.get_rust_repr().to_string()
     }
 
     /// Decode the java representation into the rust representation
-    pub fn get_rust_repr(&self, env: &mut JNIEnv<'a>) -> Result<EntityTypeName> {
-        let basename_obj = self.get_basename(env)?;
-        let basename_jstring = env.get_string(&basename_obj)?;
-        let basename_str = basename_jstring.into();
-        let namespace = self
-            .get_namespace(env)?
-            .iter(env)?
-            .map(|jstring_obj| {
-                env.get_string(&jstring_obj)
-                    .map(String::from)
-                    .map_err(Into::into)
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        let src = if namespace.is_empty() {
-            basename_str
-        } else {
-            let namespace_str = namespace.join("::");
-            format!("{namespace_str}::{basename_str}")
-        };
-        // Parse into a EntityTypeName just for sanity checking.
-        let etype = EntityTypeName::from_str(&src)?;
-        Ok(etype)
+    pub fn get_rust_repr(&self) -> EntityTypeName {
+        self.type_name.clone()
     }
 
     /// Get the namespace field
@@ -122,8 +111,21 @@ impl<'a> JEntityTypeName<'a> {
 impl<'a> Object<'a> for JEntityTypeName<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
         assert_is_class(env, &obj, "com/cedarpolicy/value/EntityTypeName")?;
-
-        Ok(Self { obj })
+        let namespace = env.call_method(&obj, "getNamespace", "()Ljava/util/List;", &[])?;
+        let namespace_components = List::cast_unchecked(get_object_ref(namespace)?, env)?;
+        let basename = env.call_method(&obj, "getBaseName", "()Ljava/lang/String;", &[])?;
+        let basename = JString::cast(env, get_object_ref(basename)?)?;
+        let jstr_basename = env.get_string(&basename)?;
+        let basename_str = String::from(jstr_basename);
+        let mut full_type_name: Vec<String> = jstr_list_to_rust_vec(env, &namespace_components)?;
+        full_type_name.push(basename_str);
+        let has_namespace_component_with_colon = full_type_name.iter().any(|s| s.contains("::"));
+        if has_namespace_component_with_colon {
+            return Err("components of the type name cannot contain colons".into());
+        }
+        let full_ns_str: String = full_type_name.join("::");
+        let type_name: EntityTypeName = full_ns_str.parse()?;
+        Ok(Self { obj, type_name })
     }
 }
 
@@ -262,6 +264,7 @@ impl<'a> AsRef<JObject<'a>> for JEntityId<'a> {
 /// (com.cedarpolicy.value.EntityUID)
 pub struct JEntityUID<'a> {
     obj: JObject<'a>,
+    entity_uid: EntityUid,
 }
 
 impl<'a> JEntityUID<'a> {
@@ -271,6 +274,8 @@ impl<'a> JEntityUID<'a> {
         entity_type: JEntityTypeName<'a>,
         id: JEntityId<'a>,
     ) -> Result<Self> {
+        let entity_uid: EntityUid =
+            EntityUid::from_type_name_and_id(entity_type.get_rust_repr(), id.get_rust_repr());
         let obj = env.new_object(
             "com/cedarpolicy/value/EntityUID",
             "(Lcom/cedarpolicy/value/EntityTypeName;Lcom/cedarpolicy/value/EntityIdentifier;)V",
@@ -279,7 +284,7 @@ impl<'a> JEntityUID<'a> {
                 JValueGen::Object(id.as_ref()),
             ],
         )?;
-        Ok(Self { obj })
+        Ok(Self { obj, entity_uid })
     }
 
     /// Attempt to parse an EntityUID from a string, and return the result as a Java optional
@@ -295,12 +300,37 @@ impl<'a> JEntityUID<'a> {
             Err(_) => JOptional::empty(env),
         }
     }
+
+    /// public method to return the rust representation of this EntityUid
+    pub fn get_rust_repr(&self) -> EntityUid {
+        self.entity_uid.clone()
+    }
 }
 
 impl<'a> Object<'a> for JEntityUID<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
         assert_is_class(env, &obj, "com/cedarpolicy/value/EntityUID")?;
-        Ok(Self { obj })
+        let entity_type_name_jref = env.call_method(
+            &obj,
+            "getType",
+            "()Lcom/cedarpolicy/value/EntityTypeName;",
+            &[],
+        )?;
+        let entity_type_name_field = get_object_ref(entity_type_name_jref)?;
+        let entity_type_name = JEntityTypeName::cast(env, entity_type_name_field)?;
+        let entity_id_jref = env.call_method(
+            &obj,
+            "getId",
+            "()Lcom/cedarpolicy/value/EntityIdentifier;",
+            &[],
+        )?;
+        let entity_id_field = get_object_ref(entity_id_jref)?;
+        let entity_id = JEntityId::cast(env, entity_id_field)?;
+        let entity_uid = EntityUid::from_type_name_and_id(
+            entity_type_name.get_rust_repr(),
+            entity_id.get_rust_repr(),
+        );
+        Ok(Self { obj, entity_uid })
     }
 }
 

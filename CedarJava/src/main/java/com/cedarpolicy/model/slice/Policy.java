@@ -16,10 +16,24 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /** Policies in the Cedar language. */
 public class Policy {
+    private static final Logger LOG = LoggerFactory.getLogger(Policy.class);
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
+    static {
+        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+    }
+
     /** Policy string. */
     public final String policySrc;
     /** Policy ID. */
@@ -41,7 +55,7 @@ public class Policy {
             throw new NullPointerException("Failed to construct policy from null string");
         }
         if (policyID == null) {
-            throw new NullPointerException("Failed to construct policy with null ID");
+            policyID = "policy" + idCounter.addAndGet(1);
         }
         this.policySrc = policy;
         this.policyID = policyID;
@@ -51,4 +65,33 @@ public class Policy {
     public String toString() {
         return "// Policy ID: " + policyID + "\n" + policySrc;
     }
+
+    public static Policy parseStaticPolicy(String policyStr) throws InternalException, NullPointerException {
+        var policyText = parsePolicyJni(policyStr);
+        return new Policy(policyText, null);
+    }
+
+    public static Policy parsePolicyTemplate(String templateStr)  throws InternalException, NullPointerException {
+        var templateText = parsePolicyTemplateJni(templateStr);
+        return new Policy(templateText, null);
+    }
+
+    /**
+     * This method takes in a Policy and a list of Instantiations and calls Cedar JNI to ensure those slots
+     * can be used to instantiate the template. If the Template is validated ahead of time by using Policy.parsePolicyTemplate
+     * and the Instantiations are also ensured to be valid (for example, by validating their parts using EntityTypeName.parse
+     * and EntityIdentifier.parse), then this should only fail because the slots in the template don't match the instantiations
+     * (barring JNI failures).
+     * @param p Policy object constructed from a valid template. Best if built from Policy.parsePolicyTemplate
+     * @param principal EntityUid to put into the principal slot. Leave null if there's no principal slot
+     * @param resource EntityUid to put into the resource slot. Leave null if there's no resource slot
+     * @return
+     */
+    public static boolean validateTemplateLinkedPolicy(Policy p, EntityUID principal, EntityUID resource) throws InternalException, NullPointerException {
+        return validateTemplateLinkedPolicyJni(p.policySrc, principal, resource);
+    }
+
+    private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
+    private static native String parsePolicyTemplateJni(String policyTemplateStr) throws InternalException, NullPointerException;
+    private static native boolean validateTemplateLinkedPolicyJni(String templateText, EntityUID principal, EntityUID resource) throws InternalException, NullPointerException;
 }
