@@ -14,8 +14,6 @@ import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AuthTests {
 
