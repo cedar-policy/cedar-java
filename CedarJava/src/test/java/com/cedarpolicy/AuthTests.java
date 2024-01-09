@@ -1,27 +1,23 @@
 package com.cedarpolicy;
 
-import java.util.Optional;
 import java.util.HashSet;
 import java.util.HashMap;
 
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import org.junit.jupiter.api.Test;
-import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
-import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
 
-import javax.swing.text.html.Option;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AuthTests {
-    
+
     @Test
     public void simple() {
         var auth = new BasicAuthorizationEngine();
