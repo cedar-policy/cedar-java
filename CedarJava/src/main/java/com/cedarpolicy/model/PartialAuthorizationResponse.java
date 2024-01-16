@@ -22,7 +22,7 @@ public abstract class PartialAuthorizationResponse {
             @JsonProperty("residuals") Map<String, JsonNode> residuals,
             @JsonProperty("diagnostics") Diagnostics diagnostics) {
         if (nested != null) {
-            //
+            // nested parameter causes a recursive calls to this method on the response JSON object
             return nested;
         }
         else if (decision != null && diagnostics != null) {
@@ -51,7 +51,7 @@ public abstract class PartialAuthorizationResponse {
      * @return set of policy ids that contributed to the decision
      */
     public Set<String> getReasons() {
-        return diagnostics.getReasons();
+        return this.diagnostics.getReasons();
     }
 
     /**
@@ -60,7 +60,7 @@ public abstract class PartialAuthorizationResponse {
      * @return list with errors that happened for a given Request
      */
     public List<String> getErrors() {
-        return diagnostics.getErrors();
+        return this.diagnostics.getErrors();
     }
 
     /**

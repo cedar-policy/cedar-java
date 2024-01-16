@@ -80,7 +80,7 @@ public final class AuthorizationResponse {
          * @return list with the policy ids that contributed to the decision
          */
         public Set<String> getReasons() {
-            return reason;
+            return this.reason;
         }
 
         /**
@@ -88,8 +88,8 @@ public final class AuthorizationResponse {
          *
          * @return list with errors that happened for a given Request
          */
-        public java.util.List<String> getErrors() {
-            return errors;
+        public List<String> getErrors() {
+            return this.errors;
         }
     }
 
@@ -148,7 +148,7 @@ public final class AuthorizationResponse {
      * @return list with the policy ids that contributed to the decision
      */
     public Set<String> getReasons() {
-        return diagnostics.getReasons();
+        return diagnostics.reason;
     }
 
     /**
@@ -156,8 +156,8 @@ public final class AuthorizationResponse {
      *
      * @return list with errors that happened for a given Request
      */
-    public List<String> getErrors() {
-        return diagnostics.getErrors();
+    public java.util.List<String> getErrors() {
+        return diagnostics.errors;
     }
 
     /**
