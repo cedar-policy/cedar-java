@@ -23,11 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
-<<<<<<< HEAD
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-=======
-import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
->>>>>>> d89fe04 (Added support for partial evaluation)
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -73,7 +69,6 @@ public class JSONTests {
     }
 
     @Test
-<<<<<<< HEAD
     public void testAuthConcretePartialResponse() {
         String src =
                 "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
@@ -98,17 +93,6 @@ public class JSONTests {
             assertEquals("p0", residual.getResiduals().iterator().next().policyID);
             assertJSONEqual(CedarJson.objectMapper().readTree(policy),
                     CedarJson.objectMapper().readTree(residual.getResiduals().iterator().next().policySrc));
-=======
-    public void testAuthPartialResponse() {
-        final String policy = "{\"effect\":\"permit\",\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"},\"resource\":{\"op\":\"All\"},\"conditions\":[{\"kind\":\"when\",\"body\":{\"==\":{\"left\":{\"unknown\":[{\"Value\":\"principal\"}]},\"right\":{\"Value\":{\"__entity\":{\"type\":\"User\",\"id\":\"alice\"}}}}}}]}";
-        final String src = "{\"response\":{\"payload\":{\"Residual\":{\"p0\":" + policy + "}},\"diagnostics\":{\"reason\":[],\"errors\":[]}}}";
-        try {
-            AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
-            assertEquals(AuthorizationResponse.Decision.NoDecision, r.getDecision());
-            assertEquals(1, r.getResidual().size());
-            assertEquals("p0", r.getResidual().iterator().next().policyID);
-            assertEquals(policy, r.getResidual().iterator().next().policySrc);
->>>>>>> d89fe04 (Added support for partial evaluation)
         } catch (JsonProcessingException e) {
             fail(e);
         }

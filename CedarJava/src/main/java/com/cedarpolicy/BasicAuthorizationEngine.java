@@ -22,14 +22,7 @@ import static com.cedarpolicy.CedarJson.objectWriter;
 import java.io.IOException;
 import java.util.Collections;
 
-<<<<<<< HEAD
 import com.cedarpolicy.model.*;
-=======
-import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.PartialAuthorizationRequest;
-import com.cedarpolicy.model.ValidationRequest;
-import com.cedarpolicy.model.ValidationResponse;
->>>>>>> d89fe04 (Added support for partial evaluation)
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
@@ -62,19 +55,11 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     @Override
-<<<<<<< HEAD
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
             throws AuthException {
         LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
         final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
-        return call("AuthorizationPartialOperation", PartialAuthorizationAnswer.class, request).getResponse();
-=======
-    public AuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
-            throws AuthException {
-        LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
-        final AuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
-        return call("AuthorizationPartialOperation", AuthorizationResponse.class, request);
->>>>>>> d89fe04 (Added support for partial evaluation)
+        return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
     }
 
     @Override
@@ -149,21 +134,6 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         }
     }
 
-<<<<<<< HEAD
-    public static class PartialAuthorizationAnswer {
-        private PartialAuthorizationResponse response;
-
-        public PartialAuthorizationAnswer(@JsonProperty("response") PartialAuthorizationResponse response) {
-            this.response = response;
-        }
-
-        public PartialAuthorizationResponse getResponse() {
-            return this.response;
-        }
-    }
-
-=======
->>>>>>> d89fe04 (Added support for partial evaluation)
     private static final class ErrorResponse {
         public final boolean success, isInternal;
         public final String[] errors;

@@ -22,6 +22,7 @@ public abstract class PartialAuthorizationResponse {
             @JsonProperty("residuals") Map<String, JsonNode> residuals,
             @JsonProperty("diagnostics") Diagnostics diagnostics) {
         if (nested != null) {
+            //
             return nested;
         }
         else if (decision != null && diagnostics != null) {
@@ -70,7 +71,7 @@ public abstract class PartialAuthorizationResponse {
     public abstract boolean reachedDecision();
 
     public static final class ConcretePartialAuthorizationResponse extends PartialAuthorizationResponse {
-        private Decision decision;
+        private final Decision decision;
 
         private ConcretePartialAuthorizationResponse(Decision decision, Diagnostics diagnostics) {
             super(diagnostics);
@@ -97,7 +98,7 @@ public abstract class PartialAuthorizationResponse {
     }
 
     public static final class ResidualPartialAuthorizationResponse extends PartialAuthorizationResponse {
-        private Set<Policy> residuals;
+        private final ImmutableSet<Policy> residuals;
 
         public ResidualPartialAuthorizationResponse(Map<String, JsonNode> residuals, Diagnostics diagnostics) {
             super(diagnostics);
