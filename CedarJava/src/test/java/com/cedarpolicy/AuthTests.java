@@ -1,17 +1,17 @@
 package com.cedarpolicy;
 
-import java.util.HashSet;
-import java.util.HashMap;
-
+import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import org.junit.jupiter.api.Test;
-import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
+import com.cedarpolicy.value.EntityUID;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
