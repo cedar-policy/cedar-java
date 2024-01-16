@@ -18,17 +18,12 @@ package com.cedarpolicy;
 
 import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
-import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
+import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -74,15 +69,30 @@ public class JSONTests {
     }
 
     @Test
-    public void testAuthPartialResponse() {
-        final String policy = "{\"effect\":\"permit\",\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"},\"resource\":{\"op\":\"All\"},\"conditions\":[{\"kind\":\"when\",\"body\":{\"==\":{\"left\":{\"unknown\":[{\"Value\":\"principal\"}]},\"right\":{\"Value\":{\"__entity\":{\"type\":\"User\",\"id\":\"alice\"}}}}}}]}";
-        final String src = "{\"response\":{\"payload\":{\"Residual\":{\"p0\":" + policy + "}},\"diagnostics\":{\"reason\":[],\"errors\":[]}}}";
+    public void testAuthConcretePartialResponse() {
+        String src =
+                "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
         try {
-            AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
-            assertEquals(AuthorizationResponse.Decision.NoDecision, r.getDecision());
-            assertEquals(1, r.getResidual().size());
-            assertEquals("p0", r.getResidual().iterator().next().policyID);
-            assertEquals(policy, r.getResidual().iterator().next().policySrc);
+            PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            assertInstanceOf(PartialAuthorizationResponse.ConcretePartialAuthorizationResponse.class, r);
+            assertTrue(((PartialAuthorizationResponse.ConcretePartialAuthorizationResponse) r).isAllowed());
+        } catch (JsonProcessingException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    public void testAuthResidualPartialResponse() {
+        final String policy = "{ \"effect\": \"permit\", \"principal\": { \"op\": \"All\" }, \"action\": { \"op\": \"All\" }, \"resource\": { \"op\": \"All\" }, \"conditions\": [ { \"kind\": \"when\", \"body\": { \"==\": { \"left\": { \"unknown\": [ { \"Value\": \"principal\" } ] }, \"right\": { \"Value\": { \"__entity\": { \"type\": \"User\", \"id\": \"alice\" } } } } } } ] }";
+        final String src = "{ \"response\": { \"residuals\": { \"p0\":" + policy + " }, \"diagnostics\": { \"reason\":[],\"errors\":[] } } }";
+        try {
+            PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            assertInstanceOf(PartialAuthorizationResponse.ResidualPartialAuthorizationResponse.class, r);
+            var residual = (PartialAuthorizationResponse.ResidualPartialAuthorizationResponse) r;
+            assertEquals(1, residual.getResiduals().size());
+            assertEquals("p0", residual.getResiduals().iterator().next().policyID);
+            assertJSONEqual(CedarJson.objectMapper().readTree(policy),
+                    CedarJson.objectMapper().readTree(residual.getResiduals().iterator().next().policySrc));
         } catch (JsonProcessingException e) {
             fail(e);
         }

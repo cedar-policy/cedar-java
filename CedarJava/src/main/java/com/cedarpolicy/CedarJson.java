@@ -16,6 +16,7 @@
 
 package com.cedarpolicy;
 
+import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.serializer.ValueCedarDeserializer;
 import com.cedarpolicy.serializer.ValueCedarSerializer;

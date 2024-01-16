@@ -60,7 +60,7 @@ public interface AuthorizationEngine {
      *     authorization engine are included in the <code>errors</code> field on the
      *     AuthorizationResponse.
      */
-    AuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request, Slice slice) throws AuthException;
+    PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request, Slice slice) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct

@@ -91,6 +91,25 @@ public final class AuthorizationResponse {
             this.errors = ImmutableList.copyOf(errors);
             this.reason = ImmutableSet.copyOf(reason);
         }
+
+        /**
+         * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny, all
+         * deny policies that evaluated to True will appear in Reasons.
+         *
+         * @return list with the policy ids that contributed to the decision
+         */
+        public Set<String> getReasons() {
+            return reason;
+        }
+
+        /**
+         * Set of errors and warnings returned by Cedar.
+         *
+         * @return list with errors that happened for a given Request
+         */
+        public java.util.List<String> getErrors() {
+            return errors;
+        }
     }
 
     /** Internal representation of the response from a query evaluation. */
@@ -173,7 +192,7 @@ public final class AuthorizationResponse {
      * @return list with the policy ids that contributed to the decision
      */
     public Set<String> getReasons() {
-        return diagnostics.reason;
+        return diagnostics.getReasons();
     }
 
     /**
@@ -181,8 +200,8 @@ public final class AuthorizationResponse {
      *
      * @return list with errors that happened for a given Request
      */
-    public java.util.List<String> getErrors() {
-        return diagnostics.errors;
+    public List<String> getErrors() {
+        return diagnostics.getErrors();
     }
 
     /**
