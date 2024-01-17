@@ -123,20 +123,6 @@ fn call_cedar(call: &str, input: &str) -> String {
     serde_json::to_string(&result).expect("could not serialise response")
 }
 
-// #[cfg(feature = "partial-eval")]
-// fn call_cedar(call: &str, input: &str) -> String {
-//     let call = String::from(call);
-//     let input = String::from(input);
-//     let result = match call.as_str() {
-//         V0_AUTH_OP => json_is_authorized(&input),
-//         V0_AUTH_PARTIAL_OP => json_is_authorized_partial(&input),
-//         V0_VALIDATE_OP => json_validate(&input),
-//         V0_PARSE_EUID_OP => json_parse_entity_uid(&input),
-//         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
-//     };
-//     serde_json::to_string(&result).expect("could not serialise response")
-// }
-
 #[derive(Debug, Serialize, Deserialize)]
 struct JavaInterfaceCall {
     pub call: String,
