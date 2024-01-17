@@ -1,13 +1,12 @@
 package com.cedarpolicy;
 
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
@@ -17,9 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AuthTests {
 
