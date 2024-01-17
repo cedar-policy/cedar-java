@@ -7,11 +7,14 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,17 +48,19 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var slice = new BasicSlice(policies, new HashSet<>());
-        assertDoesNotThrow(() -> {
-            var response = auth.isAuthorizedPartial(q, slice);
-            assertTrue(response.reachedDecision());
-            assertEquals(1, response.getDiagnostics().getReasons().size());
-            assertEquals("p0", response.getDiagnostics().getReasons().iterator().next());
-            assertInstanceOf(PartialAuthorizationResponse.ConcretePartialAuthorizationResponse.class, response);
-            var concrete = (PartialAuthorizationResponse.ConcretePartialAuthorizationResponse) response;
-            assertEquals(AuthorizationResponse.Decision.Allow, concrete.getDecision());
-            assertTrue(concrete.isAllowed());
-        }, "Should not throw AuthException");
-
+        assertDoesNotThrow(
+            assumePartialEvaluation(
+                () -> {
+                    var response = auth.isAuthorizedPartial(q, slice);
+                    assertTrue(response.reachedDecision());
+                    assertEquals(1, response.getDiagnostics().getReasons().size());
+                    assertEquals("p0", response.getDiagnostics().getReasons().iterator().next());
+                    assertInstanceOf(PartialAuthorizationResponse.ConcretePartialAuthorizationResponse.class, response);
+                    var concrete = (PartialAuthorizationResponse.ConcretePartialAuthorizationResponse) response;
+                    assertEquals(AuthorizationResponse.Decision.Allow, concrete.getDecision());
+                    assertTrue(concrete.isAllowed());
+                }
+            ), "Should not throw AuthException");
     }
 
     @Test
@@ -67,14 +72,30 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var slice = new BasicSlice(policies, new HashSet<>());
-        assertDoesNotThrow(() -> {
-            var response = auth.isAuthorizedPartial(q, slice);
-            assertFalse(response.reachedDecision());
-            assertInstanceOf(PartialAuthorizationResponse.ResidualPartialAuthorizationResponse.class, response);
-            var residual = (PartialAuthorizationResponse.ResidualPartialAuthorizationResponse) response;
-            assertEquals(1, residual.getResiduals().size());
-            assertEquals("p0", residual.getResiduals().iterator().next().policyID);
-        }, "Should not throw AuthException");
+        assertDoesNotThrow(
+            assumePartialEvaluation(
+                 () -> {
+                     var response = auth.isAuthorizedPartial(q, slice);
+                     assertFalse(response.reachedDecision());
+                     assertInstanceOf(PartialAuthorizationResponse.ResidualPartialAuthorizationResponse.class, response);
+                     var residual = (PartialAuthorizationResponse.ResidualPartialAuthorizationResponse) response;
+                     assertEquals(1, residual.getResiduals().size());
+                     assertEquals("p0", residual.getResiduals().iterator().next().policyID);
+                }
+            ), "Should not throw AuthException");
+    }
 
+    private Executable assumePartialEvaluation(Executable executable) {
+        return () -> {
+            try {
+                executable.execute();
+            } catch (InternalException e) {
+                if (e.getMessage().contains("AuthorizationPartialOperation")) {
+                    System.err.println("Native library is missing partial evaluation support. To enable that feature recompile the native library with --features=partial-eval.");
+                } else {
+                    throw e;
+                }
+            }
+        };
     }
 }
