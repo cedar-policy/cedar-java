@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
+#[cfg(feature = "partial-eval")]
+use cedar_policy::frontend::is_authorized::json_is_authorized_partial;
 use cedar_policy::{
     frontend::{
         is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
     },
     EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
 };
-#[cfg(feature = "partial-eval")]
-use cedar_policy::frontend::is_authorized::json_is_authorized_partial;
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
     sys::{jstring, jvalue},
@@ -135,7 +135,6 @@ fn call_cedar(call: &str, input: &str) -> String {
     };
     serde_json::to_string(&result).expect("could not serialise response")
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JavaInterfaceCall {
