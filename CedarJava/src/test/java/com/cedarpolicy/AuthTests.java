@@ -7,7 +7,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
 import com.cedarpolicy.value.EntityTypeName;
@@ -32,7 +32,6 @@ public class AuthTests {
             var response = auth.isAuthorized(q, slice);
             assertTrue(response.isAllowed());
         }, "Should not throw AuthException");
-
     }
 
     @Test
@@ -85,12 +84,8 @@ public class AuthTests {
         return () -> {
             try {
                 executable.execute();
-            } catch (InternalException e) {
-                if (e.getMessage().contains("AuthorizationPartialOperation")) {
-                    System.err.println("Native library is missing partial evaluation support. To enable that feature recompile the native library with --features=partial-eval.");
-                } else {
-                    throw e;
-                }
+            } catch (MissingExperimentalFeatureException e) {
+                System.err.println("Skipping assertions: " + e.getMessage());
             }
         };
     }

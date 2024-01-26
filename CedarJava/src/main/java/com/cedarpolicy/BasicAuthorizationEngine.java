@@ -25,6 +25,7 @@ import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.Slice;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -53,12 +54,22 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
 
+    @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
             throws AuthException {
-        LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
-        final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
-        return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
+        try {
+            LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
+            final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
+            return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
+        }
+        catch (InternalException e) {
+            if (e.getMessage().contains("AuthorizationPartialOperation")) {
+                throw new MissingExperimentalFeatureException(ExperimentalFeature.PARTIAL_EVALUATION);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -102,6 +113,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     throw new BadRequestException(error.errors);
                 }
             }
+
         } catch (JsonProcessingException e) {
             throw new AuthException("JSON Serialization Error", e);
         } catch (IllegalArgumentException e) {

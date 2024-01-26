@@ -1,5 +1,7 @@
 package com.cedarpolicy.model;
 
+import com.cedarpolicy.Experimental;
+import com.cedarpolicy.ExperimentalFeature;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.value.EntityUID;
@@ -25,6 +27,7 @@ import java.util.Optional;
  * If the schema is provided and `enable_request_validation` is true, then the
  * schema will also be used for request validation.
  */
+@Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class PartialAuthorizationRequest extends AuthorizationRequest {
     public PartialAuthorizationRequest(Optional<EntityUID> principalEUID, EntityUID actionEUID, Optional<EntityUID> resourceEUID, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enable_request_validation) {

@@ -60,6 +60,7 @@ public interface AuthorizationEngine {
      *     authorization engine are included in the <code>errors</code> field on the
      *     AuthorizationResponse.
      */
+    @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request, Slice slice) throws AuthException;
 
     /**

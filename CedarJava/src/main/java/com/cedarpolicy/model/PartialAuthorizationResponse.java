@@ -1,5 +1,7 @@
 package com.cedarpolicy.model;
 
+import com.cedarpolicy.Experimental;
+import com.cedarpolicy.ExperimentalFeature;
 import com.cedarpolicy.model.AuthorizationResponse.Decision;
 import com.cedarpolicy.model.AuthorizationResponse.Diagnostics;
 import com.cedarpolicy.model.slice.Policy;
@@ -12,9 +14,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 public abstract class PartialAuthorizationResponse {
     private final Diagnostics diagnostics;
 
+    /**
+     * Deserializer factory method for PartialAuthorizationResponse.
+     * @param nested Deserialized object for nested JSON object.
+     * @param decision Deserialized decision attribute of nested JSON object.
+     * @param residuals Deserialized residual attribute of nested JSON object.
+     * @param diagnostics Deserialized diagnostics attribute of nested JSON object.
+     * @return
+     */
     @JsonCreator
     public static PartialAuthorizationResponse createPartialAuthorizationResponse(
             @JsonProperty("response") PartialAuthorizationResponse nested,
@@ -22,7 +33,7 @@ public abstract class PartialAuthorizationResponse {
             @JsonProperty("residuals") Map<String, JsonNode> residuals,
             @JsonProperty("diagnostics") Diagnostics diagnostics) {
         if (nested != null) {
-            // nested parameter causes a recursive calls to this method on the response JSON object
+            // bubble the nested deserialized object for the root JSON object
             return nested;
         }
         else if (decision != null && diagnostics != null) {
