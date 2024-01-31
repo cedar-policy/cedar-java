@@ -420,9 +420,11 @@ public class SharedIntegrationTests {
             AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
             System.out.println(response.getErrors());
             assertEquals(request.decision, response.getDecision());
-            // convert to a HashSet to allow reordering of error messages
-            assertEquals(new HashSet<>(request.errors), new HashSet<>(response.getErrors()));
+            // convert to a HashSet to allow reordering
             assertEquals(new HashSet<>(request.reasons), response.getReasons());
+            // The integration tests only record the id of the erroring policy, 
+            // not the full error message. So only check that the list lengths match.
+            assertEquals(request.errors.size(), response.getErrors().size());
         } catch (BadRequestException e) {
             // In the case of parse errors ("poorly formed..."), errors may disagree but the
             // decision should be `Deny`.
