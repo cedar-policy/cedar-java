@@ -30,14 +30,57 @@ import java.util.Optional;
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class PartialAuthorizationRequest extends AuthorizationRequest {
-    public PartialAuthorizationRequest(Optional<EntityUID> principalEUID, EntityUID actionEUID, Optional<EntityUID> resourceEUID, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enable_request_validation) {
-        super(principalEUID, actionEUID, resourceEUID, context, schema, enable_request_validation);
+    /**
+     * Create a partial authorization request from the EUIDs and Context. We recommend using the {@link Builder}
+     * for convenience.
+     *
+     * @param principalEUID Principal's EUID.
+     * @param actionEUID Action's EUID.
+     * @param resourceEUID Resource's EUID.
+     * @param context Key/Value context.
+     * @param schema Schema (optional).
+     * @param enableRequestValidation Whether to use the schema for just
+     * schema-based parsing of `context` (false) or also for request validation
+     * (true). No effect if `schema` is not provided.
+     */
+    public PartialAuthorizationRequest(
+            Optional<EntityUID> principalEUID,
+            EntityUID actionEUID,
+            Optional<EntityUID> resourceEUID,
+            Optional<Map<String, Value>> context,
+            Optional<Schema> schema,
+            boolean enableRequestValidation) {
+        super(principalEUID, actionEUID, resourceEUID, context, schema, enableRequestValidation);
     }
 
-    public PartialAuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enable_request_validation) {
-        super(principal, action, resource, context, schema, enable_request_validation);
+    /**
+     * Create a partial authorization request from Entity objects and Context. We recommend using the {@link Builder}
+     * for convenience.
+     *
+     * @param principal
+     * @param action
+     * @param resource
+     * @param context
+     * @param schema
+     * @param enableRequestValidation Whether to use the schema for just
+     * schema-based parsing of `context` (false) or also for request validation
+     * (true). No effect if `schema` is not provided.
+     */
+    public PartialAuthorizationRequest(
+            Optional<Entity> principal,
+            Entity action,
+            Optional<Entity> resource,
+            Optional<Map<String, Value>> context,
+            Optional<Schema> schema,
+            boolean enableRequestValidation) {
+        super(principal, action, resource, context, schema, enableRequestValidation);
     }
 
+    /**
+     * Creates a builder of partial authorization request.
+     *
+     * @return The builder
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -48,56 +91,104 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
         private EntityUID resourceEUID;
         private Map<String, Value> context;
         private Schema schema;
-        private boolean enable_request_validation;
+        private boolean enableRequestValidation;
 
         private Builder() {}
 
+        /**
+         * Set the principal.
+         * @param principalEUID Principal's EUID.
+         * @return The builder.
+         */
         public Builder principal(EntityUID principalEUID) {
             this.principalEUID = principalEUID;
             return this;
         }
 
+        /**
+         * Set the principal.
+         * @param principal
+         * @return The builder.
+         */
         public Builder principal(Entity principal) {
             return principal(principal != null ? principal.getEUID() : null);
         }
 
+        /**
+         * Set the action.
+         * @param actionEUID Action's EUID.
+         * @return The builder.
+         */
         public Builder action(EntityUID actionEUID) {
             this.actionEUID = actionEUID;
             return this;
         }
 
+        /**
+         * Set the action.
+         * @param action
+         * @return The builder.
+         */
         public Builder action(Entity action) {
             return action(action != null ? action.getEUID() : null);
         }
 
+        /**
+         * Set the resource.
+         * @param resourceEUID Resource's EUID.
+         * @return The builder.
+         */
         public Builder resource(EntityUID resourceEUID) {
             this.resourceEUID = resourceEUID;
             return this;
         }
 
+        /**
+         * Set the resource.
+         * @param resource
+         * @return The builder.
+         */
         public Builder resource(Entity resource) {
             return resource(resource != null ? resource.getEUID() : null);
         }
 
+        /**
+         * Set the context.
+         * @param context
+         * @return The builder.
+         */
         public Builder context(Map<String, Value> context) {
             this.context = ImmutableMap.copyOf(context);
             return this;
         }
 
+        /**
+         * Set the schema.
+         * @param schema
+         * @return The builder.
+         */
         public Builder schema(Schema schema) {
             this.schema = schema;
             return this;
         }
 
+        /**
+         * Enable request validation.
+         * @return The builder.
+         */
         public Builder enableRequestValidation() {
-            this.enable_request_validation = true;
+            this.enableRequestValidation = true;
             return this;
         }
 
+        /**
+         * Build the partial authorization request.
+         * @return The request.
+         */
         public PartialAuthorizationRequest build() {
             return new PartialAuthorizationRequest(Optional.ofNullable(principalEUID), actionEUID,
                     Optional.ofNullable(resourceEUID), Optional.ofNullable(context), Optional.ofNullable(schema),
-                    enable_request_validation);
+                    enableRequestValidation);
         }
     }
 }
