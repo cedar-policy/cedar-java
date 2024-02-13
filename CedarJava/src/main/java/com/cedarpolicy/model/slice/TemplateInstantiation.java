@@ -18,8 +18,8 @@ package com.cedarpolicy.model.slice;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 /** Template instantiation. */
 public class TemplateInstantiation {
@@ -46,7 +46,7 @@ public class TemplateInstantiation {
             @JsonProperty("instantiations") List<Instantiation> instantiations) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
-        this.instantiations = Collections.unmodifiableList(instantiations);
+        this.instantiations = ImmutableList.copyOf(instantiations);
     }
 
     /** Get the template ID. */
