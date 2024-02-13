@@ -67,17 +67,13 @@ configurations {
 dependencies {
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueCedarDeserializer
     // The upgrade should be reviewed by AppSec
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.0'
-    implementation 'org.slf4j:slf4j-api:2.0.7'
-    compileOnly 'com.google.code.findbugs:findbugs:3.0.1'
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-    testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.20.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.3'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
-    testImplementation 'net.jqwik:jqwik:1.7.3'
-    testImplementation 'org.slf4j:slf4j-reload4j:2.0.7'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.1'
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.3'
+    testImplementation 'org.slf4j:slf4j-simple:2.0.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testImplementation 'net.jqwik:jqwik:1.8.2'
 }
 
 test {
