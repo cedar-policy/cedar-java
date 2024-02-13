@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#[cfg(feature = "partial-eval")]
+use cedar_policy::frontend::is_authorized::json_is_authorized_partial;
 use cedar_policy::{
     frontend::{
         is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
@@ -37,6 +39,8 @@ use crate::{
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 const V0_AUTH_OP: &str = "AuthorizationOperation";
+#[cfg(feature = "partial-eval")]
+const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
 const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
@@ -110,6 +114,8 @@ fn call_cedar(call: &str, input: &str) -> String {
     let input = String::from(input);
     let result = match call.as_str() {
         V0_AUTH_OP => json_is_authorized(&input),
+        #[cfg(feature = "partial-eval")]
+        V0_AUTH_PARTIAL_OP => json_is_authorized_partial(&input),
         V0_VALIDATE_OP => json_validate(&input),
         V0_PARSE_EUID_OP => json_parse_entity_uid(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
@@ -563,6 +569,54 @@ mod test {
 	             }
 	          }
 	         "#,
+        );
+        assert_success(result);
+    }
+
+    #[cfg(feature = "partial-eval")]
+    #[test]
+    fn test_missing_resource_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationPartialOperation",
+            r#"
+        {
+            "context": {},
+            "slice": {
+              "policies": {
+                "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
+              },
+              "entities": [],
+              "templates": {},
+              "template_instantiations": []
+            },
+            "principal" : { "type" : "User", "id" : "alice" },
+            "action" : { "type" : "Action", "id" : "view" }
+        }
+        "#,
+        );
+        assert_success(result);
+    }
+
+    #[cfg(feature = "partial-eval")]
+    #[test]
+    fn test_missing_principal_call_succeeds() {
+        let result = call_cedar(
+            "AuthorizationPartialOperation",
+            r#"
+        {
+            "context": {},
+            "slice": {
+              "policies": {
+                "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
+              },
+              "entities": [],
+              "templates": {},
+              "template_instantiations": []
+            },
+            "action" : { "type" : "Action", "id" : "view" },
+            "resource" : { "type" : "Photo", "id" : "door" }
+        }
+        "#,
         );
         assert_success(result);
     }

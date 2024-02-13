@@ -17,6 +17,8 @@ jni_fn = "0.1.0"
 thiserror = "1.0.49"
 itertools = "0.11.0"
 
+[features]
+partial-eval = ["cedar-policy/partial-eval"]
 
 # Dynamic linked library, used for linked to java process at runtime.
 [lib]

@@ -71,6 +71,25 @@ public final class AuthorizationResponse {
             this.errors = Collections.unmodifiableList(errors);
             this.reason = Collections.unmodifiableSet(reason);
         }
+
+        /**
+         * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny, all
+         * deny policies that evaluated to True will appear in Reasons.
+         *
+         * @return list with the policy ids that contributed to the decision
+         */
+        public Set<String> getReasons() {
+            return this.reason;
+        }
+
+        /**
+         * Set of errors and warnings returned by Cedar.
+         *
+         * @return list with errors that happened for a given Request
+         */
+        public List<String> getErrors() {
+            return this.errors;
+        }
     }
 
     /** Internal representation of the response from a query evaluation. */

@@ -1,9 +1,12 @@
 
 package com.cedarpolicy.value;
 
+import com.google.common.base.Suppliers;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,8 +17,10 @@ import java.util.stream.Stream;
     2) a basename 
 */
 public final class EntityTypeName {
-    private List<String> namespace;
-    private String basename;
+    private final List<String> namespace;
+    private final String basename;
+    private final Supplier<String> entityTypeNameRepr;
+
     static {
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
     }
@@ -29,6 +34,7 @@ public final class EntityTypeName {
     protected EntityTypeName(List<String> namespace, String  basename) {
         this.namespace = namespace;
         this.basename= basename;
+        this.entityTypeNameRepr = Suppliers.memoize(() -> getEntityTypeNameRepr(this));
     }
 
     /**
@@ -72,7 +78,7 @@ public final class EntityTypeName {
     }
 
     public String toString() {
-        return getEntityTypeNameRepr(this);
+        return this.entityTypeNameRepr.get();
     }
 
     /** 

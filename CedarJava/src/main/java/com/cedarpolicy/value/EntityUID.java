@@ -18,8 +18,10 @@ package com.cedarpolicy.value;
 
 import java.util.Optional;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import com.cedarpolicy.serializer.JsonEUID;
+import com.google.common.base.Suppliers;
 
 /**
  * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
@@ -28,6 +30,7 @@ import com.cedarpolicy.serializer.JsonEUID;
 public final class EntityUID extends Value {
     private final EntityTypeName type;
     private final EntityIdentifier id;
+    private final Supplier<String> euidRepr;
 
     static { 
         System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
@@ -41,6 +44,7 @@ public final class EntityUID extends Value {
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
         this.id = id;
+        this.euidRepr = Suppliers.memoize(() -> getEUIDRepr(type, id));
     }
 
     /**
@@ -71,7 +75,7 @@ public final class EntityUID extends Value {
 
     @Override
     public String toString() {
-        return getEUIDRepr(type, id);
+        return euidRepr.get();
     }
 
     @Override
@@ -97,7 +101,7 @@ public final class EntityUID extends Value {
 
     @Override
     public String toCedarExpr() {
-        return getEUIDRepr(type, id);
+        return euidRepr.get();
     }
 
 

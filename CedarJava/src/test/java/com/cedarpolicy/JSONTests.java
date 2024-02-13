@@ -18,16 +18,12 @@ package com.cedarpolicy;
 
 import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
+import com.cedarpolicy.model.PartialAuthorizationRequest;
+import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -46,6 +42,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +68,36 @@ public class JSONTests {
         }
     }
 
+    @Test
+    public void testAuthConcretePartialResponse() {
+        String src =
+                "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
+        try {
+            PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            assertInstanceOf(PartialAuthorizationResponse.ConcretePartialAuthorizationResponse.class, r);
+            assertTrue(((PartialAuthorizationResponse.ConcretePartialAuthorizationResponse) r).isAllowed());
+        } catch (JsonProcessingException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    public void testAuthResidualPartialResponse() {
+        final String policy = "{ \"effect\": \"permit\", \"principal\": { \"op\": \"All\" }, \"action\": { \"op\": \"All\" }, \"resource\": { \"op\": \"All\" }, \"conditions\": [ { \"kind\": \"when\", \"body\": { \"==\": { \"left\": { \"unknown\": [ { \"Value\": \"principal\" } ] }, \"right\": { \"Value\": { \"__entity\": { \"type\": \"User\", \"id\": \"alice\" } } } } } } ] }";
+        final String src = "{ \"response\": { \"residuals\": { \"p0\":" + policy + " }, \"diagnostics\": { \"reason\":[],\"errors\":[] } } }";
+        try {
+            PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            assertInstanceOf(PartialAuthorizationResponse.ResidualPartialAuthorizationResponse.class, r);
+            var residual = (PartialAuthorizationResponse.ResidualPartialAuthorizationResponse) r;
+            assertEquals(1, residual.getResiduals().size());
+            assertEquals("p0", residual.getResiduals().iterator().next().policyID);
+            assertJSONEqual(CedarJson.objectMapper().readTree(policy),
+                    CedarJson.objectMapper().readTree(residual.getResiduals().iterator().next().policySrc));
+        } catch (JsonProcessingException e) {
+            fail(e);
+        }
+    }
+
     /** Test. */
     @Test
     public void testRequest() {
@@ -83,6 +110,19 @@ public class JSONTests {
         n.set("schema", JsonNodeFactory.instance.nullNode());
         n.set("enable_request_validation", JsonNodeFactory.instance.booleanNode(false));
         n.set("principal", buildEuidObject("Wizard", "gandalf"));
+        n.set("action", buildEuidObject("Action", "opens"));
+        n.set("resource", buildEuidObject("Mines", "moria"));
+        assertJSONEqual(n, q);
+    }
+
+    @Test
+    public void testPartialRequest() {
+        var opens = new EntityUID(EntityTypeName.parse("Action").get(), "opens");
+        var moria = new EntityUID(EntityTypeName.parse("Mines").get(), "moria");
+        AuthorizationRequest q = new PartialAuthorizationRequest(Optional.empty(), opens, Optional.of(moria), Optional.of(new HashMap<String, Value>()), Optional.empty(), false);
+        ObjectNode n = JsonNodeFactory.instance.objectNode();
+        n.set("context", JsonNodeFactory.instance.objectNode());
+        n.set("enable_request_validation", JsonNodeFactory.instance.booleanNode(false));
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
         assertJSONEqual(n, q);

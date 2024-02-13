@@ -16,10 +16,7 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.AuthorizationRequest;
-import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.ValidationRequest;
-import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.Slice;
@@ -49,6 +46,22 @@ public interface AuthorizationEngine {
      *     AuthorizationResponse.
      */
     AuthorizationResponse isAuthorized(AuthorizationRequest request, Slice slice) throws AuthException;
+
+    /**
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the policies and
+     * entity hierarchy given in the <code>slice</code>. If information required to answer is missing residual
+     * policies are returned.
+     *
+     * @param request The request to evaluate
+     * @param slice The slice to evaluate against
+     * @return The result of the request evaluation
+     * @throws BadRequestException if any errors were found in the syntax of the policies.
+     * @throws AuthException On failure to make the authorization request. Note that errors inside the
+     *     authorization engine are included in the <code>errors</code> field on the
+     *     AuthorizationResponse.
+     */
+    @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
+    PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request, Slice slice) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct
