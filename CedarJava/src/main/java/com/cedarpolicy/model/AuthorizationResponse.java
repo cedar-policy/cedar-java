@@ -156,7 +156,7 @@ public final class AuthorizationResponse {
      *
      * @return list with errors that happened for a given Request
      */
-    public java.util.List<String> getErrors() {
+    public List<String> getErrors() {
         return diagnostics.errors;
     }
 
