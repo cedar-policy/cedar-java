@@ -1,8 +1,6 @@
 
 package com.cedarpolicy.value;
 
-import com.google.common.base.Suppliers;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Objects;
@@ -34,7 +32,15 @@ public final class EntityTypeName {
     protected EntityTypeName(List<String> namespace, String  basename) {
         this.namespace = namespace;
         this.basename= basename;
-        this.entityTypeNameRepr = Suppliers.memoize(() -> getEntityTypeNameRepr(this));
+        this.entityTypeNameRepr = new Supplier<String>() {
+            String entityTypeNameRepr = null;
+            public String get() {
+                if (entityTypeNameRepr == null) {
+                    entityTypeNameRepr = getEntityTypeNameRepr(EntityTypeName.this);
+                }
+                return entityTypeNameRepr;
+            }
+        };
     }
 
     /**
