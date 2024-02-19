@@ -23,4 +23,4 @@
  * @author anmwells
  * @version 1.2
  */
-package com.cedarpolicy.model.serializer;
+package com.cedarpolicy.serializer;

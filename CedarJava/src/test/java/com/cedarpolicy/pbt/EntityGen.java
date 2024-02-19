@@ -17,17 +17,13 @@
 package com.cedarpolicy.pbt;
 
 import com.cedarpolicy.model.slice.Entity;
-import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
-import com.cedarpolicy.value.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import net.jqwik.api.Arbitraries;
 

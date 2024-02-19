@@ -18,7 +18,6 @@ package com.cedarpolicy.serializer;
 
 import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
 import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
-import com.cedarpolicy.model.slice.EntityTypeAndId;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.Decimal;

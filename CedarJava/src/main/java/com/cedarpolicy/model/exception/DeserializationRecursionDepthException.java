@@ -16,7 +16,6 @@
 
 package com.cedarpolicy.model.exception;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.exc.StreamConstraintsException;
 
 /** Error deserializing a value due to passing recursion depth. */
