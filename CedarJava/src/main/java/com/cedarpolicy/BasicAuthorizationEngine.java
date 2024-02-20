@@ -92,7 +92,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             final String fullRequest = objectWriter().writeValueAsString(request);
 
             LOG.debug(
-                    "Making a request ({}, {}) of length {} through the JNI interface:",
+                    "Making a request ({}) of length {} through the JNI interface:",
                     operation,
                     fullRequest.length());
             LOG.trace("The request:\n{}", fullRequest);
