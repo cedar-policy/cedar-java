@@ -1,13 +1,10 @@
 package com.cedarpolicy;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import java.lang.NullPointerException;
-import java.text.Collator;
 
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -17,8 +14,6 @@ import net.jqwik.api.From;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import java.util.List;
-
-import org.junit.jupiter.api.Assertions;
 
 import java.util.stream.Collectors;
 

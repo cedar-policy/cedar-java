@@ -1,6 +1,6 @@
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package com.cedarpolicy;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cedarpolicy.value.EntityIdentifier;
 import net.jqwik.api.Property;
