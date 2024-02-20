@@ -1,4 +1,4 @@
-name: Cargo Build & Test
+name: Build & Test (CedarJava & CedarJavaFFI)
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ jobs:
         toolchain:
           - stable
     steps:
-      - name: Checkout Cedar Examples
+      - name: Checkout CedarJava
         uses: actions/checkout@v3
       - name: Checkout cedar
         uses: actions/checkout@v3
@@ -37,8 +37,12 @@ jobs:
         run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
       - name: cargo test
         working-directory: ./CedarJavaFFI
-        run: cargo test --verbose
-      - name: Build CedarJava
+        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo test --verbose
+      - name: Build and Test CedarJava
         working-directory: ./CedarJava
         shell: bash
         run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
+      - name: JavaDoc Cedarjava
+        working-directory: ./CedarJava
+        shell: bash
+        run: ./gradlew javadoc
