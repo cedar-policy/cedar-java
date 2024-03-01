@@ -71,12 +71,12 @@ jobs:
              elif [ "$RUNNER_OS" == "macOS" ]; then
               mv target/debug/libcedar_java_ffi.dylib target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib
               sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib > target/debug/libcedar_java_ffi-${{ inputs.name }}.dylib.sha1
-            elif [ "$RUNNER_OS" == "Windows" ]; then
+             elif [ "$RUNNER_OS" == "Windows" ]; then
               mv target/debug/libcedar_java_ffi.dll target/debug/libcedar_java_ffi-${{ inputs.name }}.dll
               sha1sum target/debug/libcedar_java_ffi-${{ inputs.name }}.dll > target/debug/libcedar_java_ffi-${{ inputs.name }}.dll.sha1
-            else
+             else
               echo "OS did not match"
-            fi
+             fi
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
