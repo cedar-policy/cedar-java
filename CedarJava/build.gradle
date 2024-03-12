@@ -67,7 +67,7 @@ configurations {
 dependencies {
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueCedarDeserializer
     // The upgrade should be reviewed by AppSec
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2'
     implementation 'org.slf4j:slf4j-api:2.0.12'
     implementation 'com.google.guava:guava:33.0.0-jre'
