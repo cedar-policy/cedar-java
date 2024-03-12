@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.cedarpolicy.value.EntityUID;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Represent JSON format of Entity Unique Identifier. */
 @JsonDeserialize
@@ -56,6 +57,7 @@ public class JsonEUID {
         this.type = type; this.id = id;
     }
 
+    @SuppressFBWarnings
     public JsonEUID(String src) throws InvalidEUIDException {
         var o = EntityUID.parse(src);
         if (o.isPresent()) {

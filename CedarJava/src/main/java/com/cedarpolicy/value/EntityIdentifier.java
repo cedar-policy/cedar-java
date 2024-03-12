@@ -1,6 +1,8 @@
 package com.cedarpolicy.value;
 
 
+import com.cedarpolicy.loader.LibraryLoader;
+
 /**
  * Class representing Entity Identifiers.
  * All strings are valid Entity Identifiers
@@ -8,8 +10,8 @@ package com.cedarpolicy.value;
 public final class EntityIdentifier {
     private String id; 
 
-    static { 
-        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+    static {
+        LibraryLoader.loadLibrary();
     }
 
     /**

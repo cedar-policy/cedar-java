@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.model.schema;
 
+import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
-        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+        LibraryLoader.loadLibrary();
     }
 
     // The schema after being parsed as a JSON object.

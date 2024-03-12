@@ -1,6 +1,7 @@
 
 package com.cedarpolicy.value;
 
+import com.cedarpolicy.loader.LibraryLoader;
 import com.google.common.base.Suppliers;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public final class EntityTypeName {
     private final Supplier<String> entityTypeNameRepr;
 
     static {
-        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+        LibraryLoader.loadLibrary();
     }
 
     /**

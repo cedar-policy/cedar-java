@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.value;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,6 +79,7 @@ public class IpAddress extends Value {
      *
      * @param ipAddress IP address as a String.
      */
+    @SuppressFBWarnings
     public IpAddress(String ipAddress) throws NullPointerException, IllegalArgumentException {
         if (!IpAddressValidator.validIPv4(ipAddress) && !IpAddressValidator.validIPv6(ipAddress)) {
             throw new IllegalArgumentException(
