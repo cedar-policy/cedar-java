@@ -43,9 +43,6 @@ if [ "$#" -ne 0 ] && [ "$1" == "run_int_tests" ]; then
     replace_once build.gradle ".*CEDAR_INTEGRATION_TESTS_ROOT.*" "$integration_tests_str"
 
     export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
-
-    cargo_str='cedar-policy = { version = "4.0.0", path = "../cedar/cedar-policy" }'
-    replace_once ../CedarJavaFFI/Cargo.toml ".*cedar-policy =.*" "$cargo_str"
 else
     unset MUST_RUN_CEDAR_INTEGRATION_TESTS
     export CEDAR_INTEGRATION_TESTS_ROOT=/tmp
