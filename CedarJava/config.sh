@@ -44,7 +44,7 @@ if [ "$#" -ne 0 ] && [ "$1" == "run_int_tests" ]; then
 
     export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
 
-    cargo_str='cedar-policy = { version = "3.0", path = "../cedar/cedar-policy" }'
+    cargo_str='cedar-policy = { version = "4.0.0", path = "../cedar/cedar-policy" }'
     replace_once ../CedarJavaFFI/Cargo.toml ".*cedar-policy =.*" "$cargo_str"
 else
     unset MUST_RUN_CEDAR_INTEGRATION_TESTS
