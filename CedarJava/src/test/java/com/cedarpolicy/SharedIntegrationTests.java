@@ -58,6 +58,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -258,6 +259,7 @@ public class SharedIntegrationTests {
      * Generates a test container for all the test requests in a json file. Each request is its own
      * test, and all the test in the json file are grouped into the returned container.
      */
+    @SuppressFBWarnings("NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD")
     private DynamicContainer loadJsonTests(String jsonFile) throws IOException {
         JsonTest test;
         try (InputStream jsonIn =

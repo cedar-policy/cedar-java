@@ -21,6 +21,7 @@ import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
 
+import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
@@ -40,7 +41,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     private static final Logger LOG = LoggerFactory.getLogger(BasicAuthorizationEngine.class);
 
     static {
-        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+        LibraryLoader.loadLibrary();
     }
 
     /** Construct a basic authorization engine. */
