@@ -2,47 +2,30 @@ name: Build & Test (CedarJava & CedarJavaFFI)
 
 on:
   pull_request:
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test_cedar_java_ffi:
-    name: Rust project - latest
+  build:
+    name: Build FFI and Java
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        toolchain:
-          - stable
     steps:
-      - name: Checkout CedarJava
-        uses: actions/checkout@v3
-      - name: Checkout cedar
-        uses: actions/checkout@v3
-        with:
-          repository: cedar-policy/cedar
-          ref: main
-          path: ./cedar
-      - name: rustup
-        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - name: cargo fmt
+      - name: Checkout cedar-java
+        uses: actions/checkout@v4
+      - name: Prepare Rust Build
+        run: rustup update stable && rustup default stable
+      - name: Check FFI Formatting
         working-directory: ./CedarJavaFFI
         run: cargo fmt --all --check
-      - name: configure
+      - name: Install Zig
+        run: sudo snap install zig --beta --classic
+      - name: Build FFI and Java Libraries
         working-directory: ./CedarJava
-        shell: bash
-        run: bash config.sh run_int_tests
-      - name: cargo build
-        working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
-      - name: cargo test
-        working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo test --verbose
-      - name: Build and Test CedarJava
+        env:
+          MUST_RUN_CEDAR_INTEGRATION_TESTS: 1
+        run: ./gradlew build
+      - name: Generate Java Documentation
         working-directory: ./CedarJava
-        shell: bash
-        run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
-      - name: JavaDoc Cedarjava
-        working-directory: ./CedarJava
-        shell: bash
         run: ./gradlew javadoc

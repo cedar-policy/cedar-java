@@ -16,9 +16,11 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,7 @@ public class Policy {
     private static final Logger LOG = LoggerFactory.getLogger(Policy.class);
     private static final AtomicInteger idCounter = new AtomicInteger(0);
     static {
-        System.load(System.getenv("CEDAR_JAVA_FFI_LIB"));
+        LibraryLoader.loadLibrary();
     }
 
     /** Policy string. */
@@ -47,6 +49,7 @@ public class Policy {
      * @param policyID The id of this policy. Must be unique. Note: We may flip the order of the
      *     arguments here for idiomatic reasons.
      */
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Policy(
             @JsonProperty("policySrc") String policy, @JsonProperty("policyID") String policyID)
             throws NullPointerException {

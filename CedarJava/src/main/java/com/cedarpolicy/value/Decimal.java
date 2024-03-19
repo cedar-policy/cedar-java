@@ -16,6 +16,7 @@
 
 package com.cedarpolicy.value;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +52,7 @@ public class Decimal extends Value {
      *
      * @param decimal Decimal as a String.
      */
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Decimal(String decimal) throws NullPointerException, IllegalArgumentException {
         if (!DecimalValidator.validDecimal(decimal)) {
             throw new IllegalArgumentException(
