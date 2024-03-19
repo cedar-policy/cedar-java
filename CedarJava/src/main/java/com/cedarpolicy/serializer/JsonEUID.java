@@ -57,7 +57,7 @@ public class JsonEUID {
         this.type = type; this.id = id;
     }
 
-    @SuppressFBWarnings
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public JsonEUID(String src) throws InvalidEUIDException {
         var o = EntityUID.parse(src);
         if (o.isPresent()) {

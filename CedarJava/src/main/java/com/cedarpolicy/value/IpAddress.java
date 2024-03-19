@@ -79,7 +79,7 @@ public class IpAddress extends Value {
      *
      * @param ipAddress IP address as a String.
      */
-    @SuppressFBWarnings
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public IpAddress(String ipAddress) throws NullPointerException, IllegalArgumentException {
         if (!IpAddressValidator.validIPv4(ipAddress) && !IpAddressValidator.validIPv6(ipAddress)) {
             throw new IllegalArgumentException(

@@ -49,7 +49,7 @@ public class Policy {
      * @param policyID The id of this policy. Must be unique. Note: We may flip the order of the
      *     arguments here for idiomatic reasons.
      */
-    @SuppressFBWarnings
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Policy(
             @JsonProperty("policySrc") String policy, @JsonProperty("policyID") String policyID)
             throws NullPointerException {

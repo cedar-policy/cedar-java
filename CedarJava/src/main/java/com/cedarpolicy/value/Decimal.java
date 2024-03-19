@@ -52,7 +52,7 @@ public class Decimal extends Value {
      *
      * @param decimal Decimal as a String.
      */
-    @SuppressFBWarnings
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Decimal(String decimal) throws NullPointerException, IllegalArgumentException {
         if (!DecimalValidator.validDecimal(decimal)) {
             throw new IllegalArgumentException(
