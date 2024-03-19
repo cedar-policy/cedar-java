@@ -7,7 +7,6 @@ import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 import java.util.Optional;
@@ -158,7 +157,7 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder context(Map<String, Value> context) {
-            this.context = ImmutableMap.copyOf(context);
+            this.context = Map.copyOf(context);
             return this;
         }
 

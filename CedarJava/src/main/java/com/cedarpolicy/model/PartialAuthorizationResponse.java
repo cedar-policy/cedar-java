@@ -8,8 +8,9 @@ import com.cedarpolicy.model.slice.Policy;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableSet;
 
+import java.util.stream.Collectors;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -109,17 +110,17 @@ public abstract class PartialAuthorizationResponse {
     }
 
     public static final class ResidualPartialAuthorizationResponse extends PartialAuthorizationResponse {
-        private final ImmutableSet<Policy> residuals;
+        private final Set<Policy> residuals;
 
         public ResidualPartialAuthorizationResponse(Map<String, JsonNode> residuals, Diagnostics diagnostics) {
             super(diagnostics);
             this.residuals = residuals.entrySet().stream()
                     .map(e -> new Policy(e.getValue().toString(), e.getKey()))
-                    .collect(ImmutableSet.toImmutableSet());
+                    .collect(Collectors.toUnmodifiableSet());
         }
 
         public Set<Policy> getResiduals() {
-            return this.residuals;
+            return Collections.unmodifiableSet(this.residuals);
         }
 
         @Override

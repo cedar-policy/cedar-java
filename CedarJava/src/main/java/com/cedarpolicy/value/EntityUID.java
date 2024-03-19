@@ -21,7 +21,6 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.cedarpolicy.serializer.JsonEUID;
-import com.google.common.base.Suppliers;
 
 /**
  * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
@@ -44,7 +43,15 @@ public final class EntityUID extends Value {
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
         this.id = id;
-        this.euidRepr = Suppliers.memoize(() -> getEUIDRepr(type, id));
+        this.euidRepr = new Supplier<String>() {
+            String uidRepr = null;
+            public String get() {
+                if (uidRepr == null) {
+                    uidRepr = getEUIDRepr(type, id);
+                }
+                return uidRepr;
+            }
+        };
     }
 
     /**
