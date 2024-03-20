@@ -74,7 +74,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2'
     implementation 'org.slf4j:slf4j-api:2.0.12'
     implementation 'com.fizzed:jne:4.1.1'
-    implementation 'com.google.guava:guava:33.0.0-jre'
+    implementation 'com.google.guava:guava:33.1.0-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.3'
     testImplementation 'org.slf4j:slf4j-simple:2.0.12'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
