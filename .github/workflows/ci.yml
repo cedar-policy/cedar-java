@@ -19,7 +19,7 @@ jobs:
         with:
           repository: cedar-policy/cedar
           ref: main
-          path: /cedar
+          path: /home/runner/work/cedar-java/cedar-java/cedar
       - name: Prepare Rust Build
         run: rustup update stable && rustup default stable
       - name: Check FFI Formatting
@@ -31,7 +31,7 @@ jobs:
         working-directory: ./CedarJava
         env:
           MUST_RUN_CEDAR_INTEGRATION_TESTS: 1
-          CEDAR_INTEGRATION_TESTS_ROOT: /cedar/cedar-integration-tests
+          CEDAR_INTEGRATION_TESTS_ROOT: /home/runner/work/cedar-java/cedar-java/cedar/cedar-integration-tests
         run: ./gradlew build
       - name: Generate Java Documentation
         working-directory: ./CedarJava
