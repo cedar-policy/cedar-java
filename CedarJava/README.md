@@ -29,9 +29,6 @@ export CEDAR_INTEGRATION_TESTS_ROOT=`path_to_cedar/cedar-integration-tests`
 
 ## Debugging
 
-If you're encountering unexpected errors, a good first step in debugging can be to enable TRACE-level logging for
-`com.cedarpolicy`, which will then show the exact messages being passed to Cedar.
-
 Debugging calls across the JNI boundary is a bit tricky (as ever a bit more so on a Mac), but can be done by attaching
 both a Java and native debugger (such as GDB/LLDB) to the program.
 
