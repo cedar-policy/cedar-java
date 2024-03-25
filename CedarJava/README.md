@@ -19,14 +19,6 @@ with the `build` task to compile both the Cedar Java Foreign Function Interface 
 ./gradlew build
 ```
 
-## Integration Testing
-
-Set the `CEDAR_INTEGRATION_TESTS_ROOT` environment variable to enable integration tests when building.
-
-```shell
-export CEDAR_INTEGRATION_TESTS_ROOT=`path_to_cedar/cedar-integration-tests`
-```
-
 ## Debugging
 
 If you're encountering unexpected errors, a good first step in debugging can be to enable TRACE-level logging for
