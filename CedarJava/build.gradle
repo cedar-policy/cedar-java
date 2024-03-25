@@ -24,6 +24,9 @@ plugins {
 
     // Maven Publish for publishing artifacts to an Apache Maven repository
     id 'maven-publish'
+
+    // Download Task for integration tests
+    id 'de.undercouch.download' version '5.6.0'
 }
 
 /*
@@ -177,9 +180,28 @@ tasks.register('uberJar', Jar) {
     from(layout.buildDirectory.dir(compiledLibDir))
 }
 
+tasks.register('downloadIntegrationTests', Download) {
+    group 'Build'
+    description 'Downloads Cedar repository with integration tests.'
+
+    src 'https://codeload.github.com/cedar-policy/cedar/zip/main'
+    dest layout.buildDirectory.file('cedar-main.zip')
+    overwrite false
+}
+
+tasks.register('extractIntegrationTests', Copy) {
+    group 'Build'
+    description 'Extracts Cedar integration tests.'
+
+    dependsOn('downloadIntegrationTests')
+    from zipTree(layout.buildDirectory.file('cedar-main.zip'))
+    into layout.buildDirectory.dir('resources/test')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     dependsOn('compileFFI')
+    dependsOn('extractIntegrationTests')
     classpath += files(layout.buildDirectory.dir(compiledLibDir))
 }
 
