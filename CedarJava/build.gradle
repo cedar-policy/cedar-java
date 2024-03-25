@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:5.0.14"
+    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.0.8"
     classpath "gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9"
   }
 }
@@ -21,6 +21,12 @@ plugins {
     // JaCoCo for coverage metrics and reports of Java source files. Read more at:
     // https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
+
+    // Maven Publish for publishing artifacts to an Apache Maven repository
+    id 'maven-publish'
+
+    // Download Task for integration tests
+    id 'de.undercouch.download' version '5.6.0'
 }
 
 /*
@@ -67,22 +73,194 @@ configurations {
 dependencies {
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueCedarDeserializer
     // The upgrade should be reviewed by AppSec
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2'
     implementation 'org.slf4j:slf4j-api:2.0.12'
-    implementation 'com.google.guava:guava:33.0.0-jre'
+    implementation 'com.fizzed:jne:4.1.1'
+    implementation 'com.google.guava:guava:33.1.0-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.3'
     testImplementation 'org.slf4j:slf4j-simple:2.0.12'
+    testImplementation 'net.jqwik:jqwik:1.8.4'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-    testImplementation 'net.jqwik:jqwik:1.8.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}
+
+def ffiDir = '../CedarJavaFFI'
+def compiledLibDir = 'resources/compiled'
+
+def rustLibraryTargets = [
+        'aarch64-apple-darwin' : 'libcedar_java_ffi.dylib',
+        'aarch64-unknown-linux-gnu' : 'libcedar_java_ffi.so',
+        'x86_64-apple-darwin' : 'libcedar_java_ffi.dylib',
+        'x86_64-pc-windows-gnu' : 'cedar_java_ffi.dll',
+        'x86_64-unknown-linux-gnu' : 'libcedar_java_ffi.so'
+]
+
+def rustJavaTargets = [
+        'aarch64-apple-darwin' : 'macos/aarch64',
+        'aarch64-unknown-linux-gnu' : 'linux/aarch64',
+        'x86_64-apple-darwin' : 'macos/x86_64',
+        'x86_64-pc-windows-gnu' : 'windows/x86_64',
+        'x86_64-unknown-linux-gnu' : 'linux/x86_64'
+]
+
+tasks.register('installCargoZigbuild', Exec) {
+    group 'Build'
+    description 'Installs Cargo Zigbuild for Rust compilation.'
+
+    commandLine 'cargo', 'install', 'cargo-zigbuild'
+}
+
+tasks.register('installRustTargets') {
+    dependsOn('installCargoZigbuild')
+    group 'Build'
+    description 'Installs Rust platform build targets.'
+
+    doLast {
+        rustLibraryTargets.keySet().forEach { rustTarget ->
+            exec {
+                commandLine 'rustup', 'target', 'add', rustTarget
+            }
+        }
+    }
+}
+
+tasks.register('compileFFI') {
+    dependsOn('installRustTargets')
+    group 'Build'
+    description 'Compiles Foreign Function Interface libraries.'
+
+    doLast {
+        rustLibraryTargets.forEach { rustTarget, libraryFile ->
+            exec {
+                workingDir = ffiDir
+                commandLine 'cargo', 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
+            }
+
+            def sourcePath = "${ffiDir}/target/${rustTarget}/release/${libraryFile}"
+            def javaTargetPath = rustJavaTargets.get(rustTarget)
+
+            copy {
+                from(sourcePath)
+                into layout.buildDirectory.dir("${compiledLibDir}/jne/${javaTargetPath}")
+            }
+        }
+    }
+}
+
+tasks.register('testFFI') {
+    dependsOn('compileFFI')
+    group 'Build'
+    description 'Tests Foreign Function Interface libraries.'
+
+    doLast {
+        exec {
+            workingDir = ffiDir
+            commandLine 'cargo', 'test'
+        }
+    }
+}
+
+tasks.register('cleanFFI', Exec) {
+    group 'Build'
+    description 'Deletes the build directory for Foreign Function Interface libraries.'
+
+    workingDir ffiDir
+    commandLine 'cargo', 'clean'
+}
+
+tasks.register('uberJar', Jar) {
+    dependsOn('compileFFI')
+    group 'Build'
+    description 'Assembles a jar archive containing standard classes and native libraries.'
+
+    archiveClassifier = 'uber'
+    with jar
+
+    from(layout.buildDirectory.dir(compiledLibDir))
+}
+
+tasks.register('downloadIntegrationTests', Download) {
+    group 'Build'
+    description 'Downloads Cedar repository with integration tests.'
+
+    src 'https://codeload.github.com/cedar-policy/cedar/zip/main'
+    dest layout.buildDirectory.file('cedar-main.zip')
+    overwrite false
+}
+
+tasks.register('extractIntegrationTests', Copy) {
+    group 'Build'
+    description 'Extracts Cedar integration tests.'
+
+    dependsOn('downloadIntegrationTests')
+    from zipTree(layout.buildDirectory.file('cedar-main.zip'))
+    into layout.buildDirectory.dir('resources/test')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    dependsOn('compileFFI')
+    dependsOn('extractIntegrationTests')
+    classpath += files(layout.buildDirectory.dir(compiledLibDir))
 }
 
 test {
-    useJUnitPlatform()
     //environment "CEDAR_INTEGRATION_TESTS_ROOT", ''set to absolute path of `cedar-integration-tests`'
-    //environment 'CEDAR_JAVA_FFI_LIB', 'set to absolute path of cedar_java_ffi native library (including file extension)'
     testLogging {
+        events "skipped", "failed", "standardOut", "standardError"
         showStandardStreams false
         exceptionFormat 'full'
+    }
+}
+
+tasks.named('build') {
+    dependsOn('uberJar')
+}
+
+/*
+ Configures Maven publishing
+ */
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.cedarpolicy'
+            artifactId = 'cedar-java'
+            version = '3.1.0-SNAPSHOT'
+
+            from components.java
+
+            artifacts {
+                jar
+                artifact tasks.named('uberJar')
+            }
+
+            pom {
+                name = 'cedar-java'
+                description = 'Java bindings for Cedar policy language.'
+                url = 'http://www.cedarpolicy.com'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'cedar'
+                        name = 'Cedar Team'
+                        email = 'cedar-sonatype-team@amazon.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/cedar-policy/cedar-java.git'
+                    developerConnection = 'scm:git:https://github.com/cedar-policy/cedar-java.git'
+                    url = 'https://github.com/cedar-policy/cedar-java'
+                }
+            }
+        }
     }
 }

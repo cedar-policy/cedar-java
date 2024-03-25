@@ -45,6 +45,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,11 +54,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -65,11 +66,6 @@ import org.junit.jupiter.api.TestFactory;
 /** Integration tests Used by Cedar / corpus tests saved from the fuzzer. */
 public class SharedIntegrationTests {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String CEDAR_INTEGRATION_TESTS_ROOT =
-            Objects.requireNonNull(
-                    System.getenv("CEDAR_INTEGRATION_TESTS_ROOT"),
-                    "Environment variable CEDAR_INTEGRATION_TESTS_ROOT is required "
-                            + "for shared integration tests but is not present.");
 
     /**
      * For relative paths, return an absolute path rooted in the shared integration test root. For
@@ -80,10 +76,12 @@ public class SharedIntegrationTests {
      * @return A Path object containing an absolute path.
      */
     private Path resolveIntegrationTestPath(String path) {
-        if (Paths.get(path).isAbsolute()) {
-            return Paths.get(path);
+        final Path resolved = Paths.get(path);
+        if (resolved.isAbsolute()) {
+            return resolved;
         } else {
-            return Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, path);
+            final URL integrationTestsLocation = getClass().getResource("/cedar-main/cedar-integration-tests");
+            return integrationTestsLocation == null ? resolved : Paths.get(integrationTestsLocation.getPath(), path);
         }
     }
 
@@ -219,8 +217,7 @@ public class SharedIntegrationTests {
     public List<DynamicContainer> integrationTestsFromJson() throws IOException {
         List<DynamicContainer> tests = new ArrayList<>();
         //If we can't find the `cedar` package, don't try to load integration tests.
-        //In CI, MUST_RUN_CEDAR_INTEGRATION_TESTS is set
-        if(System.getenv("MUST_RUN_CEDAR_INTEGRATION_TESTS") == null && Files.notExists(Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, "corpus_tests"))) {
+        if (Files.notExists(resolveIntegrationTestPath("corpus_tests"))) {
             return tests;
         }
         // tests other than corpus tests
@@ -229,7 +226,7 @@ public class SharedIntegrationTests {
         }
         // corpus tests
        try (Stream<Path> stream =
-               Files.list(Paths.get(CEDAR_INTEGRATION_TESTS_ROOT, "corpus_tests"))) {
+               Files.list(resolveIntegrationTestPath("corpus_tests"))) {
            stream
                    // ignore non-JSON files
                    .filter(path -> path.getFileName().toString().endsWith(".json"))
@@ -258,6 +255,7 @@ public class SharedIntegrationTests {
      * Generates a test container for all the test requests in a json file. Each request is its own
      * test, and all the test in the json file are grouped into the returned container.
      */
+    @SuppressFBWarnings("NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD")
     private DynamicContainer loadJsonTests(String jsonFile) throws IOException {
         JsonTest test;
         try (InputStream jsonIn =

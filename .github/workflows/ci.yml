@@ -1,48 +1,45 @@
-name: Build & Test (CedarJava & CedarJavaFFI)
+name: Continuous Integration Build
 
 on:
   pull_request:
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test_cedar_java_ffi:
-    name: Rust project - latest
-    runs-on: ubuntu-latest
+  build:
     strategy:
       matrix:
-        toolchain:
-          - stable
+        os: [ubuntu-latest, macos-14]
+        include:
+          - os: ubuntu-latest
+            name: Build on Linux
+            zigInstall: sudo snap install zig --beta --classic
+          - os: macos-14
+            name: Build on macOS
+            zigInstall: brew install zig
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     steps:
-      - name: Checkout CedarJava
-        uses: actions/checkout@v3
-      - name: Checkout cedar
-        uses: actions/checkout@v3
-        with:
-          repository: cedar-policy/cedar
-          ref: main
-          path: ./cedar
-      - name: rustup
-        run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - name: cargo fmt
-        working-directory: ./CedarJavaFFI
+      - name: Checkout cedar-java
+        uses: actions/checkout@v4
+      - name: Prepare Rust Build
+        run: rustup update stable && rustup default stable
+      - name: Check FFI Formatting
+        working-directory: CedarJavaFFI
         run: cargo fmt --all --check
-      - name: configure
-        working-directory: ./CedarJava
-        shell: bash
-        run: bash config.sh run_int_tests
-      - name: cargo build
-        working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
-      - name: cargo test
-        working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo test --verbose
-      - name: Build and Test CedarJava
-        working-directory: ./CedarJava
-        shell: bash
-        run: export MUST_RUN_CEDAR_INTEGRATION_TESTS=1 && ./gradlew build
-      - name: JavaDoc Cedarjava
-        working-directory: ./CedarJava
-        shell: bash
+      - name: Install Zig
+        run: ${{ matrix.zigInstall }}
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'gradle'
+      - name: Build FFI and Java Libraries
+        working-directory: CedarJava
+        run: ./gradlew build
+      - name: Generate Java Documentation
+        working-directory: CedarJava
         run: ./gradlew javadoc
