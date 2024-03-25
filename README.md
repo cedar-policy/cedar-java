@@ -5,21 +5,19 @@ It also contains source code for a Rust crate `CedarJavaFFI` that enables callin
 
 
 ## Getting Started
-You can find detailed build instructions and more information in the subfolders [CedarJavaFFI](https://github.com/cedar-policy/cedar-java/blob/main/CedarJavaFFI/README.md), [CedarJava](https://github.com/cedar-policy/cedar-java/blob/main/CedarJava/README.md).
 
-For typical use, you'll want something like:
+The [CedarJavaFFI](https://github.com/cedar-policy/cedar-java/blob/main/CedarJavaFFI/README.md) and [CedarJava](https://github.com/cedar-policy/cedar-java/blob/main/CedarJava/README.md) directories contain detailed instructions on building individual modules.
+
+The `CedarJava` module uses Gradle to build both modules and run integration tests. The following commands provide general usage for getting started.
 
 ```shell
-cd CedarJavaFFI && cargo build
-cd ../CedarJava
-export CEDAR_INTEGRATION_TESTS_ROOT=/tmp #(assuming you don't want to run them)
-export CEDAR_JAVA_FFI_LIB=path_to_CedarJavaFFI/target/debug/libcedar_java_ffi.so #(or wherever you built CedarJavaFFI)
-gradle test
+cd CedarJava
+./gradlew build
 ```
 
 ## Notes
 
-You need JDK 17 or later to run the Java code.
+`CedarJava` requires JDK 17 or later.
 
 Cedar is primarily developed in Rust (in the [cedar](https://github.com/cedar-policy/cedar) repository). As such, `CedarJava` typically lags behind the newest Cedar features. Notably, as of this writing, `CedarJava` does not expose APIs for partial evaluation.
 

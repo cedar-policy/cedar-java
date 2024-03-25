@@ -1,4 +1,4 @@
-name: Build & Test (CedarJava & CedarJavaFFI)
+name: Continuous Integration Build
 
 on:
   pull_request:
@@ -9,30 +9,37 @@ env:
 
 jobs:
   build:
-    name: Build FFI and Java
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+        include:
+          - os: ubuntu-latest
+            name: Build on Linux
+            zigInstall: sudo snap install zig --beta --classic
+          - os: macos-14
+            name: Build on macOS
+            zigInstall: brew install zig
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     steps:
       - name: Checkout cedar-java
         uses: actions/checkout@v4
-      - name: Checkout cedar
-        uses: actions/checkout@v4
-        with:
-          repository: cedar-policy/cedar
-          ref: main
-          path: /home/runner/work/cedar-java/cedar-java/cedar
       - name: Prepare Rust Build
         run: rustup update stable && rustup default stable
       - name: Check FFI Formatting
-        working-directory: ./CedarJavaFFI
+        working-directory: CedarJavaFFI
         run: cargo fmt --all --check
       - name: Install Zig
-        run: sudo snap install zig --beta --classic
+        run: ${{ matrix.zigInstall }}
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'gradle'
       - name: Build FFI and Java Libraries
-        working-directory: ./CedarJava
-        env:
-          MUST_RUN_CEDAR_INTEGRATION_TESTS: 1
-          CEDAR_INTEGRATION_TESTS_ROOT: /home/runner/work/cedar-java/cedar-java/cedar/cedar-integration-tests
+        working-directory: CedarJava
         run: ./gradlew build
       - name: Generate Java Documentation
-        working-directory: ./CedarJava
+        working-directory: CedarJava
         run: ./gradlew javadoc
