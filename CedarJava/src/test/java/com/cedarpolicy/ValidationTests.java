@@ -102,22 +102,22 @@ public class ValidationTests {
 
     private void thenIsValid(ValidationResponse response) {
         assertTrue(
-                response.getNotes().isEmpty(),
+                response.getErrors().isEmpty(),
                 () -> {
-                    String notes =
-                            response.getNotes().stream()
+                    String errors =
+                            response.getErrors().stream()
                                     .map(
                                             note ->
                                                     String.format(
                                                             "in policy %s: %s",
-                                                            note.getPolicyId(), note.getNote()))
+                                                            note.getPolicyId(), note.getError()))
                                     .collect(Collectors.joining("\n"));
-                    return "Expected valid response but got an invalid one with notes:\n" + notes;
+                    return "Expected valid response but got an invalid one with errors:\n" + errors;
                 });
     }
 
     private void thenIsNotValid(ValidationResponse response) {
-        assertFalse(response.getNotes().isEmpty());
+        assertFalse(response.getErrors().isEmpty());
     }
 
     private AuthException whenValidatingThrows() {

@@ -24,31 +24,36 @@ import java.util.Objects;
 
 /** Result of a validation request. */
 public final class ValidationResponse {
-    private final List<Note> notes;
+    private final List<ValidationError> errors;
+    private final List<ValidationWarning> warnings;
 
     /**
      * Construct a validation response.
      *
-     * @param notes Notes.
+     * @param errors Errors.
      */
     @JsonCreator
     @SuppressFBWarnings
-    public ValidationResponse(@JsonProperty("notes") List<Note> notes) {
-        if (notes == null) {
-            throw new NullPointerException("notes");
+    public ValidationResponse(@JsonProperty("validation_errors") List<ValidationError> errors, @JsonProperty("validation_warnings") List<ValidationWarning> warnings) {
+        if (errors == null) {
+            throw new NullPointerException("`errors` is null");
+        }
+        if (warnings == null) {
+            throw new NullPointerException("`warnings` is null");
         }
 
-        this.notes = notes;
+        this.errors = errors;
+        this.warnings = warnings;
     }
 
     /**
-     * Get notes from a validation response.
+     * Get errors from a validation response.
      *
-     * @return The notes.
+     * @return The errors.
      */
     @SuppressFBWarnings
-    public List<Note> getNotes() {
-        return this.notes;
+    public List<ValidationError> getErrors() {
+        return this.errors;
     }
 
     /** Test equals. */
@@ -57,36 +62,36 @@ public final class ValidationResponse {
         if (!(o instanceof ValidationResponse)) {
             return false;
         } else {
-            return notes.equals(((ValidationResponse) o).notes);
+            return errors.equals(((ValidationResponse) o).errors);
         }
     }
 
     /** Hash. */
     @Override
     public int hashCode() {
-        return Objects.hash(notes);
+        return Objects.hash(errors);
     }
 
     /** Readable string representation. */
     public String toString() {
-        return "ValidationResponse(notes=" + this.getNotes() + ")";
+        return "ValidationResponse(validation_errors=" + this.getErrors() + ")";
     }
 
-    /** Note for a specific policy. */
-    public static final class Note {
+    /** Error for a specific policy. */
+    public static final class ValidationError {
         private final String policyId;
-        private final String note;
+        private final String error;
 
         /**
-         * Create note from JSON.
+         * Create error from JSON.
          *
-         * @param policyId Policy ID to which note applies.
-         * @param note The Note.
+         * @param policyId Policy ID to which error applies.
+         * @param error The Error.
          */
         @JsonCreator
-        public Note(@JsonProperty("policyId") String policyId, @JsonProperty("note") String note) {
+        public ValidationError(@JsonProperty("policyId") String policyId, @JsonProperty("error") String error) {
             this.policyId = policyId;
-            this.note = note;
+            this.error = error;
         }
 
         /**
@@ -99,34 +104,92 @@ public final class ValidationResponse {
         }
 
         /**
-         * Get the note.
+         * Get the error.
          *
-         * @return The note.
+         * @return The error.
          */
-        public String getNote() {
-            return this.note;
+        public String getError() {
+            return this.error;
         }
 
         /** Equals. */
         @Override
         public boolean equals(final Object o) {
-            if (!(o instanceof Note)) {
+            if (!(o instanceof ValidationError)) {
                 return false;
             }
 
-            final Note other = (Note) o;
-            return policyId.equals(other.policyId) && note.equals(other.note);
+            final ValidationError other = (ValidationError) o;
+            return policyId.equals(other.policyId) && error.equals(other.error);
         }
 
         /** Hash. */
         @Override
         public int hashCode() {
-            return Objects.hash(policyId, note);
+            return Objects.hash(policyId, error);
         }
 
         /** Readable string representation. */
         public String toString() {
-            return "Note(policyId=" + policyId + ", note=" + note + ")";
+            return "Error(policyId=" + policyId + ", error=" + error + ")";
+        }
+    }
+
+    /** Warning for a specific policy. */
+    public static final class ValidationWarning {
+        private final String policyId;
+        private final String warning;
+
+        /**
+         * Create warning from JSON.
+         *
+         * @param policyId Policy ID to which warning applies.
+         * @param warning The Warning.
+         */
+        @JsonCreator
+        public ValidationWarning(@JsonProperty("policyId") String policyId, @JsonProperty("warning") String warning) {
+            this.policyId = policyId;
+            this.warning = warning;
+        }
+
+        /**
+         * Get the policy ID.
+         *
+         * @return The policy ID.
+         */
+        public String getPolicyId() {
+            return this.policyId;
+        }
+
+        /**
+         * Get the warning.
+         *
+         * @return The warning.
+         */
+        public String getWarning() {
+            return this.warning;
+        }
+
+        /** Equals. */
+        @Override
+        public boolean equals(final Object o) {
+            if (!(o instanceof ValidationWarning)) {
+                return false;
+            }
+
+            final ValidationWarning other = (ValidationWarning) o;
+            return policyId.equals(other.policyId) && warning.equals(other.warning);
+        }
+
+        /** Hash. */
+        @Override
+        public int hashCode() {
+            return Objects.hash(policyId, warning);
+        }
+
+        /** Readable string representation. */
+        public String toString() {
+            return "Warning(policyId=" + policyId + ", warning=" + warning + ")";
         }
     }
 }
