@@ -58,7 +58,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -386,7 +386,7 @@ public class SharedIntegrationTests {
         try {
             ValidationResponse result = auth.validate(validationQuery);
             if (shouldValidate) {
-                assertTrue(result.getNotes().isEmpty());
+                assertTrue(result.getErrors().isEmpty());
             }
         } catch (BadRequestException e) {
             // A `BadRequestException` is the results of a parsing error.
