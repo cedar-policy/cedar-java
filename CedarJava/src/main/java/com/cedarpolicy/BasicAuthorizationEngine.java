@@ -33,13 +33,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
 public final class BasicAuthorizationEngine implements AuthorizationEngine {
-    private static final Logger LOG = LoggerFactory.getLogger(BasicAuthorizationEngine.class);
-
     static {
         LibraryLoader.loadLibrary();
     }
@@ -50,7 +46,6 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
             throws AuthException {
-        LOG.trace("Making an isAuthorized request:\n{}\nwith slice\n{}", q, slice);
         final AuthorizationRequest request = new AuthorizationRequest(q, slice);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
@@ -60,7 +55,6 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
             throws AuthException {
         try {
-            LOG.trace("Making an isAuthorizedPartial request:\n{}\nwith slice\n{}", q, slice);
             final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
         }
@@ -75,7 +69,6 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
 
     @Override
     public ValidationResponse validate(ValidationRequest q) throws AuthException {
-        LOG.trace("Making a validate request:\n{}", q);
         return call("ValidateOperation", ValidationResponse.class, q);
     }
 
@@ -92,14 +85,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             }
             final String fullRequest = objectWriter().writeValueAsString(request);
 
-            LOG.debug(
-                    "Making a request ({}) of length {} through the JNI interface:",
-                    operation,
-                    fullRequest.length());
-            LOG.trace("The request:\n{}", fullRequest);
-
             final String response = callCedarJNI(operation, fullRequest);
-            LOG.trace("Received response of length {}:\n{}", response.length(), response);
 
             final JsonNode responseNode = objectReader().readTree(response);
             boolean wasSuccessful = responseNode.path("success").asBoolean(false);

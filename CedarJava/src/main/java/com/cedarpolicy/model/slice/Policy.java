@@ -21,16 +21,12 @@ import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 /** Policies in the Cedar language. */
 public class Policy {
-    private static final Logger LOG = LoggerFactory.getLogger(Policy.class);
     private static final AtomicInteger idCounter = new AtomicInteger(0);
     static {
         LibraryLoader.loadLibrary();
