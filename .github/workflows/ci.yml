@@ -1,45 +1,30 @@
-name: Continuous Integration Build
+name: Cargo Build & Test
 
 on:
   pull_request:
-  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-14]
-        include:
-          - os: ubuntu-latest
-            name: Build on Linux
-            zigInstall: sudo snap install zig --beta --classic
-          - os: macos-14
-            name: Build on macOS
-            zigInstall: brew install zig
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+  get-branch-name:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout cedar-java
-        uses: actions/checkout@v4
-      - name: Prepare Rust Build
-        run: rustup update stable && rustup default stable
-      - name: Check FFI Formatting
-        working-directory: CedarJavaFFI
-        run: cargo fmt --all --check
-      - name: Install Zig
-        run: ${{ matrix.zigInstall }}
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
-          cache: 'gradle'
-      - name: Build FFI and Java Libraries
-        working-directory: CedarJava
-        run: ./gradlew build
-      - name: Generate Java Documentation
-        working-directory: CedarJava
-        run: ./gradlew javadoc
+      - name: Get branch name
+        shell: bash
+        # The workflow is triggered by pull_request so we use `GITHUB_BASE_REF`
+        run: echo "branch_name=${GITHUB_BASE_REF}" >> $GITHUB_OUTPUT
+        id: get_branch_name
+
+    outputs:
+      branch_name: ${{ steps.get_branch_name.outputs.branch_name }}
+
+  run_cedar_java:
+    name: run_cedar_java
+    needs: get-branch-name
+    uses: ./.github/workflows/run_cedar_java_reusable.yml
+    with:
+      cedar_policy_ref: "main" # use the latest commit on main
+      cedar_examples_ref: "${{ github.head_ref }}" # use the current PR's commit
+
+
