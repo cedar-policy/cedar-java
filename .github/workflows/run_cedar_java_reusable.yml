@@ -5,7 +5,7 @@ on:
         cedar_policy_ref:
           required: false
           type: string
-        cedar_examples_ref:
+        cedar_java_ref:
           required: false
           default: "main"
           type: string
