@@ -3,24 +3,46 @@ package com.cedarpolicy.model;
 import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
 import com.cedarpolicy.model.AuthorizationResponse.Decision;
-import com.cedarpolicy.model.AuthorizationResponse.Diagnostics;
-import com.cedarpolicy.model.slice.Policy;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableSet;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
-public abstract class PartialAuthorizationResponse {
-    private final Diagnostics diagnostics;
+public class PartialAuthorizationResponse {
+    private Decision decision;
+    private Set<String> satisfied;
+    private Set<String> errored;
+    private Set<String> may_be_determining;
+    private Set<String> must_be_determining;
+    private Map<String, JsonNode> residuals;
+    private Set<String> nontrivial_residuals;
+
+    public PartialAuthorizationResponse(Decision decision, Set<String> satisfied, Set<String> errored,
+            Set<String> may_be_determining, Set<String> must_be_determining, Map<String, JsonNode> residuals,
+            Set<String> nontrivial_residuals) {
+        this.decision = decision;
+        this.errored = new HashSet<String>(errored);
+        this.may_be_determining = new HashSet<String>(may_be_determining);
+        this.must_be_determining = new HashSet<String>(must_be_determining);
+        this.residuals = new HashMap<String, JsonNode>(residuals);
+        this.nontrivial_residuals = new HashSet<String>(nontrivial_residuals);
+    }
+
+    public Decision getDecision() {
+        return this.decision;
+    }
+
+    public Set<String> getResiduals() {
+            return this.residuals.keySet();
+    }
 
     /**
      * Deserializer factory method for PartialAuthorizationResponse.
-     * @param nested Deserialized object for nested JSON object.
      * @param decision Deserialized decision attribute of nested JSON object.
      * @param residuals Deserialized residual attribute of nested JSON object.
      * @param diagnostics Deserialized diagnostics attribute of nested JSON object.
@@ -28,103 +50,17 @@ public abstract class PartialAuthorizationResponse {
      */
     @JsonCreator
     public static PartialAuthorizationResponse createPartialAuthorizationResponse(
-            @JsonProperty("response") PartialAuthorizationResponse nested,
-            @JsonProperty("decision") Decision decision,
-            @JsonProperty("residuals") Map<String, JsonNode> residuals,
-            @JsonProperty("diagnostics") Diagnostics diagnostics) {
-        if (nested != null) {
-            // bubble the nested deserialized object for the root JSON object
-            return nested;
-        }
-        else if (decision != null && diagnostics != null) {
-            return new ConcretePartialAuthorizationResponse(decision, diagnostics);
-        }
-        else if (residuals != null && diagnostics != null) {
-            return new ResidualPartialAuthorizationResponse(residuals, diagnostics);
-        }
-        else {
-            return null;
-        }
-    }
-
-    protected PartialAuthorizationResponse(Diagnostics diagnostics) {
-        this.diagnostics = diagnostics;
-    }
-
-    public Diagnostics getDiagnostics() {
-        return this.diagnostics;
-    }
-
-    /**
-     * Set of policyID's that caused the decision. For example, when a policy evaluates to Deny, all
-     * deny policies that evaluated to True will appear in Reasons.
-     *
-     * @return set of policy ids that contributed to the decision
-     */
-    public Set<String> getReasons() {
-        return this.diagnostics.getReasons();
-    }
-
-    /**
-     * Set of errors and warnings returned by Cedar.
-     *
-     * @return list with errors that happened for a given Request
-     */
-    public List<String> getErrors() {
-        return this.diagnostics.getErrors();
-    }
-
-    /**
-     * Check if the evaluator was able to reach a decision.
-     *
-     * @return true if the request evaluated to either Allow or Deny.
-     */
-    public abstract boolean reachedDecision();
-
-    public static final class ConcretePartialAuthorizationResponse extends PartialAuthorizationResponse {
-        private final Decision decision;
-
-        private ConcretePartialAuthorizationResponse(Decision decision, Diagnostics diagnostics) {
-            super(diagnostics);
-            this.decision = decision;
-        }
-
-        public Decision getDecision() {
-            return this.decision;
-        }
-
-        /**
-         * Check authorization decision.
-         *
-         * @return true if the request evaluated to Allow.
-         */
-        public boolean isAllowed() {
-            return this.decision == Decision.Allow;
-        }
-
-        @Override
-        public boolean reachedDecision() {
-            return this.decision != Decision.NoDecision;
-        }
-    }
-
-    public static final class ResidualPartialAuthorizationResponse extends PartialAuthorizationResponse {
-        private final ImmutableSet<Policy> residuals;
-
-        public ResidualPartialAuthorizationResponse(Map<String, JsonNode> residuals, Diagnostics diagnostics) {
-            super(diagnostics);
-            this.residuals = residuals.entrySet().stream()
-                    .map(e -> new Policy(e.getValue().toString(), e.getKey()))
-                    .collect(ImmutableSet.toImmutableSet());
-        }
-
-        public Set<Policy> getResiduals() {
-            return this.residuals;
-        }
-
-        @Override
-        public boolean reachedDecision() {
-            return false;
-        }
+        @JsonProperty("response") PartialAuthorizationResponse nested,
+        @JsonProperty("decision") Decision decision,
+        @JsonProperty("satisfied") Set<String> satisfied,
+        @JsonProperty("errored") Set<String> errored,
+        @JsonProperty("may_be_determining") Set<String> may_be_determining,
+        @JsonProperty("must_be_determining") Set<String> must_be_determining,
+        @JsonProperty("residuals") Map<String, JsonNode> residuals,
+        @JsonProperty("nontrivial_residuals") Set<String> nontrivial_residuals) {
+            if (nested != null) {
+                return nested;
+            }
+            return new PartialAuthorizationResponse(decision, satisfied, errored, may_be_determining, must_be_determining, residuals, nontrivial_residuals);
     }
 }
