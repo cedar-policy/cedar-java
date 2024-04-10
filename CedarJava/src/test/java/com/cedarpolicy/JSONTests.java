@@ -24,6 +24,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.AuthorizationResponse.Decision;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -71,27 +72,29 @@ public class JSONTests {
     @Test
     public void testAuthConcretePartialResponse() {
         String src =
-                "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
-        /*
+                "{ \"response\": { \"decision\":\"Allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"may_be_determining\": [], \"must_be_determining\": [\"p1\"], \"residuals\": {\"p2\": 3}, \"nontrivial_residuals\": [] } }";
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            assertTrue(r.getDecision() == Decision.Allow);
         } catch (JsonProcessingException e) {
             fail(e);
         }
-        */
     }
 
     @Test
     public void testAuthResidualPartialResponse() {
         final String policy = "{ \"effect\": \"permit\", \"principal\": { \"op\": \"All\" }, \"action\": { \"op\": \"All\" }, \"resource\": { \"op\": \"All\" }, \"conditions\": [ { \"kind\": \"when\", \"body\": { \"==\": { \"left\": { \"unknown\": [ { \"Value\": \"principal\" } ] }, \"right\": { \"Value\": { \"__entity\": { \"type\": \"User\", \"id\": \"alice\" } } } } } } ] }";
-        final String src = "{ \"response\": { \"residuals\": { \"p0\":" + policy + " }, \"diagnostics\": { \"reason\":[],\"errors\":[] } } }";
-        /*
+        final String src =  "{ \"response\": { \"decision\":\"Allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"may_be_determining\": [], \"must_be_determining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivial_residuals\": [] } }";;
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
+            var residuals = r.getResiduals();
+            assertEquals(1, residuals.size());
+            assertEquals("p0", residuals.entrySet().iterator().next().getKey());
+            assertJSONEqual(CedarJson.objectMapper().readTree(policy),
+                    residuals.entrySet().iterator().next().getValue());
         } catch (JsonProcessingException e) {
             fail(e);
         }
-        */
     }
 
     /** Test. */

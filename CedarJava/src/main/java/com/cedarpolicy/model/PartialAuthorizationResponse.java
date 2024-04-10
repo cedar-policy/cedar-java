@@ -6,46 +6,107 @@ import com.cedarpolicy.model.AuthorizationResponse.Decision;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 public class PartialAuthorizationResponse {
     private Decision decision;
-    private Set<String> satisfied;
-    private Set<String> errored;
-    private Set<String> may_be_determining;
-    private Set<String> must_be_determining;
-    private Map<String, JsonNode> residuals;
-    private Set<String> nontrivial_residuals;
+    private ImmutableSet<String> satisfied;
+    private ImmutableSet<String> errored;
+    private ImmutableSet<String> may_be_determining;
+    private ImmutableSet<String> must_be_determining;
+    private ImmutableMap<String, JsonNode> residuals;
+    private ImmutableSet<String> nontrivial_residuals;
 
     public PartialAuthorizationResponse(Decision decision, Set<String> satisfied, Set<String> errored,
             Set<String> may_be_determining, Set<String> must_be_determining, Map<String, JsonNode> residuals,
             Set<String> nontrivial_residuals) {
         this.decision = decision;
-        this.errored = new HashSet<String>(errored);
-        this.may_be_determining = new HashSet<String>(may_be_determining);
-        this.must_be_determining = new HashSet<String>(must_be_determining);
-        this.residuals = new HashMap<String, JsonNode>(residuals);
-        this.nontrivial_residuals = new HashSet<String>(nontrivial_residuals);
+        this.satisfied = satisfied.stream().collect(ImmutableSet.toImmutableSet());
+        this.errored = errored.stream().collect(ImmutableSet.toImmutableSet());
+        this.may_be_determining = may_be_determining.stream().collect(ImmutableSet.toImmutableSet());
+        this.must_be_determining = must_be_determining.stream().collect(ImmutableSet.toImmutableSet());
+        this.residuals = ImmutableMap.<String, JsonNode>builder().putAll(residuals).build();
+        this.nontrivial_residuals = nontrivial_residuals.stream().collect(ImmutableSet.toImmutableSet());
     }
 
+    /**
+     * The optional decision returned by partial authorization
+     *
+     * @return a nullable reference to the decision (null means that no conclusive decision can be made)
+     */
     public Decision getDecision() {
         return this.decision;
     }
 
-    public Set<String> getResiduals() {
-            return this.residuals.keySet();
+    /**
+     * The map from policy ids to residuals
+     *
+     * @return map of residuals
+     */
+    public Map<String, JsonNode> getResiduals() {
+            return this.residuals;
+    }
+
+    /**
+     * Set of policies that are satisfied by the partial request
+     *
+     * @return set of policy ids
+     */
+    public Set<String> getSatisfied() {
+        return this.satisfied;
+    }
+
+    /**
+     * Set of policies that errored during the partial authorization
+     *
+     * @return set of policy ids
+     */
+    public Set<String> getErrored() {
+        return this.errored;
+    }
+
+    /**
+     * Over approximation of policies that determine the auth decision
+     *
+     * @return set of policy ids
+     */
+    public Set<String> getMayBeDetermining() {
+        return this.may_be_determining;
+    }
+
+    /**
+     * Under approximation of policies that determine the auth decision
+     *
+     * @return set of policy ids
+     */
+    public Set<String> getMustBeDetermining() {
+        return this.must_be_determining;
+    }
+
+    /**
+     * Set of non-trivial residual policies
+     *
+     * @return set of policy ids
+     */
+    public Set<String> getNontrivialResiduals() {
+        return this.nontrivial_residuals;
     }
 
     /**
      * Deserializer factory method for PartialAuthorizationResponse.
-     * @param decision Deserialized decision attribute of nested JSON object.
-     * @param residuals Deserialized residual attribute of nested JSON object.
-     * @param diagnostics Deserialized diagnostics attribute of nested JSON object.
+     * @param nested Deserialized object for nested JSON object.
+     * @param decision Deserialized `decision` attribute of nested JSON object.
+     * @param satisfied Deserialized `satisfied` attribute of nested JSON object.
+     * @param errored Deserialized `errored` attribute of nested JSON object.
+     * @param may_be_determining Deserialized `may_be_determining` attribute of nested JSON object.
+     * @param must_be_determining Deserialized `must_be_determining` attribute of nested JSON object.
+     * @param residuals Deserialized `residual` attribute of nested JSON object.
+     * @param nontrivial_residuals Deserialized `nontrivial_residuals` attribute of nested JSON object.
      * @return
      */
     @JsonCreator
