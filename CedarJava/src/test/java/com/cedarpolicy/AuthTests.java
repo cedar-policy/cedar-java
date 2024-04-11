@@ -7,6 +7,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.AuthorizationResponse.Decision;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
@@ -47,13 +48,9 @@ public class AuthTests {
             assumePartialEvaluation(
                 () -> {
                     var response = auth.isAuthorizedPartial(q, slice);
-                    assertTrue(response.reachedDecision());
-                    assertEquals(1, response.getDiagnostics().getReasons().size());
-                    assertEquals("p0", response.getDiagnostics().getReasons().iterator().next());
-                    assertInstanceOf(PartialAuthorizationResponse.ConcretePartialAuthorizationResponse.class, response);
-                    var concrete = (PartialAuthorizationResponse.ConcretePartialAuthorizationResponse) response;
-                    assertEquals(AuthorizationResponse.Decision.Allow, concrete.getDecision());
-                    assertTrue(concrete.isAllowed());
+                    assertEquals(AuthorizationResponse.Decision.Allow, response.getDecision());
+                    assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
+                    assertTrue(response.getNontrivialResiduals().isEmpty());
                 }
             ), "Should not throw AuthException");
     }
@@ -71,11 +68,8 @@ public class AuthTests {
             assumePartialEvaluation(
                  () -> {
                      var response = auth.isAuthorizedPartial(q, slice);
-                     assertFalse(response.reachedDecision());
-                     assertInstanceOf(PartialAuthorizationResponse.ResidualPartialAuthorizationResponse.class, response);
-                     var residual = (PartialAuthorizationResponse.ResidualPartialAuthorizationResponse) response;
-                     assertEquals(1, residual.getResiduals().size());
-                     assertEquals("p0", residual.getResiduals().iterator().next().policyID);
+                     assertTrue(response.getDecision() == null);
+                     assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
                 }
             ), "Should not throw AuthException");
     }
