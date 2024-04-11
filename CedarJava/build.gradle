@@ -24,6 +24,7 @@ plugins {
 
     // Maven Publish for publishing artifacts to an Apache Maven repository
     id 'maven-publish'
+    id 'signing'
 
     // Download Task for integration tests
     id 'de.undercouch.download' version '5.6.0'
@@ -216,17 +217,21 @@ tasks.named('build') {
     dependsOn('uberJar')
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 /*
  Configures Maven publishing
  */
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
+            from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '3.1.0-SNAPSHOT'
-
-            from components.java
+            version = '3.1.2'
 
             artifacts {
                 jar
@@ -261,4 +266,18 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            // To publish, uncomment these lines and ensure you have them set in `gradle.properties`
+            // credentials {
+            //     username ossrhUsername
+            //     password ossrhPassword
+            // }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
