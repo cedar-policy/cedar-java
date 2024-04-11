@@ -14,13 +14,13 @@ import java.util.Set;
 
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 public class PartialAuthorizationResponse {
-    private Decision decision;
-    private ImmutableSet<String> satisfied;
-    private ImmutableSet<String> errored;
-    private ImmutableSet<String> may_be_determining;
-    private ImmutableSet<String> must_be_determining;
-    private ImmutableMap<String, JsonNode> residuals;
-    private ImmutableSet<String> nontrivial_residuals;
+    private final Decision decision;
+    private final ImmutableSet<String> satisfied;
+    private final ImmutableSet<String> errored;
+    private final ImmutableSet<String> may_be_determining;
+    private final ImmutableSet<String> must_be_determining;
+    private final ImmutableMap<String, JsonNode> residuals;
+    private final ImmutableSet<String> nontrivial_residuals;
 
     public PartialAuthorizationResponse(Decision decision, Set<String> satisfied, Set<String> errored,
             Set<String> may_be_determining, Set<String> must_be_determining, Map<String, JsonNode> residuals,
