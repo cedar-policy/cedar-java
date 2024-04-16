@@ -18,6 +18,7 @@ package com.cedarpolicy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cedarpolicy.model.AuthorizationRequest;
@@ -144,7 +145,7 @@ public class SharedIntegrationTests {
         public boolean enable_request_validation = true;
 
         /** The expected decision that should be returned by the authorization engine. */
-        public AuthorizationSuccessResponse.Decision decision;
+        public Decision decision;
 
         /** The expected reason list that should be returned by the authorization engine. */
         public List<String> reasons;
@@ -415,15 +416,15 @@ public class SharedIntegrationTests {
 
         try {
             AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
-            System.out.println(response.getErrors());
-            assertEquals(request.decision, response.getDecision());
+            assertNotNull(response.success);
+            assertEquals(request.decision, response.success.getDecision());
             // convert to a HashSet to allow reordering
-            assertEquals(new HashSet<>(request.reasons), response.getReasons());
+            assertEquals(new HashSet<>(request.reasons), response.success.getReasons());
             // The integration tests only record the id of the erroring policy,
             // not the full error message. So only check that the list lengths match.
-            assertEquals(request.errors.size(), response.getErrors().size());
+            assertEquals(request.errors.size(), response.success.getErrors().size());
         } catch (BadRequestException e) {
-            // In the case of parse errors ("poorly formed..."), errors may disagree but the
+            // In the case of parse errors, errors may disagree but the expected
             // decision should be `Deny`.
             assertEquals(request.decision, Decision.Deny);
         }

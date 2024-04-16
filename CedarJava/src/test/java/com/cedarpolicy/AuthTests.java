@@ -31,7 +31,8 @@ public class AuthTests {
         var slice = new BasicSlice(policies, new HashSet<>());
         assertDoesNotThrow(() -> {
             var response = auth.isAuthorized(q, slice);
-            assertTrue(response.isAllowed());
+            assertNotNull(response.success);
+            assertTrue(response.success.isAllowed());
         }, "Should not throw AuthException");
     }
 
@@ -48,7 +49,7 @@ public class AuthTests {
             assumePartialEvaluation(
                 () -> {
                     var response = auth.isAuthorizedPartial(q, slice);
-                    assertEquals(AuthorizationSuccessResponse.Decision.Allow, response.getDecision());
+                    assertEquals(Decision.Allow, response.getDecision());
                     assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
                     assertTrue(response.getNontrivialResiduals().isEmpty());
                 }

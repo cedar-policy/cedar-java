@@ -17,6 +17,7 @@
 package com.cedarpolicy.pbt;
 
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
@@ -110,7 +111,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Tests a randomly generated attribute for resource. */
@@ -181,7 +183,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Tests a randomly generated with one bad attribute for resource Response: Deny. */
@@ -259,7 +262,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertFalse(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertFalse(response.success.isAllowed());
     }
 
     /** Tests a long expression that crashes the JNI if Rust doesn't spawn a new thread. */
@@ -297,7 +301,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
      /** Tests a long expression that is denied for nearing the stack overflow limit. */
@@ -334,7 +339,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertFalse(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertFalse(response.success.isAllowed());
     }
 
     private String createNested(int repeats) {
@@ -385,7 +391,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Test IpAddress extension. */
@@ -438,7 +445,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Test Decimal extension. */
@@ -491,7 +499,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Use template slots to tests a single attribute: resource.owner. */
@@ -561,7 +570,8 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /** Test using schema parsing. */
@@ -683,6 +693,7 @@ public class IntegrationTests {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 }

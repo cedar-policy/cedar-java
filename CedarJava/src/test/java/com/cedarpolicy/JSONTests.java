@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.AuthorizationSuccessResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
@@ -58,11 +59,11 @@ public class JSONTests {
 
     /** Test. */
     @Test
-    public void testAuthResponse() {
+    public void testAuthSuccessResponse() {
         String src =
                 "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
         try {
-            AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
+            AuthorizationSuccessResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
             assertTrue(r.isAllowed());
         } catch (JsonProcessingException e) {
             fail(e);

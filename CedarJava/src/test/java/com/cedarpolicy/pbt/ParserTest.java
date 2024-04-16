@@ -105,7 +105,8 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /**
@@ -172,7 +173,8 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
     }
 
     /*
@@ -235,8 +237,9 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        assertNotNull(response.success);
+        Assertions.assertTrue(response.success.isAllowed());
 
-        Assertions.assertTrue(response.isAllowed());
         String actionList =
                 "[" + actions.stream().map(a -> a.getEUID().toString()).collect(Collectors.joining(",")) + "]";
         String p2 =
@@ -264,6 +267,7 @@ public class ParserTest {
                         principal, action, resource, currentContext2);
         AuthorizationResponse response2 =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request2, slice2));
-        Assertions.assertTrue(response2.isAllowed());
+        assertNotNull(response2.success);
+        Assertions.assertTrue(response2.success.isAllowed());
     }
 }
