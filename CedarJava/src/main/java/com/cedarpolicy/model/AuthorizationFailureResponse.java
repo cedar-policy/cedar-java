@@ -16,14 +16,23 @@
 
 package com.cedarpolicy.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.Set;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
- * The result of processing an AuthorizationRequest.
+ * Failure authorization response
  */
-public final class AuthorizationResponse {
-    @JsonProperty("Success")
-    private final AuthorizationSuccessResponse success;
-    @JsonProperty("Failure")
-    private final AuthorizationFailureResponse failure;
+public final class AuthorizationFailureResponse {
+    private final ImmutableList<String> errors;
+    private final ImmutableList<String> warnings;
+
+    @JsonCreator
+    public AuthorizationFailureResponse(ImmutableList<String> errors, ImmutableList<String> warnings) {
+        this.errors = errors;
+        this.warnings = warnings;
+    }
 }

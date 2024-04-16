@@ -88,19 +88,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             final String response = callCedarJNI(operation, fullRequest);
 
             final JsonNode responseNode = objectReader().readTree(response);
-            boolean wasSuccessful = responseNode.path("success").asBoolean(false);
-            if (wasSuccessful) {
-                final String resultJson = responseNode.path("result").textValue();
-                return objectReader().readValue(resultJson, responseClass);
-            } else {
-                final ErrorResponse error = objectReader().forType(ErrorResponse.class).readValue(responseNode);
-                if (error.isInternal) {
-                    throw new InternalException(error.errors);
-                } else {
-                    throw new BadRequestException(error.errors);
-                }
-            }
-
+            return objectReader().readValue(responseNode, responseClass);
         } catch (JsonProcessingException e) {
             throw new AuthException("JSON Serialization Error", e);
         } catch (IllegalArgumentException e) {
