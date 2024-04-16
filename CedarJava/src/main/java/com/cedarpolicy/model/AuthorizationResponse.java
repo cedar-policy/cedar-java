@@ -26,4 +26,14 @@ public final class AuthorizationResponse {
     private final AuthorizationSuccessResponse success;
     @JsonProperty("Failure")
     private final AuthorizationFailureResponse failure;
+
+    public AuthorizationResponse(AuthorizationSuccessResponse success) {
+        this.success = success;
+        this.failure = null;
+    }
+
+    public AuthorizationResponse(AuthorizationFailureResponse failure) {
+        this.failure = failure;
+        this.success = null;
+    }
 }
