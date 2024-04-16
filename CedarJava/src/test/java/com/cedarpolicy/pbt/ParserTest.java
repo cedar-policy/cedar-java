@@ -105,7 +105,7 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
+        Assertions.assertNotNull(response.success);
         Assertions.assertTrue(response.success.isAllowed());
     }
 
@@ -173,7 +173,7 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
+        Assertions.assertNotNull(response.success);
         Assertions.assertTrue(response.success.isAllowed());
     }
 
@@ -237,7 +237,7 @@ public class ParserTest {
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
         AuthorizationResponse response =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
+        Assertions.assertNotNull(response.success);
         Assertions.assertTrue(response.success.isAllowed());
 
         String actionList =
@@ -267,7 +267,7 @@ public class ParserTest {
                         principal, action, resource, currentContext2);
         AuthorizationResponse response2 =
                 Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request2, slice2));
-        assertNotNull(response2.success);
+        Assertions.assertNotNull(response2.success);
         Assertions.assertTrue(response2.success.isAllowed());
     }
 }
