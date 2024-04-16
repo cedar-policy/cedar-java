@@ -15,10 +15,10 @@
  */
 
 #[cfg(feature = "partial-eval")]
-use cedar_policy::frontend::is_authorized::json_is_authorized_partial;
+use cedar_policy::frontend::is_authorized::is_authorized_partial_json_str;
 use cedar_policy::{
     frontend::{
-        is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
+        is_authorized::is_authorized_json_str, utils::InterfaceResult, validate::json_validate,
     },
     EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
 };
@@ -113,14 +113,23 @@ fn call_cedar(call: &str, input: &str) -> String {
     let call = String::from(call);
     let input = String::from(input);
     let result = match call.as_str() {
-        V0_AUTH_OP => json_is_authorized(&input),
+        V0_AUTH_OP => is_authorized_json_str(&input),
         #[cfg(feature = "partial-eval")]
-        V0_AUTH_PARTIAL_OP => json_is_authorized_partial(&input),
-        V0_VALIDATE_OP => json_validate(&input),
-        V0_PARSE_EUID_OP => json_parse_entity_uid(&input),
-        _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
+        V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(&input),
+        V0_VALIDATE_OP => {
+            let ires = json_validate(&input);
+            serde_json::to_string(&ires)
+        }
+        V0_PARSE_EUID_OP => {
+            let ires = json_parse_entity_uid(&input);
+            serde_json::to_string(&ires)
+        }
+        _ => {
+            let ires = InterfaceResult::fail_internally(format!("unsupported operation: {}", call));
+            serde_json::to_string(&ires)
+        }
     };
-    serde_json::to_string(&result).expect("could not serialise response")
+    result.expect("could not serialise response")
 }
 
 #[derive(Debug, Serialize, Deserialize)]
