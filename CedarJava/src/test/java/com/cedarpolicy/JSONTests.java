@@ -24,7 +24,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;

@@ -2,7 +2,7 @@ package com.cedarpolicy.model;
 
 import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;

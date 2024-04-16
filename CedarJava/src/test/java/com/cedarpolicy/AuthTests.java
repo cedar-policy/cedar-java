@@ -7,7 +7,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
@@ -48,7 +48,7 @@ public class AuthTests {
             assumePartialEvaluation(
                 () -> {
                     var response = auth.isAuthorizedPartial(q, slice);
-                    assertEquals(AuthorizationResponse.Decision.Allow, response.getDecision());
+                    assertEquals(AuthorizationSuccessResponse.Decision.Allow, response.getDecision());
                     assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
                     assertTrue(response.getNontrivialResiduals().isEmpty());
                 }

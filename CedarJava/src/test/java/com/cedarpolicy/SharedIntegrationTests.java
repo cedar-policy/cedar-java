@@ -24,7 +24,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
@@ -144,7 +144,7 @@ public class SharedIntegrationTests {
         public boolean enable_request_validation = true;
 
         /** The expected decision that should be returned by the authorization engine. */
-        public AuthorizationResponse.Decision decision;
+        public AuthorizationSuccessResponse.Decision decision;
 
         /** The expected reason list that should be returned by the authorization engine. */
         public List<String> reasons;
@@ -419,7 +419,7 @@ public class SharedIntegrationTests {
             assertEquals(request.decision, response.getDecision());
             // convert to a HashSet to allow reordering
             assertEquals(new HashSet<>(request.reasons), response.getReasons());
-            // The integration tests only record the id of the erroring policy, 
+            // The integration tests only record the id of the erroring policy,
             // not the full error message. So only check that the list lengths match.
             assertEquals(request.errors.size(), response.getErrors().size());
         } catch (BadRequestException e) {
