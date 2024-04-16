@@ -111,7 +111,7 @@ public final class AuthorizationSuccessResponse {
      * @param response response returned by the authorization engine
      */
     @JsonCreator
-    public AuthorizationResponse(@JsonProperty("response") InterfaceResponse response) {
+    public AuthorizationSuccessResponse(@JsonProperty("response") InterfaceResponse response) {
         this.decision = response.decision;
         this.diagnostics = response.diagnostics;
     }
