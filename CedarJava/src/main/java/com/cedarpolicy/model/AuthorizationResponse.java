@@ -23,9 +23,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public final class AuthorizationResponse {
     @JsonProperty("Success")
-    private final AuthorizationSuccessResponse success;
+    public final AuthorizationSuccessResponse success;
     @JsonProperty("Failure")
-    private final AuthorizationFailureResponse failure;
+    public final AuthorizationFailureResponse failure;
 
     public AuthorizationResponse(AuthorizationSuccessResponse success) {
         this.success = success;

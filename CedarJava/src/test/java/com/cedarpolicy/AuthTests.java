@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import com.cedarpolicy.model.AuthorizationRequest;
-import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
