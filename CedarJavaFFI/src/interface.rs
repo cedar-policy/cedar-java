@@ -110,9 +110,7 @@ pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
 }
 
 fn call_cedar(call: &str, input: &str) -> String {
-    let call = String::from(call);
-    let input = String::from(input);
-    let result = match call.as_str() {
+    let result = match call {
         V0_AUTH_OP => is_authorized_json_str(&input),
         #[cfg(feature = "partial-eval")]
         V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(&input),
@@ -126,7 +124,9 @@ fn call_cedar(call: &str, input: &str) -> String {
             serde_json::to_string(&ires)
         }
     };
-    result.expect("failed to serialize or deserialize")
+    let ans = result.expect("failed to serialize or deserialize");
+    println!("calling Rust for {call}, input is\n\n{input}\n\noutput is\n\n{ans}");
+    ans
 }
 
 #[derive(Debug, Serialize, Deserialize)]
