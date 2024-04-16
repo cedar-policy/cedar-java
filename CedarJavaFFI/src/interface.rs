@@ -129,7 +129,7 @@ fn call_cedar(call: &str, input: &str) -> String {
             serde_json::to_string(&ires)
         }
     };
-    result.expect("could not serialise response")
+    result.expect("failed to serialize or deserialize")
 }
 
 #[derive(Debug, Serialize, Deserialize)]

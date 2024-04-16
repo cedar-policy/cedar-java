@@ -18,6 +18,7 @@ package com.cedarpolicy.model.schema;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,10 @@ import java.io.IOException;
 import java.util.Objects;
 
 /** Represent a schema. */
+// This `@JsonRootName` tells Jackson to serialize not as the JSON schema
+// directly, but as a JSON object `{ "json": <the schema> }`, which lets the FFI
+// know we are using the JSON format
+@JsonRootName(value = "json")
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -58,7 +63,7 @@ public final class Schema {
      * Build a Schema from a json node. This does not check that the parsed JSON object represents a
      * valid schema.
      *
-     * @param schemaJson List of EntityTypes.
+     * @param schemaJson Schema in Cedar's JSON schema format.
      */
     @SuppressFBWarnings
     public Schema(JsonNode schemaJson) {
