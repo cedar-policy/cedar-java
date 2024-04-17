@@ -30,7 +30,7 @@ public final class AuthorizationFailureResponse {
     private final ImmutableList<String> warnings;
 
     @JsonCreator
-    public AuthorizationFailureResponse(ImmutableList<String> errors, ImmutableList<String> warnings) {
+    public AuthorizationFailureResponse(@JsonProperty("errors") ImmutableList<String> errors, @JsonProperty("warnings") ImmutableList<String> warnings) {
         this.errors = errors;
         this.warnings = warnings;
     }
