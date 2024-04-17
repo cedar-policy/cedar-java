@@ -19,6 +19,7 @@ package com.cedarpolicy.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 
 /**
  * Failure authorization response
@@ -30,8 +31,8 @@ public final class AuthorizationFailureResponse {
     private final ImmutableList<String> warnings;
 
     @JsonCreator
-    public AuthorizationFailureResponse(@JsonProperty("errors") ImmutableList<String> errors, @JsonProperty("warnings") ImmutableList<String> warnings) {
-        this.errors = errors;
-        this.warnings = warnings;
+    public AuthorizationFailureResponse(@JsonProperty("errors") ArrayList<String> errors, @JsonProperty("warnings") ArrayList<String> warnings) {
+        this.errors = ImmutableList.copyOf(errors);
+        this.warnings = ImmutableList.copyOf(warnings);
     }
 }
