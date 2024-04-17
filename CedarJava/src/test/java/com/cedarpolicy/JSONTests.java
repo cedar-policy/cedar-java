@@ -37,7 +37,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamConstraintsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -63,8 +62,8 @@ public class JSONTests {
         String src =
                 "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
         try {
-            AuthorizationSuccessResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
-            assertTrue(r.isAllowed());
+            AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
+            assertTrue(r.success.get().isAllowed());
         } catch (JsonProcessingException e) {
             fail(e);
         }

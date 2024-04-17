@@ -17,7 +17,10 @@
 package com.cedarpolicy.pbt;
 
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
@@ -48,7 +51,6 @@ import java.util.Set;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests. */
@@ -62,6 +64,22 @@ public class IntegrationTests {
         principalType = EntityTypeName.parse("User").get();
         actionType = EntityTypeName.parse("Action").get();
         resourceType = EntityTypeName.parse("Resource").get();
+    }
+
+    private void assertAllowed(AuthorizationRequest request, Slice slice) {
+        assertDoesNotThrow(() -> {
+            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final var success = response.success.get();
+            assertTrue(success.isAllowed());
+        });
+    }
+
+    private void assertNotAllowed(AuthorizationRequest request, Slice slice) {
+        assertDoesNotThrow(() -> {
+            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final var success = response.success.get();
+            assertFalse(success.isAllowed());
+        });
     }
 
     /** Tests a single attribute: resource.owner. */
@@ -108,11 +126,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal.getEUID(), action.getEUID(), resource.getEUID(), currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Tests a randomly generated attribute for resource. */
@@ -180,11 +194,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Tests a randomly generated with one bad attribute for resource Response: Deny. */
@@ -259,11 +269,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertFalse(response.success.isAllowed());
+        assertNotAllowed(request, slice);
     }
 
     /** Tests a long expression that crashes the JNI if Rust doesn't spawn a new thread. */
@@ -298,11 +304,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
      /** Tests a long expression that is denied for nearing the stack overflow limit. */
@@ -336,11 +338,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertFalse(response.success.isAllowed());
+        assertNotAllowed(request, slice);
     }
 
     private String createNested(int repeats) {
@@ -388,11 +386,7 @@ public class IntegrationTests {
                         action,
                         resource,
                         currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Test IpAddress extension. */
@@ -442,11 +436,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Test Decimal extension. */
@@ -496,11 +486,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Use template slots to tests a single attribute: resource.owner. */
@@ -567,11 +553,7 @@ public class IntegrationTests {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /** Test using schema parsing. */
@@ -631,7 +613,7 @@ public class IntegrationTests {
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")),
                         true);
         AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        Assertions.assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(request, slice));
+        assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(request, slice));
     }
 
     /** Test using schema parsing. */
@@ -690,10 +672,6 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")),
                         true);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        assertNotNull(response.success);
-        Assertions.assertTrue(response.success.isAllowed());
+        assertAllowed(request, slice);
     }
 }

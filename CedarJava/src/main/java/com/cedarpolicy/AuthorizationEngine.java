@@ -17,6 +17,7 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.*;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.Slice;

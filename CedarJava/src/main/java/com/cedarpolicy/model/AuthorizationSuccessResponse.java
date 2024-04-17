@@ -83,38 +83,18 @@ public final class AuthorizationSuccessResponse {
         }
     }
 
-    /** Internal representation of the response from a query evaluation. */
-    public static class InterfaceResponse {
-
-        private final Decision decision;
-
-        private final Diagnostics diagnostics;
-
-        /**
-         * Read the response from a JSON object.
-         *
-         * @param decision authorization decision for the given request
-         * @param diagnostics a collection of policies that contributed to the result and any errors
-         *     that might have happened during evaluation
-         */
-        @SuppressFBWarnings
-        public InterfaceResponse(
-            @JsonProperty("decision") Decision decision,
-            @JsonProperty("diagnostics") Diagnostics diagnostics) {
-            this.decision = decision;
-            this.diagnostics = diagnostics;
-        }
-    }
-
     /**
      * Construct an authorization response.
      *
      * @param response response returned by the authorization engine
      */
     @JsonCreator
-    public AuthorizationSuccessResponse(@JsonProperty("response") InterfaceResponse response) {
-        this.decision = response.decision;
-        this.diagnostics = response.diagnostics;
+    public AuthorizationSuccessResponse(
+        @JsonProperty("decision") Decision decision,
+        @JsonProperty("diagnostics") Diagnostics diagnostics
+    ) {
+        this.decision = decision;
+        this.diagnostics = diagnostics;
     }
 
     /** Result of request evaluation. */

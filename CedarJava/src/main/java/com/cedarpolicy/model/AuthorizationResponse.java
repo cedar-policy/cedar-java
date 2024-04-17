@@ -16,24 +16,41 @@
 
 package com.cedarpolicy.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * The result of processing an AuthorizationRequest.
  */
 public final class AuthorizationResponse {
-    @JsonProperty("Success")
-    public final AuthorizationSuccessResponse success;
-    @JsonProperty("Failure")
-    public final AuthorizationFailureResponse failure;
+    /** Exactly one of `success` or `errors` should be None. */
+    @JsonProperty("response")
+    public final Optional<AuthorizationSuccessResponse> success;
+    /** Exactly one of `success` or `errors` should be None. */
+    @JsonProperty("errors")
+    public final Optional<ImmutableList<String>> errors;
+    /** Warnings can be produced regardless of whether we have a `success` or `errors`. */
+    @JsonProperty("warnings")
+    public final ImmutableList<String> warnings;
 
-    public AuthorizationResponse(AuthorizationSuccessResponse success) {
+    /**
+     * Exactly one of `success` or `errors` should be None.
+     */
+    @JsonCreator
+    public AuthorizationResponse(
+        @JsonProperty("response") Optional<AuthorizationSuccessResponse> success,
+        @JsonProperty("errors") Optional<ArrayList<String>> errors,
+        @JsonProperty("warnings") ArrayList<String> warnings
+    ) {
         this.success = success;
-        this.failure = null;
-    }
-
-    public AuthorizationResponse(AuthorizationFailureResponse failure) {
-        this.failure = failure;
-        this.success = null;
+        this.errors = errors.map((list) -> ImmutableList.copyOf(list));
+        if (warnings == null) {
+            this.warnings = ImmutableList.of(); // empty
+        } else {
+            this.warnings = ImmutableList.copyOf(warnings);
+        }
     }
 }
