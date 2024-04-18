@@ -84,9 +84,7 @@ public final class AuthorizationSuccessResponse {
     }
 
     /**
-     * Construct an authorization response.
-     *
-     * @param response response returned by the authorization engine
+     * Construct a successful authorization response.
      */
     @JsonCreator
     public AuthorizationSuccessResponse(
@@ -139,7 +137,3 @@ public final class AuthorizationSuccessResponse {
         return this.decision == Decision.Allow;
     }
 }
-
-/**
- * Failure authorization response
- */
