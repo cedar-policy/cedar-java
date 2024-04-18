@@ -226,30 +226,29 @@ public class SharedIntegrationTests {
             tests.add(loadJsonTests(testFile));
         }
         // corpus tests
-       try (Stream<Path> stream =
-               Files.list(resolveIntegrationTestPath("corpus_tests"))) {
+        try (Stream<Path> stream = Files.list(resolveIntegrationTestPath("corpus_tests"))) {
            stream
-                   // ignore non-JSON files
-                   .filter(path -> path.getFileName().toString().endsWith(".json"))
-                   // ignore files that start with policies_, entities_, or schema_
-                   .filter(
-                           path ->
-                                   !path.getFileName().toString().startsWith("policies_")
-                                           && !path.getFileName().toString().startsWith("entities_")
-                                           && !path.getFileName().toString().startsWith("schema_"))
-                   // add the test
-                   .forEach(
-                           path -> {
-                               try {
-                                   tests.add(loadJsonTests(path.toAbsolutePath().toString()));
-                               } catch (final IOException e) {
-                                   // inside the forEach we can't throw checked exceptions, but we
-                                   // can throw this unchecked exception
-                                   throw new UncheckedIOException(e);
-                               }
-                           });
+                // ignore non-JSON files
+                .filter(path -> path.getFileName().toString().endsWith(".json"))
+                // ignore files that start with policies_, entities_, or schema_
+                .filter(
+                        path ->
+                                !path.getFileName().toString().startsWith("policies_")
+                                        && !path.getFileName().toString().startsWith("entities_")
+                                        && !path.getFileName().toString().startsWith("schema_"))
+                // add the test
+                .forEach(
+                        path -> {
+                            try {
+                                tests.add(loadJsonTests(path.toAbsolutePath().toString()));
+                            } catch (final IOException e) {
+                                // inside the forEach we can't throw checked exceptions, but we
+                                // can throw this unchecked exception
+                                throw new UncheckedIOException(e);
+                            }
+                        });
        }
-        return tests;
+       return tests;
     }
 
     /**
@@ -387,7 +386,7 @@ public class SharedIntegrationTests {
         try {
             ValidationResponse result = auth.validate(validationQuery);
             if (shouldValidate) {
-                assertTrue(result.getErrors().isEmpty());
+                assertTrue(result.validated());
             }
         } catch (BadRequestException e) {
             // A `BadRequestException` is the results of a parsing error.

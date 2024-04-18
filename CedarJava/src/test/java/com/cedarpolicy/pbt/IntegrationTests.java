@@ -19,14 +19,11 @@ package com.cedarpolicy.pbt;
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.EntityTypeAndId;
@@ -60,6 +57,8 @@ public class IntegrationTests {
     final EntityTypeName actionType;
     final EntityTypeName resourceType;
 
+    private static final BasicAuthorizationEngine engine = new BasicAuthorizationEngine();
+
     public IntegrationTests() {
         principalType = EntityTypeName.parse("User").get();
         actionType = EntityTypeName.parse("Action").get();
@@ -68,7 +67,7 @@ public class IntegrationTests {
 
     private void assertAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final AuthorizationResponse response = engine.isAuthorized(request, slice);
             final var success = response.success.get();
             assertTrue(success.isAllowed());
         });
@@ -76,9 +75,17 @@ public class IntegrationTests {
 
     private void assertNotAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final AuthorizationResponse response = engine.isAuthorized(request, slice);
             final var success = response.success.get();
             assertFalse(success.isAllowed());
+        });
+    }
+
+    private void assertFailure(AuthorizationRequest request, Slice slice) {
+        assertDoesNotThrow(() -> {
+            final AuthorizationResponse response = engine.isAuthorized(request, slice);
+            final var errors = response.errors.get();
+            assertTrue(errors.size() > 0);
         });
     }
 
@@ -612,8 +619,7 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")),
                         true);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        assertThrows(BadRequestException.class, () -> authEngine.isAuthorized(request, slice));
+        assertFailure(request, slice);
     }
 
     /** Test using schema parsing. */

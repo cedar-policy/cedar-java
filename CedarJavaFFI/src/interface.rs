@@ -110,7 +110,7 @@ pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
 }
 
 fn call_cedar(call: &str, input: &str) -> String {
-    //println!("\ncalling Rust for {call}, input is \n\n{input}\n");
+    //eprintln!("\ncalling Rust for {call}, input is \n\n{input}\n");
     let result = match call {
         V0_AUTH_OP => is_authorized_json_str(&input),
         #[cfg(feature = "partial-eval")]
@@ -127,7 +127,7 @@ fn call_cedar(call: &str, input: &str) -> String {
     };
     match result {
         Ok(ans) => {
-            //println!("\noutput is\n\n{ans}\n");
+            //eprintln!("\noutput is\n\n{ans}\n");
             ans
         }
         Err(e) => {

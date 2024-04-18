@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.AuthorizationSuccessResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
