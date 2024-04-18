@@ -46,7 +46,7 @@ public final class ValidationResponse {
     */
     public final ImmutableList<String> warnings;
 
-    public class ValidationResults {
+    public static class ValidationResults {
         /** Validation errors associated with particular policies. */
         public final ImmutableList<ValidationError> validation_errors;
         /** Validation warnings associated with particular policies. */
