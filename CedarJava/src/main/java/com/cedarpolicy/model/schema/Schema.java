@@ -25,11 +25,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.util.Objects;
 
-/** Represent a schema. */
-// This `@JsonRootName` tells Jackson to serialize not as the JSON schema
-// directly, but as a JSON object `{ "json": <the schema> }`, which lets the FFI
-// know we are using the JSON format
-// @JsonRootName(value = "json")
+/** Represents a schema. */
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
