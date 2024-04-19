@@ -386,7 +386,7 @@ public class SharedIntegrationTests {
         try {
             ValidationResponse result = auth.validate(validationQuery);
             if (shouldValidate) {
-                assertTrue(result.validated());
+                assertTrue(result.validationPassed());
             }
         } catch (BadRequestException e) {
             // A `BadRequestException` is the results of a parsing error.

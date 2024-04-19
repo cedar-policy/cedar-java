@@ -91,7 +91,7 @@ public final class ValidationResponse {
      * Returns `false` if validation returned errors, or if there were errors
      * prior to even calling the validator.
      */
-    public boolean validated() {
+    public boolean validationPassed() {
         if (results.isPresent()) {
             return results.get().validation_errors.isEmpty();
         } else {

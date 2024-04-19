@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
  * Successful authorization response
  */
 public final class AuthorizationSuccessResponse {
-    /** The three possible results of request evaluation. */
+    /** The two possible results of request evaluation. */
     public enum Decision {
         /** Represents an authorization request that is allowed. */
         @JsonProperty("Allow")
