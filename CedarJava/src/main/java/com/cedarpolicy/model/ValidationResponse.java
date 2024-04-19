@@ -16,65 +16,97 @@
 
 package com.cedarpolicy.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.google.common.collect.ImmutableList;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Result of a validation request. */
 public final class ValidationResponse {
-    private final List<ValidationError> errors;
-    private final List<ValidationWarning> warnings;
+    /** Exactly one of `results` or `errors` should be None. */
+    public final Optional<ValidationResults> results;
+    /**
+     * Exactly one of `results` or `errors` should be None.
+     *
+     * These errors are not validation errors (those would be
+     * reported in `results`), but rather higher-level errors, like
+     * a failure to parse or to call the validator.
+     */
+    public final Optional<ImmutableList<String>> errors;
+    /**
+     * Other warnings not associated with particular policies.
+     * For instance, warnings about your schema itself.
+     * These warnings can be produced regardless of whether we have `results` or
+     * `errors`.
+    */
+    public final ImmutableList<String> warnings;
+
+    public static class ValidationResults {
+        /** Validation errors associated with particular policies. */
+        public final ImmutableList<ValidationError> validation_errors;
+        /** Validation warnings associated with particular policies. */
+        public final ImmutableList<ValidationWarning> validation_warnings;
+
+        @JsonCreator
+        public ValidationResults(
+            @JsonProperty("validation_errors") List<ValidationError> validation_errors,
+            @JsonProperty("validation_warnings") List<ValidationWarning> validation_warnings) {
+            // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible; see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
+            this.validation_errors = ImmutableList.copyOf(validation_errors);
+            this.validation_warnings = ImmutableList.copyOf(validation_warnings);
+        }
+    }
 
     /**
      * Construct a validation response.
      *
-     * @param errors Errors.
+     * Either `errors` should be None and `validation_errors` and `validation_warnings` both present,
+     * or the other way around.
      */
     @JsonCreator
-    @SuppressFBWarnings
-    public ValidationResponse(@JsonProperty("validation_errors") List<ValidationError> errors, @JsonProperty("validation_warnings") List<ValidationWarning> warnings) {
-        if (errors == null) {
-            throw new NullPointerException("`errors` is null");
+    public ValidationResponse(
+        @JsonProperty("validation_errors") Optional<List<ValidationError>> validation_errors,
+        @JsonProperty("validation_warnings") Optional<List<ValidationWarning>> validation_warnings,
+        @JsonProperty("errors") Optional<List<String>> errors,
+        @JsonProperty("warnings") @JsonAlias("other_warnings") Optional<List<String>> warnings) {
+        if (errors.isPresent()) {
+            this.errors = Optional.of(ImmutableList.copyOf(errors.get()));
+            this.results = Optional.empty();
+        } else {
+            // if we don't have `errors`, we should have both
+            // `validation_errors` and `validation_warnings`
+            this.results = Optional.of(new ValidationResults(validation_errors.get(), validation_warnings.get()));
+            this.errors = Optional.empty();
         }
-        if (warnings == null) {
-            throw new NullPointerException("`warnings` is null");
-        }
-
-        this.errors = errors;
-        this.warnings = warnings;
+        this.warnings = ImmutableList.copyOf(warnings.orElse(new ArrayList<String>()));
     }
 
     /**
-     * Get errors from a validation response.
-     *
-     * @return The errors.
+     * Returns `true` if validation completed successfully with no errors (there may be warnings).
+     * Returns `false` if validation returned errors, or if there were errors
+     * prior to even calling the validator.
      */
-    @SuppressFBWarnings
-    public List<ValidationError> getErrors() {
-        return this.errors;
-    }
-
-    /** Test equals. */
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof ValidationResponse)) {
-            return false;
+    public boolean validationPassed() {
+        if (results.isPresent()) {
+            return results.get().validation_errors.isEmpty();
         } else {
-            return errors.equals(((ValidationResponse) o).errors);
+            // higher-level errors are present
+            return false;
         }
-    }
-
-    /** Hash. */
-    @Override
-    public int hashCode() {
-        return Objects.hash(errors);
     }
 
     /** Readable string representation. */
     public String toString() {
-        return "ValidationResponse(validation_errors=" + this.getErrors() + ")";
+        if (results.isPresent()) {
+            return "ValidationResponse(validation_errors = " + results.get().validation_errors + ", validation_warnings = " + results.get().validation_warnings + ")";
+        } else {
+            return "ValidationResponse(errors = " + errors.get() + ")";
+        }
     }
 
     /** Error for a specific policy. */

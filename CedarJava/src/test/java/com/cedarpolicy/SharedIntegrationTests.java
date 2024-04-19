@@ -16,6 +16,7 @@
 
 package com.cedarpolicy;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,7 +25,7 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
@@ -144,7 +145,7 @@ public class SharedIntegrationTests {
         public boolean enable_request_validation = true;
 
         /** The expected decision that should be returned by the authorization engine. */
-        public AuthorizationResponse.Decision decision;
+        public Decision decision;
 
         /** The expected reason list that should be returned by the authorization engine. */
         public List<String> reasons;
@@ -225,30 +226,29 @@ public class SharedIntegrationTests {
             tests.add(loadJsonTests(testFile));
         }
         // corpus tests
-       try (Stream<Path> stream =
-               Files.list(resolveIntegrationTestPath("corpus_tests"))) {
+        try (Stream<Path> stream = Files.list(resolveIntegrationTestPath("corpus_tests"))) {
            stream
-                   // ignore non-JSON files
-                   .filter(path -> path.getFileName().toString().endsWith(".json"))
-                   // ignore files that start with policies_, entities_, or schema_
-                   .filter(
-                           path ->
-                                   !path.getFileName().toString().startsWith("policies_")
-                                           && !path.getFileName().toString().startsWith("entities_")
-                                           && !path.getFileName().toString().startsWith("schema_"))
-                   // add the test
-                   .forEach(
-                           path -> {
-                               try {
-                                   tests.add(loadJsonTests(path.toAbsolutePath().toString()));
-                               } catch (final IOException e) {
-                                   // inside the forEach we can't throw checked exceptions, but we
-                                   // can throw this unchecked exception
-                                   throw new UncheckedIOException(e);
-                               }
-                           });
+                // ignore non-JSON files
+                .filter(path -> path.getFileName().toString().endsWith(".json"))
+                // ignore files that start with policies_, entities_, or schema_
+                .filter(
+                        path ->
+                                !path.getFileName().toString().startsWith("policies_")
+                                        && !path.getFileName().toString().startsWith("entities_")
+                                        && !path.getFileName().toString().startsWith("schema_"))
+                // add the test
+                .forEach(
+                        path -> {
+                            try {
+                                tests.add(loadJsonTests(path.toAbsolutePath().toString()));
+                            } catch (final IOException e) {
+                                // inside the forEach we can't throw checked exceptions, but we
+                                // can throw this unchecked exception
+                                throw new UncheckedIOException(e);
+                            }
+                        });
        }
-        return tests;
+       return tests;
     }
 
     /**
@@ -386,7 +386,7 @@ public class SharedIntegrationTests {
         try {
             ValidationResponse result = auth.validate(validationQuery);
             if (shouldValidate) {
-                assertTrue(result.getErrors().isEmpty());
+                assertTrue(result.validationPassed());
             }
         } catch (BadRequestException e) {
             // A `BadRequestException` is the results of a parsing error.
@@ -414,16 +414,16 @@ public class SharedIntegrationTests {
         Slice slice = new BasicSlice(policies, entities);
 
         try {
-            AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
-            System.out.println(response.getErrors());
-            assertEquals(request.decision, response.getDecision());
+            final AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
+            final var success = assertDoesNotThrow(() -> response.success.get());
+            assertEquals(request.decision, success.getDecision());
             // convert to a HashSet to allow reordering
-            assertEquals(new HashSet<>(request.reasons), response.getReasons());
-            // The integration tests only record the id of the erroring policy, 
+            assertEquals(new HashSet<>(request.reasons), success.getReasons());
+            // The integration tests only record the id of the erroring policy,
             // not the full error message. So only check that the list lengths match.
-            assertEquals(request.errors.size(), response.getErrors().size());
+            assertEquals(request.errors.size(), success.getErrors().size());
         } catch (BadRequestException e) {
-            // In the case of parse errors ("poorly formed..."), errors may disagree but the
+            // In the case of parse errors, errors may disagree but the expected
             // decision should be `Deny`.
             assertEquals(request.decision, Decision.Deny);
         }

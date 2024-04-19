@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import com.cedarpolicy.model.AuthorizationRequest;
-import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Policy;
+import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
 import org.junit.jupiter.api.Test;
@@ -20,19 +20,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AuthTests {
 
+    private void assertAllowed(AuthorizationRequest q, Slice slice) {
+        assertDoesNotThrow(() -> {
+            final var response = new BasicAuthorizationEngine().isAuthorized(q, slice);
+            final var success = response.success.get();
+            assertTrue(success.isAllowed());
+        });
+    }
+
     @Test
     public void simple() {
-        var auth = new BasicAuthorizationEngine();
         var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
         var view = new EntityUID(EntityTypeName.parse("Action").get(), "view");
         var q = new AuthorizationRequest(alice, view, alice, new HashMap<>());
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal,action,resource);", "p0"));
         var slice = new BasicSlice(policies, new HashSet<>());
-        assertDoesNotThrow(() -> {
-            var response = auth.isAuthorized(q, slice);
-            assertTrue(response.isAllowed());
-        }, "Should not throw AuthException");
+        assertAllowed(q, slice);
     }
 
     @Test
@@ -47,8 +51,8 @@ public class AuthTests {
         assertDoesNotThrow(
             assumePartialEvaluation(
                 () -> {
-                    var response = auth.isAuthorizedPartial(q, slice);
-                    assertEquals(AuthorizationResponse.Decision.Allow, response.getDecision());
+                    final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
+                    assertEquals(Decision.Allow, response.getDecision());
                     assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
                     assertTrue(response.getNontrivialResiduals().isEmpty());
                 }
@@ -67,7 +71,7 @@ public class AuthTests {
         assertDoesNotThrow(
             assumePartialEvaluation(
                  () -> {
-                     var response = auth.isAuthorizedPartial(q, slice);
+                     final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
                      assertTrue(response.getDecision() == null);
                      assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
                 }

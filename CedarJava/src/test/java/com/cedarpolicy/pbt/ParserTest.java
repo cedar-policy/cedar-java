@@ -16,7 +16,6 @@
 
 package com.cedarpolicy.pbt;
 
-import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
@@ -28,6 +27,10 @@ import com.cedarpolicy.value.Value;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +40,6 @@ import java.util.stream.Collectors;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
-import org.junit.jupiter.api.Assertions;
 
 /** Property based tests for Rust Parser. */
 public class ParserTest {
@@ -52,6 +54,13 @@ public class ParserTest {
         resourceType = EntityTypeName.parse("Resource").get();
     }
 
+    private void assertAllowed(AuthorizationRequest request, Slice slice) {
+        assertDoesNotThrow(() -> {
+            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final var success = response.success.get();
+            assertTrue(success.isAllowed());
+        });
+    }
 
     /*
      * Single policy (Universal permit) Tests
@@ -102,10 +111,7 @@ public class ParserTest {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /**
@@ -169,10 +175,7 @@ public class ParserTest {
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
-        Assertions.assertTrue(response.isAllowed());
+        assertAllowed(request, slice);
     }
 
     /*
@@ -232,11 +235,8 @@ public class ParserTest {
                         action,
                         resource,
                         currentContext);
-        AuthorizationEngine authEngine = new BasicAuthorizationEngine();
-        AuthorizationResponse response =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request, slice));
+        assertAllowed(request, slice);
 
-        Assertions.assertTrue(response.isAllowed());
         String actionList =
                 "[" + actions.stream().map(a -> a.getEUID().toString()).collect(Collectors.joining(",")) + "]";
         String p2 =
@@ -262,8 +262,6 @@ public class ParserTest {
         AuthorizationRequest request2 =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext2);
-        AuthorizationResponse response2 =
-                Assertions.assertDoesNotThrow(() -> authEngine.isAuthorized(request2, slice2));
-        Assertions.assertTrue(response2.isAllowed());
+        assertAllowed(request2, slice2);
     }
 }

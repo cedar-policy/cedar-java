@@ -2,7 +2,7 @@ package com.cedarpolicy.model;
 
 import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
-import com.cedarpolicy.model.AuthorizationResponse.Decision;
+import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,17 +21,24 @@ public class PartialAuthorizationResponse {
     private final ImmutableSet<String> must_be_determining;
     private final ImmutableMap<String, JsonNode> residuals;
     private final ImmutableSet<String> nontrivial_residuals;
+    private final ImmutableSet<String> warnings;
 
     public PartialAuthorizationResponse(Decision decision, Set<String> satisfied, Set<String> errored,
             Set<String> may_be_determining, Set<String> must_be_determining, Map<String, JsonNode> residuals,
-            Set<String> nontrivial_residuals) {
+            Set<String> nontrivial_residuals, Set<String> warnings) {
         this.decision = decision;
-        this.satisfied = satisfied.stream().collect(ImmutableSet.toImmutableSet());
-        this.errored = errored.stream().collect(ImmutableSet.toImmutableSet());
-        this.may_be_determining = may_be_determining.stream().collect(ImmutableSet.toImmutableSet());
-        this.must_be_determining = must_be_determining.stream().collect(ImmutableSet.toImmutableSet());
-        this.residuals = ImmutableMap.<String, JsonNode>builder().putAll(residuals).build();
-        this.nontrivial_residuals = nontrivial_residuals.stream().collect(ImmutableSet.toImmutableSet());
+        // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible; see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
+        this.satisfied = ImmutableSet.copyOf(satisfied);
+        this.errored = ImmutableSet.copyOf(errored);
+        this.may_be_determining = ImmutableSet.copyOf(may_be_determining);
+        this.must_be_determining = ImmutableSet.copyOf(must_be_determining);
+        this.residuals = ImmutableMap.copyOf(residuals);
+        this.nontrivial_residuals = ImmutableSet.copyOf(nontrivial_residuals);
+        if (warnings == null) {
+            this.warnings = ImmutableSet.of(); // empty
+        } else {
+            this.warnings = ImmutableSet.copyOf(warnings);
+        }
     }
 
     /**
@@ -107,6 +114,7 @@ public class PartialAuthorizationResponse {
      * @param must_be_determining Deserialized `must_be_determining` attribute of nested JSON object.
      * @param residuals Deserialized `residual` attribute of nested JSON object.
      * @param nontrivial_residuals Deserialized `nontrivial_residuals` attribute of nested JSON object.
+     * @param warnings Deserialized `warnings` attribute of nested JSON object.
      * @return
      */
     @JsonCreator
@@ -118,10 +126,11 @@ public class PartialAuthorizationResponse {
         @JsonProperty("may_be_determining") Set<String> may_be_determining,
         @JsonProperty("must_be_determining") Set<String> must_be_determining,
         @JsonProperty("residuals") Map<String, JsonNode> residuals,
-        @JsonProperty("nontrivial_residuals") Set<String> nontrivial_residuals) {
+        @JsonProperty("nontrivial_residuals") Set<String> nontrivial_residuals,
+        @JsonProperty("warnings") Set<String> warnings) {
             if (nested != null) {
                 return nested;
             }
-            return new PartialAuthorizationResponse(decision, satisfied, errored, may_be_determining, must_be_determining, residuals, nontrivial_residuals);
+            return new PartialAuthorizationResponse(decision, satisfied, errored, may_be_determining, must_be_determining, residuals, nontrivial_residuals, warnings);
     }
 }

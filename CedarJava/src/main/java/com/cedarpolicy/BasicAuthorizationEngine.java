@@ -24,11 +24,9 @@ import java.io.IOException;
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
-import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.Slice;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,19 +86,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             final String response = callCedarJNI(operation, fullRequest);
 
             final JsonNode responseNode = objectReader().readTree(response);
-            boolean wasSuccessful = responseNode.path("success").asBoolean(false);
-            if (wasSuccessful) {
-                final String resultJson = responseNode.path("result").textValue();
-                return objectReader().readValue(resultJson, responseClass);
-            } else {
-                final ErrorResponse error = objectReader().forType(ErrorResponse.class).readValue(responseNode);
-                if (error.isInternal) {
-                    throw new InternalException(error.errors);
-                } else {
-                    throw new BadRequestException(error.errors);
-                }
-            }
-
+            return objectReader().readValue(responseNode, responseClass);
         } catch (JsonProcessingException e) {
             throw new AuthException("JSON Serialization Error", e);
         } catch (IllegalArgumentException e) {
@@ -129,21 +115,6 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     private static final class PartialAuthorizationRequest extends AuthorizationRequest {
         PartialAuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
             super(request, slice);
-        }
-    }
-
-    private static final class ErrorResponse {
-        public final boolean success, isInternal;
-        public final String[] errors;
-
-        @JsonCreator
-        ErrorResponse(
-                @JsonProperty("success") boolean success,
-                @JsonProperty("isInternal") boolean isInternal,
-                @JsonProperty("errors") String[] errors) {
-            this.success = success;
-            this.isInternal = isInternal;
-            this.errors = errors;
         }
     }
 

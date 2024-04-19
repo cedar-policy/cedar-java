@@ -24,10 +24,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.ValidationResponse.ValidationResults;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,8 +85,8 @@ public class ValidationTests {
     public void givenInvalidPolicyThrowsBadRequestError() {
         givenSchema(EMPTY_SCHEMA);
         givenPolicy("policy0", "permit { }");
-        AuthException result = whenValidatingThrows();
-        thenTheErrorIsABadRequest(result);
+        ValidationResponse response = whenValidated();
+        thenValidationFailed(response);
     }
 
     private void givenSchema(Schema schema) {
@@ -101,23 +103,32 @@ public class ValidationTests {
     }
 
     private void thenIsValid(ValidationResponse response) {
+        final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
         assertTrue(
-                response.getErrors().isEmpty(),
+            results.validation_errors.isEmpty(),
                 () -> {
                     String errors =
-                            response.getErrors().stream()
-                                    .map(
-                                            note ->
-                                                    String.format(
-                                                            "in policy %s: %s",
-                                                            note.getPolicyId(), note.getError()))
+                        response.results.get().validation_errors.stream()
+                            .map(note ->
+                                String.format("in policy %s: %s", note.getPolicyId(), note.getError()))
                                     .collect(Collectors.joining("\n"));
-                    return "Expected valid response but got an invalid one with errors:\n" + errors;
+                    return "Expected valid response but got validation errors:\n" + errors;
                 });
     }
 
     private void thenIsNotValid(ValidationResponse response) {
-        assertFalse(response.getErrors().isEmpty());
+        final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
+        assertFalse(
+            results.validation_errors.isEmpty(),
+            () -> {
+                return "Expected validation errors but did not find any";
+            }
+            );
+    }
+
+    private void thenValidationFailed(ValidationResponse response) {
+        final List<String> errors = assertDoesNotThrow(() -> response.errors.get());
+        assertFalse(errors.isEmpty());
     }
 
     private AuthException whenValidatingThrows() {
@@ -128,10 +139,6 @@ public class ValidationTests {
             return e;
         }
         return fail("The validation succeeded, but expected it to throw.");
-    }
-
-    private void thenTheErrorIsABadRequest(AuthException e) {
-        assertTrue(e instanceof BadRequestException);
     }
 
     @BeforeAll

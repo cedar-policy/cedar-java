@@ -18,14 +18,14 @@ package com.cedarpolicy.model.schema;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.util.Objects;
 
-/** Represent a schema. */
+/** Represents a schema. */
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -34,7 +34,9 @@ public final class Schema {
     }
 
     // The schema after being parsed as a JSON object.
-    @JsonValue private final JsonNode schemaJson;
+    // (Using "json" as the JsonProperty ensures the FFI knows we are using the JSON format.
+    // The other option is "human".)
+    @JsonProperty("json") private final JsonNode schemaJson;
 
     /**
      * Build a Schema from a string containing the JSON source for the model. This constructor will
@@ -58,7 +60,7 @@ public final class Schema {
      * Build a Schema from a json node. This does not check that the parsed JSON object represents a
      * valid schema.
      *
-     * @param schemaJson List of EntityTypes.
+     * @param schemaJson Schema in Cedar's JSON schema format.
      */
     @SuppressFBWarnings
     public Schema(JsonNode schemaJson) {
