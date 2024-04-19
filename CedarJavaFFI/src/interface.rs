@@ -15,11 +15,9 @@
  */
 
 #[cfg(feature = "partial-eval")]
-use cedar_policy::frontend::is_authorized::is_authorized_partial_json_str;
+use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::{
-    frontend::{
-        is_authorized::is_authorized_json_str, utils::InterfaceResult, validate::validate_json_str,
-    },
+    ffi::{is_authorized_json_str, validate_json_str},
     EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
 };
 use jni::{
@@ -32,6 +30,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
+    interface_result::InterfaceResult,
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
     utils::raise_npe,
 };
@@ -471,7 +470,7 @@ mod test {
     fn empty_validation_call_succeeds() {
         let result = call_cedar(
             "ValidateOperation",
-            r#"{ "schema": { "": {"entityTypes": {}, "actions": {} } }, "policySet": {} }"#,
+            r#"{ "schema": { "json": { "": {"entityTypes": {}, "actions": {} } }, "policySet": {} } }"#,
         );
         assert_success(result);
     }
@@ -625,6 +624,7 @@ mod test {
         assert_success(result);
     }
 
+    #[track_caller]
     fn assert_success(result: String) {
         let result: InterfaceResult = serde_json::from_str(result.as_str()).unwrap();
         match result {
@@ -633,6 +633,7 @@ mod test {
         };
     }
 
+    #[track_caller]
     fn assert_failure(result: String) {
         let result: InterfaceResult = serde_json::from_str(result.as_str()).unwrap();
         match result {

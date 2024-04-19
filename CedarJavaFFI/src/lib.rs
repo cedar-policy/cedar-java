@@ -16,6 +16,7 @@
 
 #![forbid(unsafe_code)]
 mod interface;
+mod interface_result;
 mod jlist;
 mod objects;
 mod utils;
