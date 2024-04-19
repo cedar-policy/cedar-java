@@ -19,6 +19,9 @@ jni_fn = "0.1.0"
 [features]
 partial-eval = ["cedar-policy/partial-eval"]
 
+[dev-dependencies]
+cool_asserts = "2.0"
+
 # Dynamic linked library, used for linked to java process at runtime.
 [lib]
 crate_type = ["cdylib"]

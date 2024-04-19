@@ -20,9 +20,8 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "success")]
 #[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
-/// As of this writing, this is only used by `json_parse_entity_uid()`.
-/// We could remove this and just specialize the output of `json_parse_entity_uid()`.
-pub enum InterfaceResult {
+/// Generic Answer type designed for serialization.
+pub enum Answer {
     /// The call succeeded
     #[serde(rename = "true")]
     Success {
@@ -49,7 +48,7 @@ pub enum InterfaceResult {
     },
 }
 
-impl InterfaceResult {
+impl Answer {
     /// A successful result
     pub fn succeed<T: Serialize>(value: T) -> Self {
         serde_json::to_string(&value).map_or_else(
@@ -58,7 +57,7 @@ impl InterfaceResult {
         )
     }
 
-    /// An "internal failure" result; see docs on [`InterfaceResult::Failure`]
+    /// An "internal failure" result; see docs on [`Answer::Failure`]
     pub fn fail_internally(message: String) -> Self {
         Self::Failure {
             is_internal: true,
@@ -67,7 +66,7 @@ impl InterfaceResult {
     }
 
     /// A failure result that isn't internal; see docs on
-    /// `InterfaceResult::Failure`
+    /// `Answer::Failure`
     pub fn fail_bad_request(errors: Vec<String>) -> Self {
         Self::Failure {
             is_internal: false,

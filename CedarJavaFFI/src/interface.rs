@@ -30,8 +30,8 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
-    interface_result::InterfaceResult,
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
+    result::Answer,
     utils::raise_npe,
 };
 
@@ -45,7 +45,7 @@ const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
 fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
     env.new_string(
-        serde_json::to_string(&InterfaceResult::fail_bad_request(vec![format!(
+        serde_json::to_string(&Answer::fail_bad_request(vec![format!(
             "Failed {} Java string",
             err
         )]))
@@ -90,7 +90,7 @@ pub fn callCedarJNI(
         Ok(r) => r.into_raw(),
         _ => env
             .new_string(
-                serde_json::to_string(&InterfaceResult::fail_internally(
+                serde_json::to_string(&Answer::fail_internally(
                     "Failed creating Java string".to_string(),
                 ))
                 .expect("could not serialise response"),
@@ -119,7 +119,7 @@ fn call_cedar(call: &str, input: &str) -> String {
             serde_json::to_string(&ires)
         }
         _ => {
-            let ires = InterfaceResult::fail_internally(format!("unsupported operation: {}", call));
+            let ires = Answer::fail_internally(format!("unsupported operation: {}", call));
             serde_json::to_string(&ires)
         }
     };
@@ -160,22 +160,18 @@ struct ParseEUIDOutput {
 
 /// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
 /// returns a serialized `ParseEUIDOutput`
-pub fn json_parse_entity_uid(input: &str) -> InterfaceResult {
+pub fn json_parse_entity_uid(input: &str) -> Answer {
     match serde_json::from_str::<ParseEUIDCall>(input) {
-        Err(e) => {
-            InterfaceResult::fail_internally(format!("error parsing call to parse EntityUID: {e:}"))
-        }
+        Err(e) => Answer::fail_internally(format!("error parsing call to parse EntityUID: {e:}")),
         Ok(euid_call) => match cedar_policy::EntityUid::from_str(euid_call.euid.as_str()) {
             Ok(euid) => match serde_json::to_string(&ParseEUIDOutput {
                 ty: euid.type_name().to_string(),
                 id: euid.id().to_string(),
             }) {
-                Ok(s) => InterfaceResult::succeed(s),
-                Err(e) => {
-                    InterfaceResult::fail_internally(format!("error serializing EntityUID: {e:}"))
-                }
+                Ok(s) => Answer::succeed(s),
+                Err(e) => Answer::fail_internally(format!("error serializing EntityUID: {e:}")),
             },
-            Err(e) => InterfaceResult::fail_internally(format!("error parsing EntityUID: {e:}")),
+            Err(e) => Answer::fail_internally(format!("error parsing EntityUID: {e:}")),
         },
     }
 }
@@ -439,6 +435,7 @@ fn get_euid_repr_internal<'a>(
 #[cfg(test)]
 mod test {
     use super::*;
+    use cool_asserts::assert_matches;
 
     #[test]
     fn parse_entityuid() {
@@ -626,19 +623,13 @@ mod test {
 
     #[track_caller]
     fn assert_success(result: String) {
-        let result: InterfaceResult = serde_json::from_str(result.as_str()).unwrap();
-        match result {
-            InterfaceResult::Success { .. } => {}
-            InterfaceResult::Failure { .. } => panic!("expected a success, not {:?}", result),
-        };
+        let result: Answer = serde_json::from_str(result.as_str()).unwrap();
+        assert_matches!(result, Answer::Success { .. });
     }
 
     #[track_caller]
     fn assert_failure(result: String) {
-        let result: InterfaceResult = serde_json::from_str(result.as_str()).unwrap();
-        match result {
-            InterfaceResult::Success { .. } => panic!("expected a failure, not {:?}", result),
-            InterfaceResult::Failure { .. } => {}
-        };
+        let result: Answer = serde_json::from_str(result.as_str()).unwrap();
+        assert_matches!(result, Answer::Failure { .. });
     }
 }
