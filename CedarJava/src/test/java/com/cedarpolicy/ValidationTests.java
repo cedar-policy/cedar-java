@@ -20,13 +20,10 @@ import static com.cedarpolicy.TestUtil.loadSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.ValidationResponse.ValidationResults;
-import com.cedarpolicy.model.exception.AuthException;
-import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
 import java.util.HashMap;
 import java.util.List;
@@ -129,16 +126,6 @@ public class ValidationTests {
     private void thenValidationFailed(ValidationResponse response) {
         final List<String> errors = assertDoesNotThrow(() -> response.errors.get());
         assertFalse(errors.isEmpty());
-    }
-
-    private AuthException whenValidatingThrows() {
-        ValidationRequest request = new ValidationRequest(schema, policies);
-        try {
-            engine.validate(request);
-        } catch (AuthException e) {
-            return e;
-        }
-        return fail("The validation succeeded, but expected it to throw.");
     }
 
     @BeforeAll

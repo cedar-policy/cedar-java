@@ -31,7 +31,7 @@ use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
-    result::Answer,
+    answer::Answer,
     utils::raise_npe,
 };
 
