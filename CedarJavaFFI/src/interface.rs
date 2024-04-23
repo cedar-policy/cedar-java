@@ -110,10 +110,10 @@ pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
 
 fn call_cedar(call: &str, input: &str) -> String {
     let result = match call {
-        V0_AUTH_OP => is_authorized_json_str(&input),
+        V0_AUTH_OP => is_authorized_json_str(input),
         #[cfg(feature = "partial-eval")]
         V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(&input),
-        V0_VALIDATE_OP => validate_json_str(&input),
+        V0_VALIDATE_OP => validate_json_str(input),
         V0_PARSE_EUID_OP => {
             let ires = json_parse_entity_uid(&input);
             serde_json::to_string(&ires)
@@ -467,7 +467,7 @@ mod test {
     fn empty_validation_call_succeeds() {
         let result = call_cedar(
             "ValidateOperation",
-            r#"{ "schema": { "json": { "": {"entityTypes": {}, "actions": {} } }, "policySet": {} } }"#,
+            r#"{ "schema": { "json": { "entityTypes": {}, "actions": {} } }, "policySet": {} }"#,
         );
         assert_success(result);
     }
