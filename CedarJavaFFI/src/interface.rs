@@ -30,8 +30,8 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
-    objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
     answer::Answer,
+    objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
     utils::raise_npe,
 };
 
