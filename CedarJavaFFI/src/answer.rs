@@ -18,8 +18,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "success")]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify))]
-#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 /// Generic Answer type designed for serialization.
 pub enum Answer {
     /// The call succeeded
