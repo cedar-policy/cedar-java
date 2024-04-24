@@ -24,7 +24,7 @@ jobs:
             zigInstall: wget https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz -O - | tar xJ && echo "zig-linux-x86_64-0.11.0" >> $GITHUB_PATH
           - os: macos-14
             name: Build on macOS
-            zigInstall: brew install zig@0.11
+            zigInstall: wget https://ziglang.org/download/0.11.0/zig-macos-x86_64-0.11.0.tar.xz -O - | tar xJ && echo "zig-macos-x86_64-0.11.0" >> $GITHUB_PATH
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     steps:
