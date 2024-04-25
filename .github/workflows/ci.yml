@@ -1,4 +1,4 @@
-name: Cargo Build & Test
+name: Build & Test
 
 on:
   pull_request:
@@ -26,5 +26,3 @@ jobs:
     with:
       cedar_policy_ref: "refs/heads/main" # use the latest commit on main
       cedar_java_ref: "${{ github.head_ref }}" # use the current PR's commit
-
-
