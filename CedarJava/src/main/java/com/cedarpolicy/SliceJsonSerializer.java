@@ -44,7 +44,7 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
                 "entities", convertEntitiesToJsonEntities(slice.getEntities()));
         jsonGenerator.writeObjectField("templates", slice.getTemplates());
         jsonGenerator.writeObjectField(
-                "template_instantiations", slice.getTemplateInstantiations());
+                "templateInstantiations", slice.getTemplateInstantiations());
         jsonGenerator.writeEndObject();
     }
 

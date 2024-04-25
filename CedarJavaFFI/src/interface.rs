@@ -491,7 +491,7 @@ mod test {
               },
               "entities": [],
               "templates": {},
-              "template_instantiations": []
+              "templateInstantiations": []
             },
             "principal": null,
             "action" : { "type" : "Action", "id" : "view" },
@@ -515,7 +515,7 @@ mod test {
               },
               "entities": [],
               "templates": {},
-              "template_instantiations": []
+              "templateInstantiations": []
             },
             "principal" : { "type" : "User", "id" : "alice" },
             "action" : { "type" : "Action", "id" : "view" },
@@ -551,10 +551,10 @@ mod test {
                      , "templates" : {
                         "ID0": "permit(principal == ?principal, action, resource);"
                       }
-                     , "template_instantiations" : [
+                     , "templateInstantiations" : [
                         {
-                            "template_id" : "ID0",
-                            "result_policy_id" : "ID0_User_alice",
+                            "templateId" : "ID0",
+                            "resultPolicyId" : "ID0_User_alice",
                             "instantiations" : [
                                 {
                                     "slot": "?principal",
@@ -587,7 +587,7 @@ mod test {
               },
               "entities": [],
               "templates": {},
-              "template_instantiations": []
+              "templateInstantiations": []
             },
             "principal" : { "type" : "User", "id" : "alice" },
             "action" : { "type" : "Action", "id" : "view" }
@@ -611,7 +611,7 @@ mod test {
               },
               "entities": [],
               "templates": {},
-              "template_instantiations": []
+              "templateInstantiations": []
             },
             "action" : { "type" : "Action", "id" : "view" },
             "resource" : { "type" : "Photo", "id" : "door" }

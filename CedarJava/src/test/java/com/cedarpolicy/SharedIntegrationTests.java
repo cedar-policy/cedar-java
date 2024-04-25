@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
@@ -415,13 +416,17 @@ public class SharedIntegrationTests {
 
         try {
             final AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
-            final var success = assertDoesNotThrow(() -> response.success.get());
-            assertEquals(request.decision, success.getDecision());
-            // convert to a HashSet to allow reordering
-            assertEquals(new HashSet<>(request.reasons), success.getReasons());
-            // The integration tests only record the id of the erroring policy,
-            // not the full error message. So only check that the list lengths match.
-            assertEquals(request.errors.size(), success.getErrors().size());
+            if (response.success.isPresent()) {
+                final var success = assertDoesNotThrow(() -> response.success.get());
+                assertEquals(request.decision, success.getDecision());
+                // convert to a HashSet to allow reordering
+                assertEquals(new HashSet<>(request.reasons), success.getReasons());
+                // The integration tests only record the id of the erroring policy,
+                // not the full error message. So only check that the list lengths match.
+                assertEquals(request.errors.size(), success.getErrors().size());
+            } else {
+                fail(String.format("Expected a success response but got %s", response));
+            }
         } catch (BadRequestException e) {
             // In the case of parse errors, errors may disagree but the expected
             // decision should be `Deny`.

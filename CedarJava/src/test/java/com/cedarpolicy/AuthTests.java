@@ -48,15 +48,16 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var slice = new BasicSlice(policies, new HashSet<>());
-        assertDoesNotThrow(
-            assumePartialEvaluation(
-                () -> {
-                    final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
-                    assertEquals(Decision.Allow, response.getDecision());
-                    assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
-                    assertTrue(response.getNontrivialResiduals().isEmpty());
-                }
-            ), "Should not throw AuthException");
+        assumePartialEvaluation(() -> {
+            try {
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
+                assertEquals(Decision.Allow, response.getDecision());
+                assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
+                assertTrue(response.getNontrivialResiduals().isEmpty());
+            } catch (Exception e) {
+                fail("error: " + e.toString());
+            }
+        });
     }
 
     @Test
@@ -68,14 +69,15 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var slice = new BasicSlice(policies, new HashSet<>());
-        assertDoesNotThrow(
-            assumePartialEvaluation(
-                 () -> {
-                     final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
-                     assertTrue(response.getDecision() == null);
-                     assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
-                }
-            ), "Should not throw AuthException");
+        assumePartialEvaluation(() -> {
+            try {
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
+                assertTrue(response.getDecision() == null);
+                assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
+            } catch (Exception e) {
+                fail("error: " + e.toString());
+            }
+        });
     }
 
     private Executable assumePartialEvaluation(Executable executable) {

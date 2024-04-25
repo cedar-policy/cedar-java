@@ -106,10 +106,10 @@ public class JSONTests {
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         n.set("context", JsonNodeFactory.instance.objectNode());
         n.set("schema", JsonNodeFactory.instance.nullNode());
-        n.set("enable_request_validation", JsonNodeFactory.instance.booleanNode(false));
         n.set("principal", buildEuidObject("Wizard", "gandalf"));
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
+        n.set("enableRequestValidation", JsonNodeFactory.instance.booleanNode(false));
         assertJSONEqual(n, q);
     }
 
@@ -120,9 +120,9 @@ public class JSONTests {
         AuthorizationRequest q = new PartialAuthorizationRequest(Optional.empty(), opens, Optional.of(moria), Optional.of(new HashMap<String, Value>()), Optional.empty(), false);
         ObjectNode n = JsonNodeFactory.instance.objectNode();
         n.set("context", JsonNodeFactory.instance.objectNode());
-        n.set("enable_request_validation", JsonNodeFactory.instance.booleanNode(false));
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
+        n.set("enableRequestValidation", JsonNodeFactory.instance.booleanNode(false));
         assertJSONEqual(n, q);
     }
 
