@@ -106,7 +106,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.resourceEUID,
                     request.context,
                     request.schema,
-                    request.enable_request_validation);
+                    request.enableRequestValidation);
             this.slice = slice;
         }
     }

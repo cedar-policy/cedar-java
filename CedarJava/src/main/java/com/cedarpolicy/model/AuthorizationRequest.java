@@ -35,7 +35,7 @@ import java.util.Optional;
  * `context` from JSON: for instance, it will allow `__entity` and `__extn`
  * escapes to be implicit, and it will error if attributes have the wrong types
  * (e.g., string instead of integer).
- * If the schema is provided and `enable_request_validation` is true, then the
+ * If the schema is provided and `enableRequestValidation` is true, then the
  * schema will also be used for request validation.
  */
 public class AuthorizationRequest {
@@ -53,7 +53,7 @@ public class AuthorizationRequest {
     public final Optional<Map<String, Value>> context;
 
     /** JSON object representing the Schema. Used for schema-based parsing of
-     * `context`, and also (if `enable_request_validation` is `true`) for
+     * `context`, and also (if `enableRequestValidation` is `true`) for
      * request validation. */
     public final Optional<Schema> schema;
 
@@ -61,7 +61,8 @@ public class AuthorizationRequest {
      * If this is `false`, the schema will only be used for schema-based parsing
      * of `context`, and not for request validation.
      * If a schema is not provided, this option has no effect. */
-    public final boolean enable_request_validation;
+    @JsonProperty("enableRequestValidation")
+    public final boolean enableRequestValidation;
 
     /**
      * Create an authorization request from the EUIDs and Context.
@@ -71,7 +72,7 @@ public class AuthorizationRequest {
      * @param resourceEUID Resource's EUID.
      * @param context Key/Value context.
      * @param schema Schema (optional).
-     * @param enable_request_validation Whether to use the schema for just
+     * @param enableRequestValidation Whether to use the schema for just
      * schema-based parsing of `context` (false) or also for request validation
      * (true). No effect if `schema` is not provided.
      */
@@ -81,7 +82,7 @@ public class AuthorizationRequest {
             Optional<EntityUID> resourceEUID,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema,
-            boolean enable_request_validation) {
+            boolean enableRequestValidation) {
         this.principalEUID = principalEUID;
         this.actionEUID = actionEUID;
         this.resourceEUID = resourceEUID;
@@ -91,7 +92,7 @@ public class AuthorizationRequest {
             this.context = Optional.of(new HashMap<>(context.get()));
         }
         this.schema = schema;
-        this.enable_request_validation = enable_request_validation;
+        this.enableRequestValidation = enableRequestValidation;
     }
 
     /**
@@ -136,18 +137,18 @@ public class AuthorizationRequest {
      * @param resource
      * @param context
      * @param schema
-     * @param enable_request_validation Whether to use the schema for just
+     * @param enableRequestValidation Whether to use the schema for just
      * schema-based parsing of `context` (false) or also for request validation
      * (true). No effect if `schema` is not provided.
      */
-    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enable_request_validation) {
+    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enableRequestValidation) {
         this(
             principal.map(e -> e.getEUID()),
             action.getEUID(),
             resource.map(e -> e.getEUID()),
             context,
             schema,
-            enable_request_validation
+            enableRequestValidation
         );
     }
 
@@ -155,6 +156,6 @@ public class AuthorizationRequest {
     /** Readable string representation. */
     @Override
     public String toString() {
-        return "Request(" + principalEUID + ",\t" + actionEUID + ",\t" + resourceEUID + ")";
+        return "Request(" + principalEUID + ", " + actionEUID + ", " + resourceEUID + ", " + context + ")";
     }
 }

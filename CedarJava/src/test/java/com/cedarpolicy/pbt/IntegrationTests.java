@@ -20,6 +20,7 @@ import static com.cedarpolicy.TestUtil.loadSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
@@ -68,24 +69,36 @@ public class IntegrationTests {
     private void assertAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
             final AuthorizationResponse response = engine.isAuthorized(request, slice);
-            final var success = response.success.get();
-            assertTrue(success.isAllowed());
+            if (response.success.isPresent()) {
+                final var success = assertDoesNotThrow(() -> response.success.get());
+                assertTrue(success.isAllowed());
+            } else {
+                fail(String.format("Expected a success response but got %s", response.toString()));
+            }
         });
     }
 
     private void assertNotAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
             final AuthorizationResponse response = engine.isAuthorized(request, slice);
-            final var success = response.success.get();
-            assertFalse(success.isAllowed());
+            if (response.success.isPresent()) {
+                final var success = assertDoesNotThrow(() -> response.success.get());
+                assertFalse(success.isAllowed());
+            } else {
+                fail(String.format("Expected a success response but got %s", response.toString()));
+            }
         });
     }
 
     private void assertFailure(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
             final AuthorizationResponse response = engine.isAuthorized(request, slice);
-            final var errors = response.errors.get();
-            assertTrue(errors.size() > 0);
+            if (response.success.isPresent()) {
+                fail(String.format("Expected a failure, but got this success: %s", response.toString()));
+            } else {
+                final var errors = assertDoesNotThrow(() -> response.errors.get());
+                assertTrue(errors.size() > 0);
+            }
         });
     }
 

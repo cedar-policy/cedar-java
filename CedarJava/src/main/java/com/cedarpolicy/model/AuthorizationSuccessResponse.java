@@ -136,4 +136,9 @@ public final class AuthorizationSuccessResponse {
     public boolean isAllowed() {
         return this.decision == Decision.Allow;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s, reason %s, errors %s", decision, diagnostics.reason, diagnostics.errors);
+    }
 }

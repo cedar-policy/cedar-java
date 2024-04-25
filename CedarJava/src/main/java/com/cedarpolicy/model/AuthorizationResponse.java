@@ -53,4 +53,14 @@ public final class AuthorizationResponse {
             this.warnings = ImmutableList.copyOf(warnings);
         }
     }
+
+    @Override
+    public String toString() {
+        final String warnings_str = warnings.isEmpty() ? "" : "\nwith warnings: " + warnings.toString();
+        if (success.isPresent()) {
+            return "SUCCESS: " + success.get().toString() + warnings_str;
+        } else {
+            return "FAILURE: " + errors.get().toString() + warnings_str;
+        }
+    }
 }

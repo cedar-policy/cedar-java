@@ -34,10 +34,10 @@ public class BasicSlice implements Slice {
 
     private final Set<Entity> entities;
 
-    @JsonProperty("template_policies")
+    @JsonProperty("templatePolicies")
     private final Map<String, String> templatePolicies;
 
-    @JsonProperty("template_instantiations")
+    @JsonProperty("templateInstantiations")
     private final List<TemplateInstantiation> templateInstantiations;
 
     /**
@@ -53,7 +53,7 @@ public class BasicSlice implements Slice {
             Set<Policy> policies,
             Set<Entity> entities,
             Set<Policy> templates,
-            List<TemplateInstantiation> templateInstantiations) {   
+            List<TemplateInstantiation> templateInstantiations) {
         // Copy of previous constructor. We can't call the previous constructor because fields are
         // final
         this.policies = new HashMap<>();

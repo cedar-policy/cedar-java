@@ -24,7 +24,7 @@ import java.util.Optional;
  * `context` from JSON: for instance, it will allow `__entity` and `__extn`
  * escapes to be implicit, and it will error if attributes have the wrong types
  * (e.g., string instead of integer).
- * If the schema is provided and `enable_request_validation` is true, then the
+ * If the schema is provided and `enableRequestValidation` is true, then the
  * schema will also be used for request validation.
  */
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)

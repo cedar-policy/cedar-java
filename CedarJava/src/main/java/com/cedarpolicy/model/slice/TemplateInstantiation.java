@@ -24,10 +24,10 @@ import com.google.common.collect.ImmutableList;
 /** Template instantiation. */
 public class TemplateInstantiation {
 
-    @JsonProperty("template_id")
+    @JsonProperty("templateId")
     private final String templateId;
 
-    @JsonProperty("result_policy_id")
+    @JsonProperty("resultPolicyId")
     private final String resultPolicyId;
 
     private final List<Instantiation> instantiations;
@@ -41,8 +41,8 @@ public class TemplateInstantiation {
      */
     @JsonCreator
     public TemplateInstantiation(
-            @JsonProperty("template_id") String templateId,
-            @JsonProperty("result_policy_id") String resultPolicyId,
+            @JsonProperty("templateId") String templateId,
+            @JsonProperty("resultPolicyId") String resultPolicyId,
             @JsonProperty("instantiations") List<Instantiation> instantiations) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
