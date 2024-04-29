@@ -9,7 +9,7 @@ For more information about Cedar, please see: https://www.cedarpolicy.com/
 - [JDK 17](https://openjdk.org/projects/jdk/17/) or later
 - [Rust](https://rustup.rs/) with `rustup`
 - [Zig](https://ziglang.org/learn/getting-started/) for cross compiling with [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)
-    We currently depend on Zig 11.
+    We currently depend on Zig 0.11.
 
 ## Building
 
