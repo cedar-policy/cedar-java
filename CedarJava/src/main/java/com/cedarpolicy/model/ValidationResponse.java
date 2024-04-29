@@ -113,16 +113,21 @@ public final class ValidationResponse {
     public static final class ValidationError {
         private final String policyId;
         private final String error;
+        private final SourceLocation sourceLocation;
 
         /**
          * Create error from JSON.
          *
          * @param policyId Policy ID to which error applies.
+         * @param sourceLocation location error originated from.
          * @param error The Error.
          */
         @JsonCreator
-        public ValidationError(@JsonProperty("policyId") String policyId, @JsonProperty("error") String error) {
+        public ValidationError(@JsonProperty("policyId") String policyId,
+                @JsonProperty("sourceLocation") SourceLocation sourceLocation,
+                @JsonProperty("error") String error) {
             this.policyId = policyId;
+            this.sourceLocation = sourceLocation;
             this.error = error;
         }
 
@@ -170,17 +175,22 @@ public final class ValidationResponse {
     /** Warning for a specific policy. */
     public static final class ValidationWarning {
         private final String policyId;
+        private final Optional<SourceLocation> sourceLocation;
         private final String warning;
 
         /**
          * Create warning from JSON.
          *
          * @param policyId Policy ID to which warning applies.
+         * @param sourceLocation (optional) the location the warning applies to
          * @param warning The Warning.
          */
         @JsonCreator
-        public ValidationWarning(@JsonProperty("policyId") String policyId, @JsonProperty("warning") String warning) {
+        public ValidationWarning(@JsonProperty("policyId") String policyId,
+                @JsonProperty("sourceLocation") Optional<SourceLocation> sourceLocation,
+                @JsonProperty("warning") String warning) {
             this.policyId = policyId;
+            this.sourceLocation = sourceLocation;
             this.warning = warning;
         }
 
