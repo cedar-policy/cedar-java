@@ -119,7 +119,7 @@ public final class ValidationResponse {
          * Create error from JSON.
          *
          * @param policyId Policy ID to which error applies.
-         * @param sourceLocation location error orginiated from.
+         * @param sourceLocation location error originated from.
          * @param error The Error.
          */
         @JsonCreator
