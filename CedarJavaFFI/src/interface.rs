@@ -15,7 +15,7 @@
  */
 
 #[cfg(feature = "partial-eval")]
-use cedar_policy::ffi::is_authorized_partial_json_str;
+use cedar_policy::ffi::{is_authorized_partial_json_str, PartialAuthorizationAnswer};
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
@@ -435,6 +435,7 @@ fn get_euid_repr_internal<'a>(
 #[cfg(test)]
 mod test {
     use super::*;
+    use cedar_policy::ffi::{AuthorizationAnswer, ValidationAnswer};
     use cool_asserts::assert_matches;
 
     #[test]
@@ -460,16 +461,25 @@ mod test {
 }
             "#,
         );
-        assert_success(result);
+        assert_authorization_success(result);
+    }
+
+    #[test]
+    fn empty_validation_call_json_schema_succeeds() {
+        let result = call_cedar(
+            "ValidateOperation",
+            r#"{ "schema": { "json": {} }, "policySet": {} }"#,
+        );
+        assert_validation_success(result);
     }
 
     #[test]
     fn empty_validation_call_succeeds() {
         let result = call_cedar(
             "ValidateOperation",
-            r#"{ "schema": { "json": { "entityTypes": {}, "actions": {} } }, "policySet": {} }"#,
+            r#"{ "schema": { "human": "" }, "policySet": {} }"#,
         );
-        assert_success(result);
+        assert_validation_success(result);
     }
 
     #[test]
@@ -499,7 +509,7 @@ mod test {
         }
         "#,
         );
-        assert_success(result);
+        assert_authorization_success(result);
     }
 
     #[test]
@@ -523,7 +533,7 @@ mod test {
         }
         "#,
         );
-        assert_success(result);
+        assert_authorization_success(result);
     }
 
     #[test]
@@ -570,7 +580,7 @@ mod test {
 	          }
 	         "#,
         );
-        assert_success(result);
+        assert_authorization_success(result);
     }
 
     #[cfg(feature = "partial-eval")]
@@ -594,7 +604,7 @@ mod test {
         }
         "#,
         );
-        assert_success(result);
+        assert_partial_authorization_success(result);
     }
 
     #[cfg(feature = "partial-eval")]
@@ -618,7 +628,7 @@ mod test {
         }
         "#,
         );
-        assert_success(result);
+        assert_partial_authorization_success(result);
     }
 
     #[track_caller]
@@ -631,5 +641,24 @@ mod test {
     fn assert_failure(result: String) {
         let result: Answer = serde_json::from_str(result.as_str()).unwrap();
         assert_matches!(result, Answer::Failure { .. });
+    }
+
+    #[track_caller]
+    fn assert_authorization_success(result: String) {
+        let result: AuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
+        assert_matches!(result, AuthorizationAnswer::Success { .. });
+    }
+
+    #[cfg(feature = "partial-eval")]
+    #[track_caller]
+    fn assert_partial_authorization_success(result: String) {
+        let result: PartialAuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
+        assert_matches!(result, PartialAuthorizationAnswer::Residuals { .. });
+    }
+
+    #[track_caller]
+    fn assert_validation_success(result: String) {
+        let result: ValidationAnswer = serde_json::from_str(result.as_str()).unwrap();
+        assert_matches!(result, ValidationAnswer::Success { .. });
     }
 }
