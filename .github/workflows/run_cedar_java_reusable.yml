@@ -46,6 +46,9 @@ jobs:
       - name: Check FFI Formatting
         working-directory: CedarJavaFFI
         run: cargo fmt --all --check
+      - name: Run FFI tests
+        working-directory: CedarJavaFFI
+        run: cargo test --all-features
       - name: Install Zig
         run: ${{ matrix.zigInstall }}
       - name: Setup Java JDK
