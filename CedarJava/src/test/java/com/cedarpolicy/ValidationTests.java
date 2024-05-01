@@ -18,11 +18,14 @@ package com.cedarpolicy;
 
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.cedarpolicy.model.DetailedError;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.ValidationResponse.SuccessOrFailure;
 import com.cedarpolicy.model.ValidationResponse.ValidationResults;
 import com.cedarpolicy.model.schema.Schema;
 import java.util.HashMap;
@@ -100,12 +103,13 @@ public class ValidationTests {
     }
 
     private void thenIsValid(ValidationResponse response) {
+        assertEquals(response.type, SuccessOrFailure.Success);
         final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
         assertTrue(
-            results.validation_errors.isEmpty(),
+            results.validationErrors.isEmpty(),
                 () -> {
                     String errors =
-                        response.results.get().validation_errors.stream()
+                        response.results.get().validationErrors.stream()
                             .map(note ->
                                 String.format("in policy %s: %s", note.getPolicyId(), note.getError()))
                                     .collect(Collectors.joining("\n"));
@@ -114,9 +118,10 @@ public class ValidationTests {
     }
 
     private void thenIsNotValid(ValidationResponse response) {
+        assertEquals(response.type, SuccessOrFailure.Success);
         final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
         assertFalse(
-            results.validation_errors.isEmpty(),
+            results.validationErrors.isEmpty(),
             () -> {
                 return "Expected validation errors but did not find any";
             }
@@ -124,7 +129,8 @@ public class ValidationTests {
     }
 
     private void thenValidationFailed(ValidationResponse response) {
-        final List<String> errors = assertDoesNotThrow(() -> response.errors.get());
+        assertEquals(response.type, SuccessOrFailure.Failure);
+        final List<DetailedError> errors = assertDoesNotThrow(() -> response.errors.get());
         assertFalse(errors.isEmpty());
     }
 

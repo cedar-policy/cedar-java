@@ -6,6 +6,7 @@ import java.util.HashSet;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.AuthorizationResponse.SuccessOrFailure;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.slice.BasicSlice;
@@ -23,6 +24,7 @@ public class AuthTests {
     private void assertAllowed(AuthorizationRequest q, Slice slice) {
         assertDoesNotThrow(() -> {
             final var response = new BasicAuthorizationEngine().isAuthorized(q, slice);
+            assertEquals(response.type, SuccessOrFailure.Success);
             final var success = response.success.get();
             assertTrue(success.isAllowed());
         });

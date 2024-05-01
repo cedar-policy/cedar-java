@@ -386,6 +386,7 @@ public class SharedIntegrationTests {
         ValidationRequest validationQuery = new ValidationRequest(schema, policies);
         try {
             ValidationResponse result = auth.validate(validationQuery);
+            assertEquals(result.type, ValidationResponse.SuccessOrFailure.Success);
             if (shouldValidate) {
                 assertTrue(result.validationPassed());
             }
@@ -416,7 +417,7 @@ public class SharedIntegrationTests {
 
         try {
             final AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
-            if (response.success.isPresent()) {
+            if (response.type == AuthorizationResponse.SuccessOrFailure.Success) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertEquals(request.decision, success.getDecision());
                 // convert to a HashSet to allow reordering

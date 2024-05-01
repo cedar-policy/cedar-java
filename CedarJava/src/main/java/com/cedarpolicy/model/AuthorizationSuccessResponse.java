@@ -47,7 +47,7 @@ public final class AuthorizationSuccessResponse {
         private ImmutableSet<String> reason;
 
         /** Set of errors and warnings returned by Cedar. */
-        private ImmutableList<String> errors;
+        private ImmutableList<AuthorizationError> errors;
 
         /**
          * Read the reasons and errors from a JSON object.
@@ -58,7 +58,7 @@ public final class AuthorizationSuccessResponse {
         @SuppressFBWarnings
         public Diagnostics(
                 @JsonProperty("reason") Set<String> reason,
-                @JsonProperty("errors") List<String> errors) {
+                @JsonProperty("errors") List<AuthorizationError> errors) {
             this.errors = ImmutableList.copyOf(errors);
             this.reason = ImmutableSet.copyOf(reason);
         }
@@ -78,7 +78,7 @@ public final class AuthorizationSuccessResponse {
          *
          * @return list with errors that happened for a given Request
          */
-        public List<String> getErrors() {
+        public List<AuthorizationError> getErrors() {
             return this.errors;
         }
     }
@@ -93,6 +93,29 @@ public final class AuthorizationSuccessResponse {
     ) {
         this.decision = decision;
         this.diagnostics = diagnostics;
+    }
+
+    /** Error (or warning) which occurred in a particular policy during authorization */
+    public static final class AuthorizationError {
+        /** Id of the policy where the error (or warning) occurred */
+        @JsonProperty("policyId")
+        public final String policyId;
+        /**
+         * Error (or warning).
+         * You can look at the `severity` field to see whether it is
+         * actually an error or a warning.
+         */
+        @JsonProperty("error")
+        public final DetailedError error;
+
+        @JsonCreator
+        public AuthorizationError(
+            @JsonProperty("policyId") String policyId,
+            @JsonProperty("error") DetailedError error
+        ) {
+            this.policyId = policyId;
+            this.error = error;
+        }
     }
 
     /** Result of request evaluation. */
@@ -124,7 +147,7 @@ public final class AuthorizationSuccessResponse {
      *
      * @return list with errors that happened for a given Request
      */
-    public List<String> getErrors() {
+    public List<AuthorizationError> getErrors() {
         return diagnostics.errors;
     }
 
