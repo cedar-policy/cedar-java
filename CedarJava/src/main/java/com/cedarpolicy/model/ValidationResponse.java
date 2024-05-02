@@ -50,16 +50,16 @@ public final class ValidationResponse {
 
     public static final class ValidationSuccessResponse {
         /** Validation errors associated with particular policies. */
-        @JsonProperty("validation_errors")
+        @JsonProperty("validationErrors")
         public final ImmutableList<ValidationError> validationErrors;
         /** Validation warnings associated with particular policies. */
-        @JsonProperty("validation_warnings")
+        @JsonProperty("validationWarnings")
         public final ImmutableList<ValidationError> validationWarnings;
 
         @JsonCreator
         public ValidationSuccessResponse(
-            @JsonProperty("validation_errors") Optional<List<ValidationError>> validationErrors,
-            @JsonProperty("validation_warnings") Optional<List<ValidationError>> validationWarnings) {
+            @JsonProperty("validationErrors") Optional<List<ValidationError>> validationErrors,
+            @JsonProperty("validationWarnings") Optional<List<ValidationError>> validationWarnings) {
             // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible; see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
             if (validationErrors.isPresent()) {
                 this.validationErrors = ImmutableList.copyOf(validationErrors.get());
@@ -85,10 +85,10 @@ public final class ValidationResponse {
     @JsonCreator
     public ValidationResponse(
         @JsonProperty("type") SuccessOrFailure type,
-        @JsonProperty("validation_errors") Optional<List<ValidationError>> validationErrors,
-        @JsonProperty("validation_warnings") Optional<List<ValidationError>> validationWarnings,
+        @JsonProperty("validationErrors") Optional<List<ValidationError>> validationErrors,
+        @JsonProperty("validationWarnings") Optional<List<ValidationError>> validationWarnings,
         @JsonProperty("errors") Optional<List<DetailedError>> errors,
-        @JsonProperty("warnings") @JsonAlias("other_warnings") Optional<List<DetailedError>> warnings) {
+        @JsonProperty("warnings") @JsonAlias("otherWarnings") Optional<List<DetailedError>> warnings) {
         this.type = type;
         this.errors = errors.map((list) -> ImmutableList.copyOf(list));
         if (type == SuccessOrFailure.Success) {
