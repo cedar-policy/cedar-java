@@ -1,0 +1,93 @@
+package com.cedarpolicy.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Optional;
+
+public class DetailedError {
+    /** Main error message */
+    @JsonProperty("message")
+    public final String message;
+    /** Help message, providing additional information about the error or help resolving it */
+    @JsonProperty("help")
+    public final Optional<String> help;
+    /** Error code */
+    @JsonProperty("code")
+    public final Optional<String> code;
+    /** URL for more information about the error */
+    @JsonProperty("url")
+    public final Optional<String> url;
+    /** Severity */
+    @JsonProperty("severity")
+    public final Optional<Severity> severity;
+    /** Source labels (ranges) */
+    @JsonProperty("sourceLocations")
+    public final ImmutableList<SourceLabel> sourceLocations;
+    /** Related errors */
+    @JsonProperty("related")
+    public final ImmutableList<DetailedError> related;
+
+    @JsonCreator
+    public DetailedError(
+        @JsonProperty("message") String message,
+        @JsonProperty("help") Optional<String> help,
+        @JsonProperty("code") Optional<String> code,
+        @JsonProperty("url") Optional<String> url,
+        @JsonProperty("severity") Optional<Severity> severity,
+        @JsonProperty("sourceLocations") Optional<List<SourceLabel>> sourceLocations,
+        @JsonProperty("related") Optional<List<DetailedError>> related
+    ) {
+        this.message = message;
+        this.help = help;
+        this.code = code;
+        this.url = url;
+        this.severity = severity;
+        if (sourceLocations.isPresent()) {
+            this.sourceLocations = ImmutableList.copyOf(sourceLocations.get());
+        } else {
+            this.sourceLocations = ImmutableList.of(); // empty
+        }
+        if (related.isPresent()) {
+            this.related = ImmutableList.copyOf(related.get());
+        } else {
+            this.related = ImmutableList.of(); // empty
+        }
+    }
+
+    public enum Severity {
+        /** Advice (the lowest severity) */
+        @JsonProperty("advice")
+        Advice,
+        /** Warning */
+        @JsonProperty("warning")
+        Warning,
+        /** Error (the highest severity) */
+        @JsonProperty("error")
+        Error,
+    }
+
+    public static final class SourceLabel {
+        /** Text of the label (if any) */
+        @JsonProperty("label")
+        public final Optional<String> label;
+        /** Start of the source location (in bytes) */
+        @JsonProperty("start")
+        public final int start;
+        /** End of the source location (in bytes) */
+        @JsonProperty("end")
+        public final int end;
+
+        @JsonCreator
+        public SourceLabel(
+            @JsonProperty("label") Optional<String> label,
+            @JsonProperty("start") int start,
+            @JsonProperty("end") int end
+        ) {
+            this.label = label;
+            this.start = start;
+            this.end = end;
+        }
+    }
+}

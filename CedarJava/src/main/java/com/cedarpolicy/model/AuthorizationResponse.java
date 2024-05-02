@@ -26,25 +26,31 @@ import java.util.Optional;
  * The result of processing an AuthorizationRequest.
  */
 public final class AuthorizationResponse {
-    /** Exactly one of `success` or `errors` should be None. */
+    /** Is this a success or a failure response */
+    @JsonProperty("type")
+    public final SuccessOrFailure type;
+    /** This will be present if and only if `type` is `Success`. */
     @JsonProperty("response")
     public final Optional<AuthorizationSuccessResponse> success;
-    /** Exactly one of `success` or `errors` should be None. */
+    /** This will be present if and only if `type` is `Failure`. */
     @JsonProperty("errors")
-    public final Optional<ImmutableList<String>> errors;
-    /** Warnings can be produced regardless of whether we have a `success` or `errors`. */
+    public final Optional<ImmutableList<DetailedError>> errors;
+    /** Warnings can be produced regardless of whether we have a `Success` or `Failure`. */
     @JsonProperty("warnings")
     public final ImmutableList<String> warnings;
 
     /**
-     * Exactly one of `success` or `errors` should be None.
+     * If `type` is `Success`, `success` should be present and `errors` empty.
+     * If `type` is `Failure`, `errors` should be present and `success` empty.
      */
     @JsonCreator
     public AuthorizationResponse(
+        @JsonProperty("type") SuccessOrFailure type,
         @JsonProperty("response") Optional<AuthorizationSuccessResponse> success,
-        @JsonProperty("errors") Optional<ArrayList<String>> errors,
+        @JsonProperty("errors") Optional<ArrayList<DetailedError>> errors,
         @JsonProperty("warnings") ArrayList<String> warnings
     ) {
+        this.type = type;
         this.success = success;
         this.errors = errors.map((list) -> ImmutableList.copyOf(list));
         if (warnings == null) {
@@ -57,10 +63,17 @@ public final class AuthorizationResponse {
     @Override
     public String toString() {
         final String warnings_str = warnings.isEmpty() ? "" : "\nwith warnings: " + warnings.toString();
-        if (success.isPresent()) {
+        if (type == SuccessOrFailure.Success) {
             return "SUCCESS: " + success.get().toString() + warnings_str;
         } else {
             return "FAILURE: " + errors.get().toString() + warnings_str;
         }
+    }
+
+    public enum SuccessOrFailure {
+        @JsonProperty("success")
+        Success,
+        @JsonProperty("failure")
+        Failure,
     }
 }
