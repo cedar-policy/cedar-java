@@ -26,7 +26,7 @@ import com.cedarpolicy.model.DetailedError;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.ValidationResponse.SuccessOrFailure;
-import com.cedarpolicy.model.ValidationResponse.ValidationResults;
+import com.cedarpolicy.model.ValidationResponse.ValidationSuccessResponse;
 import com.cedarpolicy.model.schema.Schema;
 import java.util.HashMap;
 import java.util.List;
@@ -104,12 +104,12 @@ public class ValidationTests {
 
     private void thenIsValid(ValidationResponse response) {
         assertEquals(response.type, SuccessOrFailure.Success);
-        final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
+        final ValidationSuccessResponse success = assertDoesNotThrow(() -> response.success.get());
         assertTrue(
-            results.validationErrors.isEmpty(),
+            success.validationErrors.isEmpty(),
                 () -> {
                     String errors =
-                        response.results.get().validationErrors.stream()
+                        response.success.get().validationErrors.stream()
                             .map(note ->
                                 String.format("in policy %s: %s", note.getPolicyId(), note.getError()))
                                     .collect(Collectors.joining("\n"));
@@ -119,9 +119,9 @@ public class ValidationTests {
 
     private void thenIsNotValid(ValidationResponse response) {
         assertEquals(response.type, SuccessOrFailure.Success);
-        final ValidationResults results = assertDoesNotThrow(() -> response.results.get());
+        final ValidationSuccessResponse success = assertDoesNotThrow(() -> response.success.get());
         assertFalse(
-            results.validationErrors.isEmpty(),
+            success.validationErrors.isEmpty(),
             () -> {
                 return "Expected validation errors but did not find any";
             }

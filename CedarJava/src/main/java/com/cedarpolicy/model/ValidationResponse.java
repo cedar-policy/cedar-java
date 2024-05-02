@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,24 +31,24 @@ public final class ValidationResponse {
     @JsonProperty("type")
     public final SuccessOrFailure type;
     /** This will be present if and only if `type` is `Success`. */
-    public final Optional<ValidationResults> results;
+    public final Optional<ValidationSuccessResponse> success;
     /**
      * This will be present if and only if `type` is `Failure`.
      *
      * These errors are not validation errors (those would be
-     * reported in `results`), but rather higher-level errors, like
+     * reported in `success`), but rather higher-level errors, like
      * a failure to parse or to call the validator.
      */
     public final Optional<ImmutableList<DetailedError>> errors;
     /**
      * Other warnings not associated with particular policies.
      * For instance, warnings about your schema itself.
-     * These warnings can be produced regardless of whether we have `results` or
-     * `errors`.
+     * These warnings can be produced regardless of whether `type` is
+     * `Success` or `Failure`.
     */
     public final ImmutableList<DetailedError> warnings;
 
-    public static final class ValidationResults {
+    public static final class ValidationSuccessResponse {
         /** Validation errors associated with particular policies. */
         @JsonProperty("validation_errors")
         public final ImmutableList<ValidationError> validationErrors;
@@ -58,7 +57,7 @@ public final class ValidationResponse {
         public final ImmutableList<ValidationError> validationWarnings;
 
         @JsonCreator
-        public ValidationResults(
+        public ValidationSuccessResponse(
             @JsonProperty("validation_errors") Optional<List<ValidationError>> validationErrors,
             @JsonProperty("validation_warnings") Optional<List<ValidationError>> validationWarnings) {
             // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible; see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
@@ -93,9 +92,9 @@ public final class ValidationResponse {
         this.type = type;
         this.errors = errors.map((list) -> ImmutableList.copyOf(list));
         if (type == SuccessOrFailure.Success) {
-            this.results = Optional.of(new ValidationResults(validationErrors, validationWarnings));
+            this.success = Optional.of(new ValidationSuccessResponse(validationErrors, validationWarnings));
         } else {
-            this.results = Optional.empty();
+            this.success = Optional.empty();
         }
         if (warnings.isPresent()) {
             this.warnings = ImmutableList.copyOf(warnings.get());
@@ -117,8 +116,8 @@ public final class ValidationResponse {
      * prior to even calling the validator.
      */
     public boolean validationPassed() {
-        if (results.isPresent()) {
-            return results.get().validationErrors.isEmpty();
+        if (success.isPresent()) {
+            return success.get().validationErrors.isEmpty();
         } else {
             // higher-level errors are present
             return false;
@@ -127,8 +126,8 @@ public final class ValidationResponse {
 
     /** Readable string representation. */
     public String toString() {
-        if (results.isPresent()) {
-            return "ValidationResponse(validationErrors = " + results.get().validationErrors + ", validationWarnings = " + results.get().validationWarnings + ")";
+        if (success.isPresent()) {
+            return "ValidationResponse(validationErrors = " + success.get().validationErrors + ", validationWarnings = " + success.get().validationWarnings + ")";
         } else {
             return "ValidationResponse(errors = " + errors.get() + ")";
         }
