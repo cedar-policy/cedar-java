@@ -57,6 +57,8 @@ jobs:
           java-version: '17'
           distribution: 'corretto'
           cache: 'gradle'
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Build FFI and Java Libraries
         working-directory: CedarJava
         run: ./gradlew build
