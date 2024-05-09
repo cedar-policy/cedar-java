@@ -102,7 +102,7 @@ pub fn callCedarJNI(
 /// JNI entry point to get the Cedar version
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
-    env.new_string("3.1")
+    env.new_string("4.0")
         .expect("error creating Java string")
         .into_raw()
 }
@@ -142,7 +142,7 @@ fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
     JValueOwned::Object(JObject::null()).as_jni()
 }
 
-/// public string-based JSON interface to parse a schema
+/// Public string-based JSON interface to parse a schema in Cedar's JSON format
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
 pub fn parseJsonSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
     match parse_json_schema_internal(&mut env, schema_jstr) {
@@ -151,7 +151,7 @@ pub fn parseJsonSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JStri
     }
 }
 
-/// public string-based JSON interface to parse a schema
+/// public string-based JSON interface to parse a schema in Cedar's human-readable format
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
 pub fn parseHumanSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
     match parse_human_schema_internal(&mut env, schema_jstr) {
@@ -171,7 +171,7 @@ fn parse_json_schema_internal<'a>(
         let schema_string = String::from(schema_jstring);
         match Schema::from_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
-            Ok(_) => Ok(JValueGen::Object(env.new_string("Success")?.into())),
+            Ok(_) => Ok(JValueGen::Object(env.new_string(&schema_string)?.into())),
         }
     }
 }
@@ -187,7 +187,7 @@ fn parse_human_schema_internal<'a>(
         let schema_string = String::from(schema_jstring);
         match Schema::from_str_natural(&schema_string) {
             Err(e) => Err(Box::new(e)),
-            Ok(_) => Ok(JValueGen::Object(env.new_string("Success")?.into())),
+            Ok(_) => Ok(JValueGen::Object(env.new_string(&schema_string)?.into())),
         }
     }
 }

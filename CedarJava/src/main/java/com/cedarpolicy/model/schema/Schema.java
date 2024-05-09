@@ -130,15 +130,15 @@ public final class Schema {
     /** Specifies the schema format used. */
     public enum JsonOrHuman {
         /**
-         * Cedar schema format. See <a href=
-         * "https://docs.cedarpolicy.com/schema/human-readable-schema.html">https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
-         */
-        Json,
-        /**
          * Cedar JSON schema format. See <a href=
          * "https://docs.cedarpolicy.com/schema/json-schema.html">https://docs.cedarpolicy.com/schema/json-schema.html</a>
          */
-        Human,
+        Json,
+        /**
+         * Cedar schema format. See <a href=
+         * "https://docs.cedarpolicy.com/schema/human-readable-schema.html">https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
+         */
+        Human
     }
 
     private static native String parseJsonSchemaJni(String schemaJson) throws InternalException, NullPointerException;
