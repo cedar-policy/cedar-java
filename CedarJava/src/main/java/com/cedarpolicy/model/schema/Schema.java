@@ -118,11 +118,11 @@ public final class Schema {
      */
     public static Schema parse(JsonOrHuman type, String str) throws InternalException, NullPointerException {
         if (type == JsonOrHuman.Json) {
-            var schemaJson = parseJsonSchemaJni(str);
-            return new Schema(JsonOrHuman.Json, Optional.of(schemaJson), Optional.empty());
+            parseJsonSchemaJni(str);
+            return new Schema(JsonOrHuman.Json, Optional.of(str), Optional.empty());
         } else {
-            var schemaText = parseHumanSchemaJni(str);
-            return new Schema(JsonOrHuman.Human, Optional.empty(), Optional.of(schemaText));
+            parseHumanSchemaJni(str);
+            return new Schema(JsonOrHuman.Human, Optional.empty(), Optional.of(str));
         }
 
     }

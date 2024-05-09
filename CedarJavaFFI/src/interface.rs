@@ -171,7 +171,7 @@ fn parse_json_schema_internal<'a>(
         let schema_string = String::from(schema_jstring);
         match Schema::from_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
-            Ok(_) => Ok(JValueGen::Object(env.new_string(&schema_string)?.into())),
+            Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
     }
 }
@@ -187,7 +187,7 @@ fn parse_human_schema_internal<'a>(
         let schema_string = String::from(schema_jstring);
         match Schema::from_str_natural(&schema_string) {
             Err(e) => Err(Box::new(e)),
-            Ok(_) => Ok(JValueGen::Object(env.new_string(&schema_string)?.into())),
+            Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
     }
 }
