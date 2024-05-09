@@ -4,14 +4,13 @@ name = "cedar-java-ffi"
 edition = "2021"
 
 
-version = "3.1.0"
+version = "3.2.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 thiserror = "1.0"
 itertools = "0.12"
-cedar-policy = "3.1"
 
 # JNI Support
 jni = "0.21.0"
@@ -23,3 +22,6 @@ partial-eval = ["cedar-policy/partial-eval"]
 # Dynamic linked library, used for linked to java process at runtime.
 [lib]
 crate_type = ["cdylib"]
+
+[dependencies.cedar-policy]
+version = "3.2"
