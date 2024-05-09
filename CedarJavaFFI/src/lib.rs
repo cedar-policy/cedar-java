@@ -19,6 +19,7 @@ mod answer;
 mod interface;
 mod jlist;
 mod objects;
+mod tests;
 mod utils;
 
 pub use interface::*;

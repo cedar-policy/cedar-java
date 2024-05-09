@@ -47,14 +47,6 @@ pub enum Answer {
 }
 
 impl Answer {
-    /// A successful result
-    pub fn succeed<T: Serialize>(value: T) -> Self {
-        serde_json::to_string(&value).map_or_else(
-            |e| Self::fail_internally(format!("error serializing result: {e:}")),
-            |result| Self::Success { result },
-        )
-    }
-
     /// An "internal failure" result; see docs on [`Answer::Failure`]
     pub fn fail_internally(message: String) -> Self {
         Self::Failure {
