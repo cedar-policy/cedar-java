@@ -15,7 +15,7 @@
  */
 
 #[cfg(feature = "partial-eval")]
-use cedar_policy::ffi::{is_authorized_partial_json_str, PartialAuthorizationAnswer};
+use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
@@ -41,7 +41,6 @@ const V0_AUTH_OP: &str = "AuthorizationOperation";
 #[cfg(feature = "partial-eval")]
 const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
-const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
 fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
     env.new_string(
@@ -59,7 +58,7 @@ fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
     call_cedar(&call_str, &input_str)
 }
 
-/// The main JNI entry point
+/// JNI entry point for authorization and validation requests
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn callCedarJNI(
     mut env: JNIEnv<'_>,
@@ -100,24 +99,20 @@ pub fn callCedarJNI(
     }
 }
 
-/// The main JNI entry point
+/// JNI entry point to get the Cedar version
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn getCedarJNIVersion(env: JNIEnv<'_>) -> jstring {
-    env.new_string("3.0")
+    env.new_string("4.0")
         .expect("error creating Java string")
         .into_raw()
 }
 
-fn call_cedar(call: &str, input: &str) -> String {
+pub(crate) fn call_cedar(call: &str, input: &str) -> String {
     let result = match call {
         V0_AUTH_OP => is_authorized_json_str(input),
         #[cfg(feature = "partial-eval")]
-        V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(&input),
+        V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(input),
         V0_VALIDATE_OP => validate_json_str(input),
-        V0_PARSE_EUID_OP => {
-            let ires = json_parse_entity_uid(&input);
-            serde_json::to_string(&ires)
-        }
         _ => {
             let ires = Answer::fail_internally(format!("unsupported operation: {}", call));
             serde_json::to_string(&ires)
@@ -147,45 +142,25 @@ fn jni_failed(env: &mut JNIEnv<'_>, e: &dyn Error) -> jvalue {
     JValueOwned::Object(JObject::null()).as_jni()
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct ParseEUIDCall {
-    euid: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ParseEUIDOutput {
-    ty: String,
-    id: String,
-}
-
-/// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
-/// returns a serialized `ParseEUIDOutput`
-pub fn json_parse_entity_uid(input: &str) -> Answer {
-    match serde_json::from_str::<ParseEUIDCall>(input) {
-        Err(e) => Answer::fail_internally(format!("error parsing call to parse EntityUID: {e:}")),
-        Ok(euid_call) => match cedar_policy::EntityUid::from_str(euid_call.euid.as_str()) {
-            Ok(euid) => match serde_json::to_string(&ParseEUIDOutput {
-                ty: euid.type_name().to_string(),
-                id: euid.id().to_string(),
-            }) {
-                Ok(s) => Answer::succeed(s),
-                Err(e) => Answer::fail_internally(format!("error serializing EntityUID: {e:}")),
-            },
-            Err(e) => Answer::fail_internally(format!("error parsing EntityUID: {e:}")),
-        },
-    }
-}
-
-/// public string-based JSON interface to parse a schema
+/// Public string-based JSON interface to parse a schema in Cedar's JSON format
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
-pub fn parseSchema<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
-    match parse_schema_internal(&mut env, schema_jstr) {
+pub fn parseJsonSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
+    match parse_json_schema_internal(&mut env, schema_jstr) {
         Ok(v) => v.as_jni(),
         Err(e) => jni_failed(&mut env, e.as_ref()),
     }
 }
 
-fn parse_schema_internal<'a>(
+/// public string-based JSON interface to parse a schema in Cedar's human-readable format
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn parseHumanSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
+    match parse_human_schema_internal(&mut env, schema_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn parse_json_schema_internal<'a>(
     env: &mut JNIEnv<'a>,
     schema_jstr: JString<'a>,
 ) -> Result<JValueOwned<'a>> {
@@ -196,7 +171,23 @@ fn parse_schema_internal<'a>(
         let schema_string = String::from(schema_jstring);
         match Schema::from_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
-            Ok(_) => Ok(JValueGen::Object(env.new_string("Success")?.into())),
+            Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
+        }
+    }
+}
+
+fn parse_human_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    schema_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if schema_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let schema_jstring = env.get_string(&schema_jstr)?;
+        let schema_string = String::from(schema_jstring);
+        match Schema::from_str_natural(&schema_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
     }
 }
@@ -429,236 +420,5 @@ fn get_euid_repr_internal<'a>(
         let euid = EntityUid::from_type_name_and_id(etype, id);
         let jstring = env.new_string(euid.to_string())?;
         Ok(jstring.into())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use cedar_policy::ffi::{AuthorizationAnswer, ValidationAnswer};
-    use cool_asserts::assert_matches;
-
-    #[test]
-    fn parse_entityuid() {
-        let result = call_cedar("ParseEntityUidOperation", r#"{"euid": "User::\"Alice\""} "#);
-        assert_success(result);
-    }
-
-    #[test]
-    fn empty_authorization_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationOperation",
-            r#"
-{
-  "principal" : { "type" : "User", "id" : "alice" },
-  "action" : { "type" : "Photo", "id" : "view" },
-  "resource" : { "type" : "Photo", "id" : "photo" },
-  "slice": {
-    "policies": {},
-    "entities": []
-  },
-  "context": {}
-}
-            "#,
-        );
-        assert_authorization_success(result);
-    }
-
-    #[test]
-    fn empty_validation_call_json_schema_succeeds() {
-        let result = call_cedar(
-            "ValidateOperation",
-            r#"{ "schema": { "json": {} }, "policySet": {} }"#,
-        );
-        assert_validation_success(result);
-    }
-
-    #[test]
-    fn empty_validation_call_succeeds() {
-        let result = call_cedar(
-            "ValidateOperation",
-            r#"{ "schema": { "human": "" }, "policySet": {} }"#,
-        );
-        assert_validation_success(result);
-    }
-
-    #[test]
-    fn unrecognised_call_fails() {
-        let result = call_cedar("BadOperation", "");
-        assert_failure(result);
-    }
-
-    #[test]
-    fn test_unspecified_principal_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationOperation",
-            r#"
-        {
-            "context": {},
-            "slice": {
-              "policies": {
-                "001": "permit(principal, action, resource);"
-              },
-              "entities": [],
-              "templates": {},
-              "templateInstantiations": []
-            },
-            "principal": null,
-            "action" : { "type" : "Action", "id" : "view" },
-            "resource" : { "type" : "Resource", "id" : "thing" }
-        }
-        "#,
-        );
-        assert_authorization_success(result);
-    }
-
-    #[test]
-    fn test_unspecified_resource_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationOperation",
-            r#"
-        {
-            "context": {},
-            "slice": {
-              "policies": {
-                "001": "permit(principal, action, resource);"
-              },
-              "entities": [],
-              "templates": {},
-              "templateInstantiations": []
-            },
-            "principal" : { "type" : "User", "id" : "alice" },
-            "action" : { "type" : "Action", "id" : "view" },
-            "resource": null
-        }
-        "#,
-        );
-        assert_authorization_success(result);
-    }
-
-    #[test]
-    fn template_authorization_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationOperation",
-            r#"
-            {
-                 "principal" : {
-                    "type" : "User",
-                    "id" : "alice"
-                },
-                "action" : {
-                    "type" : "Photo",
-                    "id" : "view"
-                },
-                "resource" : {
-                    "type" : "Photo",
-                    "id" : "door"
-                },
-	            "context" : {},
-	            "slice" : {
-	                   "policies" : {}
-	                 , "entities" : []
-                     , "templates" : {
-                        "ID0": "permit(principal == ?principal, action, resource);"
-                      }
-                     , "templateInstantiations" : [
-                        {
-                            "templateId" : "ID0",
-                            "resultPolicyId" : "ID0_User_alice",
-                            "instantiations" : [
-                                {
-                                    "slot": "?principal",
-                                    "value": {
-                                        "ty" : "User",
-                                        "eid" : "alice"
-                                    }
-                                }
-                            ]
-                        }
-                     ]
-	             }
-	          }
-	         "#,
-        );
-        assert_authorization_success(result);
-    }
-
-    #[cfg(feature = "partial-eval")]
-    #[test]
-    fn test_missing_resource_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationPartialOperation",
-            r#"
-        {
-            "context": {},
-            "slice": {
-              "policies": {
-                "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
-              },
-              "entities": [],
-              "templates": {},
-              "templateInstantiations": []
-            },
-            "principal" : { "type" : "User", "id" : "alice" },
-            "action" : { "type" : "Action", "id" : "view" }
-        }
-        "#,
-        );
-        assert_partial_authorization_success(result);
-    }
-
-    #[cfg(feature = "partial-eval")]
-    #[test]
-    fn test_missing_principal_call_succeeds() {
-        let result = call_cedar(
-            "AuthorizationPartialOperation",
-            r#"
-        {
-            "context": {},
-            "slice": {
-              "policies": {
-                "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
-              },
-              "entities": [],
-              "templates": {},
-              "templateInstantiations": []
-            },
-            "action" : { "type" : "Action", "id" : "view" },
-            "resource" : { "type" : "Photo", "id" : "door" }
-        }
-        "#,
-        );
-        assert_partial_authorization_success(result);
-    }
-
-    #[track_caller]
-    fn assert_success(result: String) {
-        let result: Answer = serde_json::from_str(result.as_str()).unwrap();
-        assert_matches!(result, Answer::Success { .. });
-    }
-
-    #[track_caller]
-    fn assert_failure(result: String) {
-        let result: Answer = serde_json::from_str(result.as_str()).unwrap();
-        assert_matches!(result, Answer::Failure { .. });
-    }
-
-    #[track_caller]
-    fn assert_authorization_success(result: String) {
-        let result: AuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
-        assert_matches!(result, AuthorizationAnswer::Success { .. });
-    }
-
-    #[cfg(feature = "partial-eval")]
-    #[track_caller]
-    fn assert_partial_authorization_success(result: String) {
-        let result: PartialAuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
-        assert_matches!(result, PartialAuthorizationAnswer::Residuals { .. });
-    }
-
-    #[track_caller]
-    fn assert_validation_success(result: String) {
-        let result: ValidationAnswer = serde_json::from_str(result.as_str()).unwrap();
-        assert_matches!(result, ValidationAnswer::Success { .. });
     }
 }

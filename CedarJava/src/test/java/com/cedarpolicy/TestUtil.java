@@ -17,13 +17,17 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /** Utils to help with tests. */
 public final class TestUtil {
-    private TestUtil() {}
+    private TestUtil() {
+    }
 
     /**
      * Load schema file.
@@ -32,12 +36,11 @@ public final class TestUtil {
      */
     public static Schema loadSchemaResource(String schemaFile) {
         try {
-            return new Schema(
-                    new String(
-                            Files.readAllBytes(
-                                    Paths.get(
-                                            ValidationTests.class.getResource(schemaFile).toURI())),
-                            StandardCharsets.UTF_8));
+            String text = new String(Files.readAllBytes(
+                    Paths.get(
+                            ValidationTests.class.getResource(schemaFile).toURI())),
+                    StandardCharsets.UTF_8);
+            return new Schema(JsonOrHuman.Json, Optional.of(text), Optional.empty());
         } catch (Exception e) {
             throw new RuntimeException("Failed to load test schema file " + schemaFile, e);
         }

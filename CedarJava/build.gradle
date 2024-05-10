@@ -183,8 +183,8 @@ tasks.register('downloadIntegrationTests', Download) {
     group 'Build'
     description 'Downloads Cedar repository with integration tests.'
 
-    src 'https://codeload.github.com/cedar-policy/cedar/zip/main'
-    dest layout.buildDirectory.file('cedar-main.zip')
+    src 'https://codeload.github.com/cedar-policy/cedar-integration-tests/zip/main'
+    dest layout.buildDirectory.file('cedar-integration-tests-main.zip')
     overwrite false
 }
 
@@ -193,19 +193,28 @@ tasks.register('extractIntegrationTests', Copy) {
     description 'Extracts Cedar integration tests.'
 
     dependsOn('downloadIntegrationTests')
-    from zipTree(layout.buildDirectory.file('cedar-main.zip'))
+    from zipTree(layout.buildDirectory.file('cedar-integration-tests-main.zip'))
     into layout.buildDirectory.dir('resources/test')
+}
+
+tasks.register('extractCorpusTests', Copy) {
+    group 'Build'
+    description 'Extracts Cedar corpus tests.'
+
+    dependsOn('extractIntegrationTests')
+    dependsOn('processTestResources')
+    from tarTree(layout.buildDirectory.file('resources/test/cedar-integration-tests-main/corpus-tests.tar.gz'))
+    into layout.buildDirectory.dir('resources/test/cedar-integration-tests-main')
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     dependsOn('compileFFI')
-    dependsOn('extractIntegrationTests')
+    dependsOn('extractCorpusTests')
     classpath += files(layout.buildDirectory.dir(compiledLibDir))
 }
 
 test {
-    //environment "CEDAR_INTEGRATION_TESTS_ROOT", ''set to absolute path of `cedar-integration-tests`'
     testLogging {
         events "skipped", "failed", "standardOut", "standardError"
         showStandardStreams false

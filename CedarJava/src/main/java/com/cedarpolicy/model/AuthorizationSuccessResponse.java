@@ -138,7 +138,7 @@ public final class AuthorizationSuccessResponse {
      *
      * @return list with the policy ids that contributed to the decision
      */
-    public Set<String> getReasons() {
+    public Set<String> getReason() {
         return diagnostics.reason;
     }
 

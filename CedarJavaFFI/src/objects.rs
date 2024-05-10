@@ -62,7 +62,7 @@ impl<'a> JEntityTypeName<'a> {
         Ok(Self { obj, type_name })
     }
 
-    /// Get the string representation for this EntityTYpeName
+    /// Get the string representation for this EntityTypeName
     pub fn get_string_repr(&self) -> String {
         self.get_rust_repr().to_string()
     }
