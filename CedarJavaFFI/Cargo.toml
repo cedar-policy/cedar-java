@@ -1,8 +1,6 @@
 [package]
 
 name = "cedar-java-ffi"
-license = "Apache-2.0"
-description = "Java FFI for Cedar (from the cedar-policy crate)."
 edition = "2021"
 
 
