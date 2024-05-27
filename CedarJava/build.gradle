@@ -79,7 +79,7 @@ dependencies {
     implementation 'com.fizzed:jne:4.1.1'
     implementation 'com.google.guava:guava:33.2.0-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.5'
-    testImplementation 'net.jqwik:jqwik:1.8.4'
+    testImplementation 'net.jqwik:jqwik:1.8.5'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
