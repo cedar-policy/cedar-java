@@ -235,7 +235,7 @@ impl<'a> JEntityId<'a> {
 
     /// Decode the object into its string representation
     pub fn get_string_repr(&self) -> String {
-        self.id.as_ref().to_string()
+        self.id.escaped().to_string()
     }
 }
 
