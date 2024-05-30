@@ -27,7 +27,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, error::Error, str::FromStr, thread};
+use std::{collections::HashMap, error::Error, panic::catch_unwind, str::FromStr};
 
 use crate::{
     answer::Answer,
@@ -54,10 +54,6 @@ fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
     .into_raw()
 }
 
-fn call_cedar_in_thread(call_str: String, input_str: String) -> String {
-    call_cedar(&call_str, &input_str)
-}
-
 /// JNI entry point for authorization and validation requests
 #[jni_fn("com.cedarpolicy.BasicAuthorizationEngine")]
 pub fn callCedarJNI(
@@ -77,9 +73,7 @@ pub fn callCedarJNI(
     };
     j_input_str.push(' ');
 
-    let handle = thread::spawn(move || call_cedar_in_thread(j_call_str, j_input_str));
-
-    let result = match handle.join() {
+    let result = match catch_unwind(|| call_cedar(&j_call_str, &j_input_str)) {
         Ok(s) => s,
         Err(e) => format!("Authorization thread failed {e:?}"),
     };
