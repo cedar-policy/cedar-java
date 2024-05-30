@@ -36,6 +36,7 @@ public final class Utils {
                             "unless",
                             "advice",
                             "in",
+                            "is",
                             "has",
                             "if",
                             "then",
