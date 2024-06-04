@@ -59,7 +59,7 @@ public class JSONTests {
     @Test
     public void testAuthSuccessResponse() {
         String src =
-                "{ \"response\": { \"decision\":\"Allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
+                "{ \"response\": { \"decision\":\"allow\", \"diagnostics\": { \"reason\":[], \"errors\": [] } } }";
         try {
             AuthorizationResponse r = objectReader().forType(AuthorizationResponse.class).readValue(src);
             assertTrue(r.success.get().isAllowed());
@@ -71,7 +71,7 @@ public class JSONTests {
     @Test
     public void testAuthConcretePartialResponse() {
         String src =
-                "{ \"response\": { \"decision\":\"Allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"may_be_determining\": [], \"must_be_determining\": [\"p1\"], \"residuals\": {\"p2\": 3}, \"nontrivial_residuals\": [] } }";
+                "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p2\": 3}, \"nontrivialResiduals\": [] } }";
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
             assertTrue(r.getDecision() == Decision.Allow);
@@ -83,7 +83,7 @@ public class JSONTests {
     @Test
     public void testAuthResidualPartialResponse() {
         final String policy = "{ \"effect\": \"permit\", \"principal\": { \"op\": \"All\" }, \"action\": { \"op\": \"All\" }, \"resource\": { \"op\": \"All\" }, \"conditions\": [ { \"kind\": \"when\", \"body\": { \"==\": { \"left\": { \"unknown\": [ { \"Value\": \"principal\" } ] }, \"right\": { \"Value\": { \"__entity\": { \"type\": \"User\", \"id\": \"alice\" } } } } } } ] }";
-        final String src =  "{ \"response\": { \"decision\":\"Allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"may_be_determining\": [], \"must_be_determining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivial_residuals\": [] } }";;
+        final String src =  "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivialResiduals\": [] } }";;
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
             var residuals = r.getResiduals();
@@ -109,7 +109,7 @@ public class JSONTests {
         n.set("principal", buildEuidObject("Wizard", "gandalf"));
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
-        n.set("enableRequestValidation", JsonNodeFactory.instance.booleanNode(false));
+        n.set("validateRequest", JsonNodeFactory.instance.booleanNode(false));
         assertJSONEqual(n, q);
     }
 
@@ -122,7 +122,7 @@ public class JSONTests {
         n.set("context", JsonNodeFactory.instance.objectNode());
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
-        n.set("enableRequestValidation", JsonNodeFactory.instance.booleanNode(false));
+        n.set("validateRequest", JsonNodeFactory.instance.booleanNode(false));
         assertJSONEqual(n, q);
     }
 

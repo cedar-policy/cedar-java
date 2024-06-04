@@ -110,10 +110,10 @@ public class PartialAuthorizationResponse {
      * @param decision Deserialized `decision` attribute of nested JSON object.
      * @param satisfied Deserialized `satisfied` attribute of nested JSON object.
      * @param errored Deserialized `errored` attribute of nested JSON object.
-     * @param may_be_determining Deserialized `may_be_determining` attribute of nested JSON object.
-     * @param must_be_determining Deserialized `must_be_determining` attribute of nested JSON object.
+     * @param may_be_determining Deserialized `mayBeDetermining` attribute of nested JSON object.
+     * @param must_be_determining Deserialized `mustBeDetermining` attribute of nested JSON object.
      * @param residuals Deserialized `residual` attribute of nested JSON object.
-     * @param nontrivial_residuals Deserialized `nontrivial_residuals` attribute of nested JSON object.
+     * @param nontrivial_residuals Deserialized `nontrivialResiduals` attribute of nested JSON object.
      * @param warnings Deserialized `warnings` attribute of nested JSON object.
      * @return
      */
@@ -123,10 +123,10 @@ public class PartialAuthorizationResponse {
         @JsonProperty("decision") Decision decision,
         @JsonProperty("satisfied") Set<String> satisfied,
         @JsonProperty("errored") Set<String> errored,
-        @JsonProperty("may_be_determining") Set<String> may_be_determining,
-        @JsonProperty("must_be_determining") Set<String> must_be_determining,
+        @JsonProperty("mayBeDetermining") Set<String> may_be_determining,
+        @JsonProperty("mustBeDetermining") Set<String> must_be_determining,
         @JsonProperty("residuals") Map<String, JsonNode> residuals,
-        @JsonProperty("nontrivial_residuals") Set<String> nontrivial_residuals,
+        @JsonProperty("nontrivialResiduals") Set<String> nontrivial_residuals,
         @JsonProperty("warnings") Set<String> warnings) {
             if (nested != null) {
                 return nested;

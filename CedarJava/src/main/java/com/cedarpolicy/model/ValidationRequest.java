@@ -18,6 +18,7 @@ package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.Policy;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -29,41 +30,42 @@ import java.util.Set;
 /** Information passed to Cedar for validation. */
 public final class ValidationRequest {
     private final Schema schema;
-    private final Map<String, String> policySet;
+    @JsonProperty("policies")
+    private final Map<String, String> policies;
 
     /**
      * Construct a validation request.
      *
      * @param schema Schema for the request
-     * @param policySet Map of Policy ID to policy.
+     * @param policies Map of Policy ID to policy.
      */
     @SuppressFBWarnings
-    public ValidationRequest(Schema schema, Map<String, String> policySet) {
+    public ValidationRequest(Schema schema, Map<String, String> policies) {
         if (schema == null) {
             throw new NullPointerException("schema");
         }
 
-        if (policySet == null) {
-            throw new NullPointerException("policySet");
+        if (policies == null) {
+            throw new NullPointerException("policies");
         }
 
         this.schema = schema;
-        this.policySet = policySet;
+        this.policies = policies;
     }
 
-    public ValidationRequest(Schema schema, Set<Policy> policySet) {
+    public ValidationRequest(Schema schema, Set<Policy> policies) {
         if (schema == null) {
             throw new NullPointerException("schema");
         }
 
-        if (policySet == null) {
-            throw new NullPointerException("policySet");
+        if (policies == null) {
+            throw new NullPointerException("policies");
         }
 
         this.schema = schema;
-        this.policySet = new HashMap<>();
-        for (Policy p : policySet) {
-            this.policySet.put(p.policyID, p.policySrc);
+        this.policies = new HashMap<>();
+        for (Policy p : policies) {
+            this.policies.put(p.policyID, p.policySrc);
         }
     }
 
@@ -83,7 +85,7 @@ public final class ValidationRequest {
      */
     @SuppressFBWarnings
     public Map<String, String> getPolicySet() {
-        return this.policySet;
+        return this.policies;
     }
 
     /** Test equality. */
@@ -94,17 +96,17 @@ public final class ValidationRequest {
         }
 
         final ValidationRequest other = (ValidationRequest) o;
-        return schema.equals(other.schema) && policySet.equals(other.policySet);
+        return schema.equals(other.schema) && policies.equals(other.policies);
     }
 
     /** Hash. */
     @Override
     public int hashCode() {
-        return Objects.hash(schema, policySet);
+        return Objects.hash(schema, policies);
     }
 
     /** Get readable string representation. */
     public String toString() {
-        return "ValidationRequest(schema=" + schema + ", policySet=" + policySet + ")";
+        return "ValidationRequest(schema=" + schema + ", policies=" + policies + ")";
     }
 }

@@ -164,7 +164,7 @@ mod validation_tests {
     fn empty_validation_call_json_schema_succeeds() {
         let result = call_cedar(
             "ValidateOperation",
-            r#"{ "schema": { "json": {} }, "policySet": {} }"#,
+            r#"{ "schema": { "json": {} }, "policies": {} }"#,
         );
         assert_validation_success(result);
     }
@@ -173,7 +173,7 @@ mod validation_tests {
     fn empty_validation_call_succeeds() {
         let result = call_cedar(
             "ValidateOperation",
-            r#"{ "schema": { "human": "" }, "policySet": {} }"#,
+            r#"{ "schema": { "human": "" }, "policies": {} }"#,
         );
         assert_validation_success(result);
     }
