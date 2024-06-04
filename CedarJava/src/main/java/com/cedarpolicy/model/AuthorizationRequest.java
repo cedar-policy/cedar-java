@@ -61,7 +61,7 @@ public class AuthorizationRequest {
      * If this is `false`, the schema will only be used for schema-based parsing
      * of `context`, and not for request validation.
      * If a schema is not provided, this option has no effect. */
-    @JsonProperty("enableRequestValidation")
+    @JsonProperty("validateRequest")
     public final boolean enableRequestValidation;
 
     /**

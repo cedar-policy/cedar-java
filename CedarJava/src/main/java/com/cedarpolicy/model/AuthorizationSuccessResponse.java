@@ -31,10 +31,10 @@ public final class AuthorizationSuccessResponse {
     /** The two possible results of request evaluation. */
     public enum Decision {
         /** Represents an authorization request that is allowed. */
-        @JsonProperty("Allow")
+        @JsonProperty("allow")
         Allow,
         /** Represents an authorization request that is denied. */
-        @JsonProperty("Deny")
+        @JsonProperty("deny")
         Deny,
     }
 

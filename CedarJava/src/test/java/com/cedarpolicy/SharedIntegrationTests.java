@@ -117,11 +117,9 @@ public class SharedIntegrationTests {
         /**
          * Whether the given policies are expected to pass the validator with this schema, or not
          */
-        @JsonProperty("should_validate")
         public boolean shouldValidate;
 
         /** List of requests with their expected result. */
-        @JsonAlias("queries")
         public List<JsonRequest> requests;
     }
 
