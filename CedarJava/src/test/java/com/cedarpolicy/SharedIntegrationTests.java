@@ -128,7 +128,7 @@ public class SharedIntegrationTests {
     @JsonDeserialize
     private static class JsonRequest {
         /** Textual description of the request. */
-        public String desc;
+        public String description;
 
         /** Principal entity uid used for the request. */
         public JsonEUID principal;
@@ -143,13 +143,12 @@ public class SharedIntegrationTests {
         public Map<String, Value> context;
 
         /** Whether to enable request validation for this request. Default true */
-        public boolean enable_request_validation = true;
+        public boolean validateRequest = true;
 
         /** The expected decision that should be returned by the authorization engine. */
         public Decision decision;
 
         /** The expected reason list that should be returned by the authorization engine. */
-        @JsonAlias("reasons")
         public List<String> reason;
 
         /** The expected error list that should be returned by the authorization engine. */
@@ -272,7 +271,7 @@ public class SharedIntegrationTests {
                         .map(
                                 request ->
                                         DynamicTest.dynamicTest(
-                                                jsonFile + ": " + request.desc,
+                                                jsonFile + ": " + request.description,
                                                 () ->
                                                         executeJsonRequestTest(
                                                                 entities, policies, request,
@@ -407,7 +406,7 @@ public class SharedIntegrationTests {
                     request.resource == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.resource).get()),
                     Optional.of(request.context),
                     Optional.of(schema),
-                    request.enable_request_validation);
+                    request.validateRequest);
         Slice slice = new BasicSlice(policies, entities);
 
         try {
