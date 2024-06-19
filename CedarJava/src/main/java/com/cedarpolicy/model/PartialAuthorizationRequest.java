@@ -44,9 +44,9 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
      * (true). No effect if `schema` is not provided.
      */
     public PartialAuthorizationRequest(
-            Optional<EntityUID> principalEUID,
+            EntityUID principalEUID,
             EntityUID actionEUID,
-            Optional<EntityUID> resourceEUID,
+            EntityUID resourceEUID,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema,
             boolean enableRequestValidation) {
@@ -67,9 +67,9 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
      * (true). No effect if `schema` is not provided.
      */
     public PartialAuthorizationRequest(
-            Optional<Entity> principal,
+            Entity principal,
             Entity action,
-            Optional<Entity> resource,
+            Entity resource,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema,
             boolean enableRequestValidation) {
@@ -186,8 +186,8 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The request.
          */
         public PartialAuthorizationRequest build() {
-            return new PartialAuthorizationRequest(Optional.ofNullable(principalEUID), actionEUID,
-                    Optional.ofNullable(resourceEUID), Optional.ofNullable(context), Optional.ofNullable(schema),
+            return new PartialAuthorizationRequest(principalEUID, actionEUID,
+                    resourceEUID, Optional.ofNullable(context), Optional.ofNullable(schema),
                     enableRequestValidation);
         }
     }
