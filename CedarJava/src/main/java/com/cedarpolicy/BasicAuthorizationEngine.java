@@ -112,9 +112,13 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    private static final class PartialAuthorizationRequest extends AuthorizationRequest {
-        PartialAuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
-            super(request, slice);
+    private static final class PartialAuthorizationRequest {
+        @JsonProperty public final Slice slice;
+        @JsonProperty public final com.cedarpolicy.model.PartialAuthorizationRequest request;
+
+        PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, Slice slice) {
+            this.request = request;
+            this.slice = slice;
         }
     }
 
