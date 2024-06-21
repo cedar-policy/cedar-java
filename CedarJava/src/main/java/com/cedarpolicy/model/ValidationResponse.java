@@ -60,7 +60,8 @@ public final class ValidationResponse {
         public ValidationSuccessResponse(
             @JsonProperty("validationErrors") Optional<List<ValidationError>> validationErrors,
             @JsonProperty("validationWarnings") Optional<List<ValidationError>> validationWarnings) {
-            // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible; see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
+            // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible
+            // see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
             if (validationErrors.isPresent()) {
                 this.validationErrors = ImmutableList.copyOf(validationErrors.get());
             } else {
@@ -127,7 +128,8 @@ public final class ValidationResponse {
     /** Readable string representation. */
     public String toString() {
         if (success.isPresent()) {
-            return "ValidationResponse(validationErrors = " + success.get().validationErrors + ", validationWarnings = " + success.get().validationWarnings + ")";
+            return "ValidationResponse(validationErrors = " + success.get().validationErrors + ", validationWarnings = "
+                    + success.get().validationWarnings + ")";
         } else {
             return "ValidationResponse(errors = " + errors.get() + ")";
         }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.2//EN"
+        "classpath:com/puppycrawl/tools/checkstyle/suppressions_1_2.dtd" >
+
+<suppressions>
+    <suppress checks="HiddenField" files="BasicSlice.java$"/>
+    <suppress checks="HiddenField" files="Entity.java$"/>
+    <suppress checks="HiddenField" files="PartialAuthorizationRequest.java$"/>
+    <suppress checks="LineLength" files="JSONTests.java$"/>
+    <suppress checks="LineLength" files="IntegrationTests.java$"/>
+    <suppress checks="ParameterNumber" files="PartialAuthorizationResponse.java$"/>
+</suppressions>

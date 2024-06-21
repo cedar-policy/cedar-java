@@ -83,7 +83,7 @@ public class JSONTests {
     @Test
     public void testAuthResidualPartialResponse() {
         final String policy = "{ \"effect\": \"permit\", \"principal\": { \"op\": \"All\" }, \"action\": { \"op\": \"All\" }, \"resource\": { \"op\": \"All\" }, \"conditions\": [ { \"kind\": \"when\", \"body\": { \"==\": { \"left\": { \"unknown\": [ { \"Value\": \"principal\" } ] }, \"right\": { \"Value\": { \"__entity\": { \"type\": \"User\", \"id\": \"alice\" } } } } } } ] }";
-        final String src =  "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivialResiduals\": [] } }";;
+        final String src = "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivialResiduals\": [] } }";
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
             var residuals = r.getResiduals();
@@ -187,7 +187,7 @@ public class JSONTests {
 
         String weirdType = "a";
         String weirdId = "";
-        String weirdEID = weirdType+"::\""+weirdId+"\"";
+        String weirdEID = weirdType + "::\"" + weirdId + "\"";
         uid = EntityUID.parse(weirdEID).get();
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", weirdId);
@@ -246,12 +246,12 @@ public class JSONTests {
     /** Tests deserialization of value that causes stack overflow */
     @Test
     public void testDeserializationStackOverflow() {
-        String json = "{\"\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}";
+        String json = "{\"\":" + "[".repeat(1024) + "]".repeat(1024) + "}";
         try {
             CedarJson.objectMapper().readValue(json, Value.class);
         } catch (JsonProcessingException e) {
-            System.out.println("class: "+e.getClass());
-            assert(e instanceof StreamConstraintsException);
+            System.out.println("class: " + e.getClass());
+            assertTrue(e instanceof StreamConstraintsException);
         }
     }
 }

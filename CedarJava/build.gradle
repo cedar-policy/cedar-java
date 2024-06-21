@@ -28,6 +28,10 @@ plugins {
 
     // Download Task for integration tests
     id 'de.undercouch.download' version '5.6.0'
+
+    // Quality checks on Java source files
+    // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+    id 'checkstyle'
 }
 
 /*
@@ -192,6 +196,7 @@ tasks.register('extractIntegrationTests', Copy) {
     group 'Build'
     description 'Extracts Cedar integration tests.'
 
+    dependsOn('checkstyleTest')
     dependsOn('downloadIntegrationTests')
     from zipTree(layout.buildDirectory.file('cedar-integration-tests-main.zip'))
     into layout.buildDirectory.dir('resources/test')

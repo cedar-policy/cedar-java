@@ -36,7 +36,7 @@ public class EntityUIDTests {
         assertEquals(euid.getType(), EntityTypeName.parse("Foo::Bar").get());
     }
 
-    @Test 
+    @Test
     void simpleBadNameSpace() {
         var src = "Foo:Bar::\"alice\"";
         assertFalse(EntityUID.parse(src).isPresent());
@@ -57,12 +57,12 @@ public class EntityUIDTests {
     @Test
     void nullSafety() {
         assertThrows(NullPointerException.class, () -> EntityUID.parse(null), "should throw NPE");
-        EntityIdentifier null_id = null;
-        assertThrows(NullPointerException.class, () -> new EntityUID(null, null_id).toString(), "should throw NPE");
+        EntityIdentifier nullID = null;
+        assertThrows(NullPointerException.class, () -> new EntityUID(null, nullID).toString(), "should throw NPE");
         var id = new EntityIdentifier("alice");
         assertThrows(NullPointerException.class, () -> new EntityUID(null, id).toString(), "should throw NPE");
         var type = EntityTypeName.parse("Foo").get();
-        assertThrows(NullPointerException.class, () -> new EntityUID(type, null_id).toString(), "should throw NPE");
+        assertThrows(NullPointerException.class, () -> new EntityUID(type, nullID).toString(), "should throw NPE");
     }
 
     @Test
@@ -78,7 +78,7 @@ public class EntityUIDTests {
     void emptyConstructing() {
         var x = new EntityUID(EntityTypeName.parse("Foo").get(), "");
         var y = EntityUID.parse(x.toString()).get();
-        assertEquals(x,y);
+        assertEquals(x, y);
     }
 
 

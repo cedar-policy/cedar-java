@@ -93,7 +93,8 @@ public class PartialAuthorizationRequest {
         return new Builder();
     }
 
-    public static class Builder {
+
+    public static final class Builder {
         private Optional<EntityUID> principalEUID = Optional.empty();
         private Optional<EntityUID> actionEUID = Optional.empty();
         private Optional<EntityUID> resourceEUID = Optional.empty();
@@ -101,7 +102,8 @@ public class PartialAuthorizationRequest {
         private Optional<Schema> schema = Optional.empty();
         private boolean enableRequestValidation = false;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Set the principal.

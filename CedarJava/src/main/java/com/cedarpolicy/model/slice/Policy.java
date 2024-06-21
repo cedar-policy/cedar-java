@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Policies in the Cedar language. */
 public class Policy {
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
     static {
         LibraryLoader.loadLibrary();
     }
@@ -54,7 +54,7 @@ public class Policy {
             throw new NullPointerException("Failed to construct policy from null string");
         }
         if (policyID == null) {
-            policyID = "policy" + idCounter.addAndGet(1);
+            policyID = "policy" + ID_COUNTER.addAndGet(1);
         }
         this.policySrc = policy;
         this.policyID = policyID;
@@ -86,11 +86,14 @@ public class Policy {
      * @param resource EntityUid to put into the resource slot. Leave null if there's no resource slot
      * @return
      */
-    public static boolean validateTemplateLinkedPolicy(Policy p, EntityUID principal, EntityUID resource) throws InternalException, NullPointerException {
+    public static boolean validateTemplateLinkedPolicy(Policy p, EntityUID principal, EntityUID resource)
+            throws InternalException, NullPointerException {
         return validateTemplateLinkedPolicyJni(p.policySrc, principal, resource);
     }
 
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
-    private static native String parsePolicyTemplateJni(String policyTemplateStr) throws InternalException, NullPointerException;
-    private static native boolean validateTemplateLinkedPolicyJni(String templateText, EntityUID principal, EntityUID resource) throws InternalException, NullPointerException;
+    private static native String parsePolicyTemplateJni(String policyTemplateStr)
+            throws InternalException, NullPointerException;
+    private static native boolean validateTemplateLinkedPolicyJni(String templateText, EntityUID principal, EntityUID resource)
+            throws InternalException, NullPointerException;
 }

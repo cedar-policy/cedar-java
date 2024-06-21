@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+
+    <!-- Checks that a package-info.java file exists for each package. -->
+    <!-- See https://checkstyle.sourceforge.io/checks/javadoc/javadocpackage.html -->
+    <!--
+    <module name="JavadocPackage">
+      <property name="allowLegacy" value="true"/>
+    </module>
+    -->
+
+    <!-- Checks whether files end with a new line. -->
+    <!-- See https://checkstyle.sourceforge.io/checks/misc/newlineatendoffile.html -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <!-- Checks for Size Violations. -->
+    <!-- See https://checkstyle.sourceforge.io/checks/sizes/filelength.html -->
+    <module name="FileLength"/>
+
+    <!-- Checks for whitespace. -->
+    <!-- See https://checkstyle.sourceforge.io/checks/whitespace/filetabcharacter.html -->
+    <module name="FileTabCharacter"/>
+
+    <!-- Checks that a specified pattern matches a single-line in any file type. -->
+    <!-- See https://checkstyle.sourceforge.io/checks/regexp/regexpsingleline.html -->
+    <module name="RegexpSingleline">
+       <property name="format" value="\s+$"/>
+       <property name="minimum" value="0"/>
+       <property name="maximum" value="0"/>
+       <property name="message" value="Line has trailing spaces."/>
+       <property name="severity" value="info"/>
+    </module>
+
+    <!-- Checks for long lines -->
+    <!-- See https://checkstyle.sourceforge.io/checks/sizes/linelength.html -->
+    <module name="LineLength">
+        <property name="max" value="140"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Checks the Javadoc of a method or constructor. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/javadoc/javadocmethod.html -->
+        <module name="JavadocMethod">
+            <!-- <property name="scope" value="package"/> -->
+            <property name="allowMissingParamTags" value="true"/>
+            <!-- <property name="allowMissingThrowsTags" value="true"/> -->
+            <property name="allowMissingReturnTag" value="true"/>
+            <!-- <property name="allowThrowsTagsForSubclasses" value="true"/> -->
+            <!-- <property name="allowUndeclaredRTE" value="true"/> -->
+            <!-- <property name="allowMissingPropertyJavadoc" value="true"/> -->
+        </module>
+
+        <!-- Checks the Javadoc comments for type definitions. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/javadoc/javadoctype.html -->
+        <module name="JavadocType">
+            <property name="scope" value="package"/>
+        </module>
+<!--        <module name="JavadocVariable">-->
+<!--          <property name="scope" value="package"/>-->
+<!--        </module>-->
+
+        <!-- Validates Javadoc comments to help ensure they are well formed.  -->
+        <!-- https://checkstyle.sourceforge.io/checks/javadoc/javadocstyle.html -->
+        <module name="JavadocStyle">
+          <property name="checkEmptyJavadoc" value="true"/>
+          <property name="checkFirstSentence" value="false"/>
+        </module>
+
+        <!-- Checks for Naming Conventions. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/naming/index.html -->
+        <module name="ConstantName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+        <module name="MethodName"/>
+        <module name="PackageName"/>
+        <module name="ParameterName"/>
+        <module name="StaticVariableName"/>
+        <module name="TypeName"/>
+
+        <!-- Checks for imports -->
+        <!-- See https://checkstyle.sourceforge.io/checks/imports/index.html -->
+        <!-- <module name="AvoidStarImport"/>-->
+        <module name="IllegalImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- Checks for Size Violations. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/sizes/index.html -->
+        <module name="MethodLength"/>
+        <module name="ParameterNumber"/>
+
+        <!-- Checks for whitespace -->
+        <!-- See https://checkstyle.sourceforge.io/checks/whitespace/index.html -->
+        <module name="EmptyForIteratorPad"/>
+        <module name="GenericWhitespace"/>
+        <module name="MethodParamPad"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="OperatorWrap"/>
+        <module name="ParenPad"/>
+        <module name="TypecastParenPad"/>
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround"/>
+
+        <!-- Modifier Checks -->
+        <!-- See https://checkstyle.sourceforge.io/checks/modifier/index.html -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+
+        <!-- Checks for blocks. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/blocks/index.html -->
+        <module name="AvoidNestedBlocks"/>
+        <module name="EmptyBlock">
+          <property name="option" value="text"/>
+        </module>
+        <module name="LeftCurly"/>
+        <module name="NeedBraces"/>
+        <module name="RightCurly"/>
+
+        <!-- Checks for common coding problems -->
+        <!-- See https://checkstyle.sourceforge.io/checks/coding/index.html -->
+        <!-- <module name="AvoidInlineConditionals"/> -->
+        <module name="EmptyStatement"/>
+        <module name="EqualsHashCode"/>
+
+        <!-- Checks that a local variable or a parameter does not shadow a field that is defined in the same class. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/coding/hiddenfield.html -->
+        <module name="HiddenField">
+          <property name="ignoreConstructorParameter" value="true"/>
+          <property name="ignoreSetter" value="true"/>
+          <property name="setterCanReturnItsClass" value="true"/>
+          <property name="severity" value="warning"/>
+        </module>
+        <module name="IllegalInstantiation"/>
+        <module name="InnerAssignment"/>
+<!--        <module name="MagicNumber">-->
+<!--          <property name="severity" value="warning"/>-->
+<!--        </module>-->
+        <module name="MissingSwitchDefault"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+
+        <!-- Checks for class design -->
+        <!-- See https://checkstyle.sourceforge.io/checks/design/index.html -->
+        <!-- <module name="DesignForExtension"/> -->
+        <module name="FinalClass"/>
+        <module name="HideUtilityClassConstructor"/>
+        <module name="InterfaceIsType"/>
+<!--        <module name="VisibilityModifier"/>-->
+
+        <!-- Miscellaneous other checks. -->
+        <!-- See https://checkstyle.sourceforge.io/checks/misc/index.html -->
+        <module name="ArrayTypeStyle"/>
+        <!-- <module name="FinalParameters"/> -->
+        <module name="TodoComment">
+          <property name="format" value="TODO"/>
+          <property name="severity" value="info"/>
+        </module>
+        <module name="UpperEll"/>
+    </module>
+
+    <!-- Suppression filter to override the above rules on a per-file basis -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml" />
+        <property name="optional" value="false"/>
+    </module>
+</module>

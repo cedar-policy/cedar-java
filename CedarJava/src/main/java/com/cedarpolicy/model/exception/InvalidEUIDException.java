@@ -8,5 +8,5 @@ public class InvalidEUIDException extends Exception {
     public InvalidEUIDException(String message) {
         super(message);
     }
-    
+
 }

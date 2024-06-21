@@ -30,24 +30,29 @@ import java.util.regex.PatternSyntaxException;
 public class IpAddress extends Value {
 
     private static class IpAddressValidator {
-        private static final Pattern ipv4Pattern =
+
+        private static final Pattern IPV4_PATTERN =
                 Pattern.compile(
                         "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)"
                                 + "{3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
 
         public static boolean validIPv4(String ip) {
-            if (ip == null || ip.isEmpty()) return false;
+            if (ip == null || ip.isEmpty()) {
+                return false;
+            }
             ip = ip.trim();
-            if ((ip.length() < 6) || (ip.length() > 15)) return false;
+            if ((ip.length() < 6) || (ip.length() > 15)) {
+                return false;
+            }
             try {
-                Matcher matcher = ipv4Pattern.matcher(ip);
+                Matcher matcher = IPV4_PATTERN.matcher(ip);
                 return matcher.matches();
             } catch (PatternSyntaxException ex) {
                 return false;
             }
         }
 
-        private static final Pattern ipv6Pattern =
+        private static final Pattern IPV6_PATTERN =
                 Pattern.compile(
                         "^(([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|"
@@ -59,11 +64,15 @@ public class IpAddress extends Value {
                                 + "((:)(((:[0-9A-Fa-f]{1,4}){1,7})|:))|$");
 
         public static boolean validIPv6(String ip) {
-            if (ip == null || ip.isEmpty()) return false;
+            if (ip == null || ip.isEmpty()) {
+                return false;
+            }
             ip = ip.trim();
-            if ((ip.length() < 3) || (ip.length() > 39)) return false;
+            if ((ip.length() < 3) || (ip.length() > 39)) {
+                return false;
+            }
             try {
-                Matcher matcher = ipv6Pattern.matcher(ip);
+                Matcher matcher = IPV6_PATTERN.matcher(ip);
                 return matcher.matches();
             } catch (PatternSyntaxException ex) {
                 return false;

@@ -50,7 +50,7 @@ public final class Schema {
      * If `type` is `Human`, `schemaText` should be present and `schemaJson` empty.
      * This constructor does not check that the input text represents a valid JSON
      * or Cedar schema. Use the `parse` function to ensure schema validity.
-     * 
+     *
      * @param type       The schema format used.
      * @param schemaJson Optional schema in Cedar's JSON schema format.
      * @param schemaText Optional schema in Cedar's human-readable schema format.
@@ -109,7 +109,7 @@ public final class Schema {
     /**
      * Try to parse a string representing a JSON or Cedar schema. If parsing
      * succeeds, return a `Schema`, otherwise raise an exception.
-     * 
+     *
      * @param type The schema format used.
      * @param str  Schema text to parse.
      * @throws InternalException    If parsing fails.
@@ -130,13 +130,13 @@ public final class Schema {
     /** Specifies the schema format used. */
     public enum JsonOrHuman {
         /**
-         * Cedar JSON schema format. See <a href=
-         * "https://docs.cedarpolicy.com/schema/json-schema.html">https://docs.cedarpolicy.com/schema/json-schema.html</a>
+         * Cedar JSON schema format. See <a href="https://docs.cedarpolicy.com/schema/json-schema.html">
+         *     https://docs.cedarpolicy.com/schema/json-schema.html</a>
          */
         Json,
         /**
-         * Cedar schema format. See <a href=
-         * "https://docs.cedarpolicy.com/schema/human-readable-schema.html">https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
+         * Cedar schema format. See <a href="https://docs.cedarpolicy.com/schema/human-readable-schema.html">
+         *     https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
          */
         Human
     }

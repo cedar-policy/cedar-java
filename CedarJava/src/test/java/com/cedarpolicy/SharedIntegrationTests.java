@@ -37,8 +37,6 @@ import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -321,11 +319,11 @@ public class SharedIntegrationTests {
     }
 
     /** Check for unmatched quotes. */
-    private Boolean hasUnmatchedQuote(String s) {
+    private Boolean hasUnmatchedQuote(String str) {
         // Ignore escaped quotes, i.e. \"
         // Note that backslashes in the regular expression have to be double escaped.
-        String new_s = s.replaceAll("\\\\\"", "");
-        long count = new_s.chars().filter(ch -> ch == '\"').count();
+        String newStr = str.replaceAll("\\\\\"", "");
+        long count = newStr.chars().filter(ch -> ch == '\"').count();
         return (count % 2 == 1);
     }
 

@@ -62,11 +62,11 @@ public final class AuthorizationResponse {
 
     @Override
     public String toString() {
-        final String warnings_str = warnings.isEmpty() ? "" : "\nwith warnings: " + warnings.toString();
+        final String warningsString = warnings.isEmpty() ? "" : "\nwith warnings: " + warnings.toString();
         if (type == SuccessOrFailure.Success) {
-            return "SUCCESS: " + success.get().toString() + warnings_str;
+            return "SUCCESS: " + success.get().toString() + warningsString;
         } else {
-            return "FAILURE: " + errors.get().toString() + warnings_str;
+            return "FAILURE: " + errors.get().toString() + warningsString;
         }
     }
 

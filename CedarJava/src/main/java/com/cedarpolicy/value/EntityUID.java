@@ -83,7 +83,7 @@ public final class EntityUID extends Value {
     public boolean equals(Object o) {
         if (o == null) {
             return false;
-        } if (o == this) {
+        } else if (o == this) {
             return true;
         } else {
             try {
