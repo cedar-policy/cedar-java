@@ -41,13 +41,13 @@ import java.util.Optional;
 public class AuthorizationRequest {
     /** EUID of the principal in the request. */
     @JsonProperty("principal")
-    public final Optional<EntityUID> principalEUID;
+    public final EntityUID principalEUID;
     /** EUID of the action in the request. */
     @JsonProperty("action")
     public final EntityUID actionEUID;
     /** EUID of the resource in the request. */
     @JsonProperty("resource")
-    public final Optional<EntityUID> resourceEUID;
+    public final EntityUID resourceEUID;
 
     /** Key/Value map representing the context of the request. */
     public final Optional<Map<String, Value>> context;
@@ -77,9 +77,9 @@ public class AuthorizationRequest {
      * (true). No effect if `schema` is not provided.
      */
     public AuthorizationRequest(
-            Optional<EntityUID> principalEUID,
+            EntityUID principalEUID,
             EntityUID actionEUID,
-            Optional<EntityUID> resourceEUID,
+            EntityUID resourceEUID,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema,
             boolean enableRequestValidation) {
@@ -105,9 +105,9 @@ public class AuthorizationRequest {
      */
     public AuthorizationRequest(EntityUID principalEUID, EntityUID actionEUID, EntityUID resourceEUID, Map<String, Value> context) {
         this(
-                Optional.of(principalEUID),
+                principalEUID,
                 actionEUID,
-                Optional.of(resourceEUID),
+                resourceEUID,
                 Optional.of(context),
                 Optional.empty(),
                 false);
@@ -141,12 +141,13 @@ public class AuthorizationRequest {
      * schema-based parsing of `context` (false) or also for request validation
      * (true). No effect if `schema` is not provided.
      */
-    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource,
+
+    public AuthorizationRequest(Entity principal, Entity action, Entity resource,
                                 Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enableRequestValidation) {
         this(
-            principal.map(e -> e.getEUID()),
+            principal.getEUID(),
             action.getEUID(),
-            resource.map(e -> e.getEUID()),
+            resource.getEUID(),
             context,
             schema,
             enableRequestValidation

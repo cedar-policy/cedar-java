@@ -399,9 +399,9 @@ public class SharedIntegrationTests {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authRequest =
                 new AuthorizationRequest(
-                    request.principal == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.principal).get()),
+                    EntityUID.parseFromJson(request.principal).get(),
                     EntityUID.parseFromJson(request.action).get(),
-                    request.resource == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.resource).get()),
+                    EntityUID.parseFromJson(request.resource).get(),
                     Optional.of(request.context),
                     Optional.of(schema),
                     request.validateRequest);

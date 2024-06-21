@@ -117,11 +117,15 @@ public class JSONTests {
     public void testPartialRequest() {
         var opens = new EntityUID(EntityTypeName.parse("Action").get(), "opens");
         var moria = new EntityUID(EntityTypeName.parse("Mines").get(), "moria");
-        AuthorizationRequest q = new PartialAuthorizationRequest(Optional.empty(), opens, Optional.of(moria), Optional.of(new HashMap<String, Value>()), Optional.empty(), false);
+        var q = PartialAuthorizationRequest.builder()
+            .action(opens)
+            .resource(moria)
+            .emptyContext()
+            .build();
         ObjectNode n = JsonNodeFactory.instance.objectNode();
-        n.set("context", JsonNodeFactory.instance.objectNode());
         n.set("action", buildEuidObject("Action", "opens"));
         n.set("resource", buildEuidObject("Mines", "moria"));
+        n.set("context", JsonNodeFactory.instance.objectNode());
         n.set("validateRequest", JsonNodeFactory.instance.booleanNode(false));
         assertJSONEqual(n, q);
     }

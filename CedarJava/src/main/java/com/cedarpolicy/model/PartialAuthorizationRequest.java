@@ -4,12 +4,14 @@ import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.Entity;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 /**
@@ -29,14 +31,38 @@ import java.util.Optional;
  */
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
-public class PartialAuthorizationRequest extends AuthorizationRequest {
+public class PartialAuthorizationRequest {
+
+    /** EUID of the principal in the request. */
+    public final Optional<EntityUID> principal;
+    /** EUID of the action in the request. */
+    public final Optional<EntityUID> action;
+    /** EUID of the resource in the request. */
+    public final Optional<EntityUID> resource;
+
+    /** Key/Value map representing the context of the request. */
+    public final Optional<Map<String, Value>> context;
+
+    /** JSON object representing the Schema. Used for schema-based parsing of
+     * `context`, and also (if `enableRequestValidation` is `true`) for
+     * request validation. */
+    public final Optional<Schema> schema;
+
+    /** If this is `true` and a schema is provided, perform request validation.
+     * If this is `false`, the schema will only be used for schema-based parsing
+     * of `context`, and not for request validation.
+     * If a schema is not provided, this option has no effect. */
+    @JsonProperty("validateRequest")
+    public final boolean enableRequestValidation;
+
+    
     /**
      * Create a partial authorization request from the EUIDs and Context. We recommend using the {@link Builder}
      * for convenience.
      *
-     * @param principalEUID Principal's EUID.
-     * @param actionEUID Action's EUID.
-     * @param resourceEUID Resource's EUID.
+     * @param principal Principal's EUID.
+     * @param action Action's EUID.
+     * @param resource Resource's EUID.
      * @param context Key/Value context.
      * @param schema Schema (optional).
      * @param enableRequestValidation Whether to use the schema for just
@@ -44,36 +70,18 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
      * (true). No effect if `schema` is not provided.
      */
     public PartialAuthorizationRequest(
-            Optional<EntityUID> principalEUID,
-            EntityUID actionEUID,
-            Optional<EntityUID> resourceEUID,
+            Optional<EntityUID> principal,
+            Optional<EntityUID> action,
+            Optional<EntityUID> resource,
             Optional<Map<String, Value>> context,
             Optional<Schema> schema,
             boolean enableRequestValidation) {
-        super(principalEUID, actionEUID, resourceEUID, context, schema, enableRequestValidation);
-    }
-
-    /**
-     * Create a partial authorization request from Entity objects and Context. We recommend using the {@link Builder}
-     * for convenience.
-     *
-     * @param principal
-     * @param action
-     * @param resource
-     * @param context
-     * @param schema
-     * @param enableRequestValidation Whether to use the schema for just
-     * schema-based parsing of `context` (false) or also for request validation
-     * (true). No effect if `schema` is not provided.
-     */
-    public PartialAuthorizationRequest(
-            Optional<Entity> principal,
-            Entity action,
-            Optional<Entity> resource,
-            Optional<Map<String, Value>> context,
-            Optional<Schema> schema,
-            boolean enableRequestValidation) {
-        super(principal, action, resource, context, schema, enableRequestValidation);
+        this.principal = principal;
+        this.action = action;
+        this.resource = resource;
+        this.context = context;
+        this.schema = schema;
+        this.enableRequestValidation = enableRequestValidation;
     }
 
     /**
@@ -85,13 +93,14 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
         return new Builder();
     }
 
+
     public static final class Builder {
-        private EntityUID principalEUID;
-        private EntityUID actionEUID;
-        private EntityUID resourceEUID;
-        private Map<String, Value> context;
-        private Schema schema;
-        private boolean enableRequestValidation;
+        private Optional<EntityUID> principalEUID = Optional.empty();
+        private Optional<EntityUID> actionEUID = Optional.empty();
+        private Optional<EntityUID> resourceEUID = Optional.empty();
+        private Optional<Map<String, Value>> context = Optional.empty();
+        private Optional<Schema> schema = Optional.empty();
+        private boolean enableRequestValidation = false;
 
         private Builder() {
         }
@@ -102,17 +111,8 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder principal(EntityUID principalEUID) {
-            this.principalEUID = principalEUID;
+            this.principalEUID = Optional.of(principalEUID);
             return this;
-        }
-
-        /**
-         * Set the principal.
-         * @param principal
-         * @return The builder.
-         */
-        public Builder principal(Entity principal) {
-            return principal(principal != null ? principal.getEUID() : null);
         }
 
         /**
@@ -121,17 +121,8 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder action(EntityUID actionEUID) {
-            this.actionEUID = actionEUID;
+            this.actionEUID = Optional.of(actionEUID);
             return this;
-        }
-
-        /**
-         * Set the action.
-         * @param action
-         * @return The builder.
-         */
-        public Builder action(Entity action) {
-            return action(action != null ? action.getEUID() : null);
         }
 
         /**
@@ -140,17 +131,8 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder resource(EntityUID resourceEUID) {
-            this.resourceEUID = resourceEUID;
+            this.resourceEUID = Optional.of(resourceEUID);
             return this;
-        }
-
-        /**
-         * Set the resource.
-         * @param resource
-         * @return The builder.
-         */
-        public Builder resource(Entity resource) {
-            return resource(resource != null ? resource.getEUID() : null);
         }
 
         /**
@@ -159,7 +141,16 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder context(Map<String, Value> context) {
-            this.context = ImmutableMap.copyOf(context);
+            this.context = Optional.of(ImmutableMap.copyOf(context));
+            return this;
+        }
+
+        /** 
+         * Set the context to be empty, not unknown
+         * @return The builder.
+         */
+        public Builder emptyContext() {
+            this.context = Optional.of(new HashMap<>());
             return this;
         }
 
@@ -169,7 +160,7 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The builder.
          */
         public Builder schema(Schema schema) {
-            this.schema = schema;
+            this.schema = Optional.of(schema);
             return this;
         }
 
@@ -187,8 +178,12 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
          * @return The request.
          */
         public PartialAuthorizationRequest build() {
-            return new PartialAuthorizationRequest(Optional.ofNullable(principalEUID), actionEUID,
-                    Optional.ofNullable(resourceEUID), Optional.ofNullable(context), Optional.ofNullable(schema),
+            return new PartialAuthorizationRequest(
+                    principalEUID,
+                    actionEUID,
+                    resourceEUID,
+                    context,
+                    schema,
                     enableRequestValidation);
         }
     }
