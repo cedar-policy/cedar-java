@@ -54,7 +54,8 @@ public class Entity {
     public String toString() {
         String parentStr = "";
         if (!parentsEUIDs.isEmpty()) {
-            List<String> parentStrs = new ArrayList<String>(parentsEUIDs.stream().map(euid -> euid.toString()).collect(Collectors.toList()));
+            List<String> parentStrs = new ArrayList<String>(parentsEUIDs.stream()
+                    .map(euid -> euid.toString()).collect(Collectors.toList()));
             parentStr = "\n\tparents:\n\t\t" + String.join("\n\t\t", parentStrs);
         }
         String attributeStr = "";
@@ -70,8 +71,8 @@ public class Entity {
 
 
     /**
-     * Get the entity uid 
-     * @return Entity UID 
+     * Get the entity uid
+     * @return Entity UID
      */
     public EntityUID getEUID() {
         return euid;
@@ -79,7 +80,7 @@ public class Entity {
 
     /**
      * Get this Entities parents
-     * @return the set of parent EntityUIDs 
+     * @return the set of parent EntityUIDs
      */
     public Set<EntityUID> getParents() {
         return parentsEUIDs;

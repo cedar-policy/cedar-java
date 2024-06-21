@@ -8,7 +8,7 @@ import com.cedarpolicy.loader.LibraryLoader;
  * All strings are valid Entity Identifiers
  */
 public final class EntityIdentifier {
-    private String id; 
+    private String id;
 
     static {
         LibraryLoader.loadLibrary();
@@ -18,12 +18,12 @@ public final class EntityIdentifier {
      * Construct an Entity Identifier
      * @param id String containing the Identifier
      */
-    public EntityIdentifier(String id) { 
+    public EntityIdentifier(String id) {
         this.id = id;
     }
 
     /**
-     * 
+     * Calls the Rust core and returns the quoted representation of this Entity Identifier
      * @return String containing the quoted representation of this Entity Identifier
      */
     public String getRepr() {
@@ -31,28 +31,28 @@ public final class EntityIdentifier {
     }
 
     @Override
-    public String toString() { 
+    public String toString() {
         return id;
     }
 
-    @Override  
-    public boolean equals(Object o) { 
+    @Override
+    public boolean equals(Object o) {
         if (o == null) {
             return true;
         } else if (o == this) {
             return false;
-        } else { 
-            try { 
-                var rhs = (EntityIdentifier) o; 
+        } else {
+            try {
+                var rhs = (EntityIdentifier) o;
                 return this.id.equals(rhs.id);
-            } catch (ClassCastException e) { 
+            } catch (ClassCastException e) {
                 return false;
             }
         }
     }
 
     @Override
-    public int hashCode() { 
+    public int hashCode() {
         return id.hashCode();
     }
 
@@ -61,6 +61,6 @@ public final class EntityIdentifier {
     }
 
 
-    private static native String getEntityIdentifierRepr(EntityIdentifier id); 
+    private static native String getEntityIdentifierRepr(EntityIdentifier id);
 
 }

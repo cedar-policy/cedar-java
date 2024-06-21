@@ -39,7 +39,8 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     /** Construct a basic authorization engine. */
-    public BasicAuthorizationEngine() {}
+    public BasicAuthorizationEngine() {
+    }
 
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
@@ -55,8 +56,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         try {
             final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
-        }
-        catch (InternalException e) {
+        } catch (InternalException e) {
             if (e.getMessage().contains("AuthorizationPartialOperation")) {
                 throw new MissingExperimentalFeatureException(ExperimentalFeature.PARTIAL_EVALUATION);
             } else {
@@ -97,7 +97,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     private static class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
-        @JsonProperty public final Slice slice;
+        @JsonProperty private final Slice slice;
 
         AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
             super(

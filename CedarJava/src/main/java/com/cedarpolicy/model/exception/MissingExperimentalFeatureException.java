@@ -8,9 +8,9 @@ public class MissingExperimentalFeatureException extends InternalException {
     private ExperimentalFeature experimentalFeature;
 
     public MissingExperimentalFeatureException(ExperimentalFeature experimentalFeature) {
-        super("Missing experimental feature. To enable this feature please recompile " +
-                Path.of(System.getenv("CEDAR_JAVA_FFI_LIB")).getFileName() +
-                " with \"--features=" + experimentalFeature.getCompileFlag() + "\".");
+        super("Missing experimental feature. To enable this feature please recompile "
+                + Path.of(System.getenv("CEDAR_JAVA_FFI_LIB")).getFileName()
+                + " with \"--features=" + experimentalFeature.getCompileFlag() + "\".");
         this.experimentalFeature = experimentalFeature;
     }
 

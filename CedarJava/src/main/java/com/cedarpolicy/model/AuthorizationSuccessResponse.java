@@ -99,14 +99,14 @@ public final class AuthorizationSuccessResponse {
     public static final class AuthorizationError {
         /** Id of the policy where the error (or warning) occurred */
         @JsonProperty("policyId")
-        public final String policyId;
+        private final String policyId;
         /**
          * Error (or warning).
          * You can look at the `severity` field to see whether it is
          * actually an error or a warning.
          */
         @JsonProperty("error")
-        public final DetailedError error;
+        private final DetailedError error;
 
         @JsonCreator
         public AuthorizationError(

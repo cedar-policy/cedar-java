@@ -85,7 +85,7 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
         return new Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
         private EntityUID principalEUID;
         private EntityUID actionEUID;
         private EntityUID resourceEUID;
@@ -93,7 +93,8 @@ public class PartialAuthorizationRequest extends AuthorizationRequest {
         private Schema schema;
         private boolean enableRequestValidation;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Set the principal.

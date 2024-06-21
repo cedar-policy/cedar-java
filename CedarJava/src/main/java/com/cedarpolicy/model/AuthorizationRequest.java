@@ -141,7 +141,8 @@ public class AuthorizationRequest {
      * schema-based parsing of `context` (false) or also for request validation
      * (true). No effect if `schema` is not provided.
      */
-    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource, Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enableRequestValidation) {
+    public AuthorizationRequest(Optional<Entity> principal, Entity action, Optional<Entity> resource,
+                                Optional<Map<String, Value>> context, Optional<Schema> schema, boolean enableRequestValidation) {
         this(
             principal.map(e -> e.getEUID()),
             action.getEUID(),

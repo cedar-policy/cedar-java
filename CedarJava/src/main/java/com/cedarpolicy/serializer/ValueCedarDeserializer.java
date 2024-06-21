@@ -90,11 +90,11 @@ public class ValueCedarDeserializer extends JsonDeserializer<Value> {
                         if (escapeType == EscapeType.ENTITY) {
                             JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
                             if (val.isObject() && val.has("id") && val.has("type")) {
-                                int num_fields = 0;
+                                int numFields = 0;
                                 for (Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
-                                    num_fields++;
+                                    numFields++;
                                 }
-                                if (num_fields == 2) {
+                                if (numFields == 2) {
                                     var id = new EntityIdentifier(val.get("id").textValue());
                                     var type = EntityTypeName.parse(val.get("type").textValue());
                                     if (type.isPresent()) {

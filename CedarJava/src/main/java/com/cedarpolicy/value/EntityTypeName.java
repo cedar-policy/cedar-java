@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-/**  Object representing a Cedar entity type 
-    An entity type has two components: 
+/**  Object representing a Cedar entity type
+    An entity type has two components:
     1) An (optional) hierarchical namespace
-    2) a basename 
+    2) a basename
 */
 public final class EntityTypeName {
     private final List<String> namespace;
@@ -34,7 +34,7 @@ public final class EntityTypeName {
      */
     protected EntityTypeName(List<String> namespace, String  basename) {
         this.namespace = namespace;
-        this.basename= basename;
+        this.basename = basename;
         this.entityTypeNameRepr = Suppliers.memoize(() -> getEntityTypeNameRepr(this));
     }
 
@@ -56,7 +56,7 @@ public final class EntityTypeName {
         return new EntityUID(this, id);
     }
 
-    /** 
+    /**
      * Get the namespace components in order from the root
      * Ex: the namespace `foo::bar::baz` would be returned in the order: `foo`, `bar`, `baz`
      * @return stream of Strings representing namespace components
@@ -69,7 +69,7 @@ public final class EntityTypeName {
         return namespace;
     }
 
-    /** 
+    /**
      * Get the namespace component as a string
      * This is equivalent to `toString` ignoring the basename.
      * @return String containing the namespace
@@ -82,30 +82,31 @@ public final class EntityTypeName {
         return this.entityTypeNameRepr.get();
     }
 
-    /** 
-     * @return Basename of this entity type
+    /**
+     * Get the basename of this entity type
+     * @return String containing the basename
      */
     public String getBaseName() {
         return basename;
     }
 
 
-    public boolean equals(Object rhs) { 
-        if (rhs == null) { 
+    public boolean equals(Object rhs) {
+        if (rhs == null) {
             return false;
         }
         if (rhs == this) {
             return true;
         }
-        try { 
-            var rhs_typename = (EntityTypeName) rhs; 
-            return basename.equals(rhs_typename.basename) && namespace.equals(rhs_typename.namespace);
-        } catch (ClassCastException e) { 
+        try {
+            var rhsTypename = (EntityTypeName) rhs;
+            return basename.equals(rhsTypename.basename) && namespace.equals(rhsTypename.namespace);
+        } catch (ClassCastException e) {
             return false;
         }
     }
 
-    public int hashCode() { 
+    public int hashCode() {
         return Objects.hash(basename, namespace);
     }
 
@@ -114,7 +115,7 @@ public final class EntityTypeName {
      * @param src the string to be parsed
      * @return An optional containing the EntityTypeName if it was able to be parsed
      */
-    public static Optional<EntityTypeName> parse(String src) { 
+    public static Optional<EntityTypeName> parse(String src) {
         return parseEntityTypeName(src);
     }
 

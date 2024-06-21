@@ -21,10 +21,16 @@ import com.fizzed.jne.JNE;
 /**
  * Native Library Loader encapsulates runtime loading of the Cedar Java FFI library
  */
-public class LibraryLoader {
+public final class LibraryLoader {
     private static final String LIBRARY_PATH_VARIABLE_NAME = "CEDAR_JAVA_FFI_LIB";
 
     private static final String LIBRARY_NAME = "cedar_java_ffi";
+
+    /**
+     * Private constructor to prevent instantiation of this utility class
+     */
+    private LibraryLoader() {
+    }
 
     /**
      * Load Cedar Java FFI library based on runtime operating system and architecture of the Java Virtual Machine

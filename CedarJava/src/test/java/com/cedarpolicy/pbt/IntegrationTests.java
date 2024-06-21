@@ -58,7 +58,7 @@ public class IntegrationTests {
     final EntityTypeName actionType;
     final EntityTypeName resourceType;
 
-    private static final BasicAuthorizationEngine engine = new BasicAuthorizationEngine();
+    private static final BasicAuthorizationEngine ENGINE = new BasicAuthorizationEngine();
 
     public IntegrationTests() {
         principalType = EntityTypeName.parse("User").get();
@@ -68,7 +68,7 @@ public class IntegrationTests {
 
     private void assertAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = engine.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
             if (response.success.isPresent()) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertTrue(success.isAllowed());
@@ -80,7 +80,7 @@ public class IntegrationTests {
 
     private void assertNotAllowed(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = engine.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
             if (response.success.isPresent()) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertFalse(success.isAllowed());
@@ -92,7 +92,7 @@ public class IntegrationTests {
 
     private void assertFailure(AuthorizationRequest request, Slice slice) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = engine.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
             if (response.success.isPresent()) {
                 fail(String.format("Expected a failure, but got this success: %s", response.toString()));
             } else {
@@ -161,7 +161,7 @@ public class IntegrationTests {
 
         String actionId = "view";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set< EntityUID> actionParents = new HashSet<>();
+        Set<EntityUID> actionParents = new HashSet<>();
         Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(action);
 
@@ -206,7 +206,7 @@ public class IntegrationTests {
                         + attributes.toString()
                         + "\n};";
         attributes = null;
-        Policy policy = new Policy(p, "ID" + String.valueOf(count));
+        Policy policy = new Policy(p, "ID" + count);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
@@ -223,13 +223,13 @@ public class IntegrationTests {
         Set<Entity> entities = new HashSet<>();
         String principalId = "alice";
         Map<String, Value> principalAttributes = new HashMap<>();
-        Set< EntityUID> principalParents = new HashSet<>();
+        Set<EntityUID> principalParents = new HashSet<>();
         Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
         entities.add(principal);
 
         String actionId = "view";
         Map<String, Value> actionAttributes = new HashMap<>();
-        Set< EntityUID> actionParents = new HashSet<>();
+        Set<EntityUID> actionParents = new HashSet<>();
         Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
         entities.add(action);
 
@@ -239,7 +239,7 @@ public class IntegrationTests {
             resourceAttributes.put(Utils.strings(), Utils.primStrings());
         }
         resourceAttributes.put("name", new PrimString("my_photo"));
-        Set< EntityUID> resourceParents = new HashSet<>();
+        Set<EntityUID> resourceParents = new HashSet<>();
         var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(resource);
         /*
@@ -281,7 +281,7 @@ public class IntegrationTests {
                         + attributes.toString()
                         + "};";
         attributes = null;
-        Policy policy = new Policy(p, "ID" + String.valueOf(count));
+        Policy policy = new Policy(p, "ID" + count);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
         Slice slice = new BasicSlice(policies, entities);
@@ -349,7 +349,7 @@ public class IntegrationTests {
         Set<EntityUID> resourceParents = new HashSet<>();
         var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
         entities.add(resource);
-	String p = createNested(5000);
+        String p = createNested(5000);
         Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
@@ -362,7 +362,7 @@ public class IntegrationTests {
     }
 
     private String createNested(int repeats) {
-        StringBuilder builder  = new StringBuilder("permit(principal == User::\"alice\", action == Action::\"view\", resource == Resource::\"photo.jpg\") when { ");
+        StringBuilder builder = new StringBuilder("permit(principal == User::\"alice\", action == Action::\"view\", resource == Resource::\"photo.jpg\") when { ");
         String phrase = " resource.name == \"my_photo\" && ";
         for (int i = 0; i < repeats; i++) {
            builder.append(phrase);

@@ -12,8 +12,8 @@ public class EntityIdTests {
     @Property
     void anyString(@ForAll String s) {
         var id = new EntityIdentifier(s);
-        var as_str = id.getRepr();
-        assertTrue(as_str.length() >= s.length());
+        var asStr = id.getRepr();
+        assertTrue(asStr.length() >= s.length());
     }
 
 }

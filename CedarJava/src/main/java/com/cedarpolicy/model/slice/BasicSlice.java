@@ -65,7 +65,8 @@ public class BasicSlice implements Slice {
 
         for (Entity entity : entities) {
             attributes.put(entity.getEUID().toString(), entity.attrs);
-            List<String> parentList = new ArrayList<String>(entity.getParents().stream().map(euid -> euid.toString()).collect(Collectors.toList()));
+            List<String> parentList = new ArrayList<String>(entity.getParents().stream()
+                    .map(euid -> euid.toString()).collect(Collectors.toList()));
             parents.put(entity.getEUID().toString(), parentList);
         }
 

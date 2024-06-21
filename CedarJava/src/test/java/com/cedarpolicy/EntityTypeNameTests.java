@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.lang.NullPointerException;
 
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -23,7 +22,7 @@ import com.cedarpolicy.value.EntityTypeName;
 
 public class EntityTypeNameTests {
 
-    private static String[] KEYWORDS = new String[] {
+    private static final String[] KEYWORDS = new String[] {
         "true",
         "false",
         "if",
@@ -124,7 +123,7 @@ public class EntityTypeNameTests {
 
     @Provide
     public static Arbitrary<EntityTypeName> multiLevelName() {
-        Arbitrary<List<String>> namespace = validName().collect(lst -> lst.size() >= 1 );
+        Arbitrary<List<String>> namespace = validName().collect(lst -> lst.size() >= 1);
         return namespace.map(parts -> parse(parts));
     }
 
@@ -142,7 +141,7 @@ public class EntityTypeNameTests {
     public static Arbitrary<String> validName() {
         var first = Arbitraries.chars().alpha();
         var rest = Arbitraries.strings().alpha().numeric().ofMinLength(0);
-        return Combinators.combine(first, rest).as((f,r) -> f + r).filter(str -> !isKeyword(str));
+        return Combinators.combine(first, rest).as((f, r) -> f + r).filter(str -> !isKeyword(str));
     }
 
     private static boolean isKeyword(String s) {

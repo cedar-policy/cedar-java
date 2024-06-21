@@ -89,8 +89,8 @@ public class ValidationTests {
         thenValidationFailed(response);
     }
 
-    private void givenSchema(Schema schema) {
-        this.schema = schema;
+    private void givenSchema(Schema testSchema) {
+        this.schema = testSchema;
     }
 
     private void givenPolicy(String id, String policy) {

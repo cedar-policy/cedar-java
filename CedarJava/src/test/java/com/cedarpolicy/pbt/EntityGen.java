@@ -66,7 +66,7 @@ public final class EntityGen {
 
         var count = Arbitraries.integers().between(10, 100).sample();
 
-        for (int i = 0; i < count; i++ ) {
+        for (int i = 0; i < count; i++) {
             actions.add(arbitraryEntity());
         }
 
