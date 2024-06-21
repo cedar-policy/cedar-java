@@ -626,9 +626,9 @@ public class IntegrationTests {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
-                        Optional.of(principal),
+                        principal,
                         action,
-                        Optional.of(resource),
+                        resource,
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")),
                         true);
@@ -685,9 +685,9 @@ public class IntegrationTests {
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
-                        Optional.of(principal),
+                        principal,
                         action,
-                        Optional.of(resource),
+                        resource,
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")),
                         true);

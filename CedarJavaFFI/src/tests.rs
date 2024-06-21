@@ -19,6 +19,12 @@ fn assert_authorization_success(result: String) {
     assert_matches!(result, AuthorizationAnswer::Success { .. });
 }
 
+#[track_caller]
+fn assert_authorization_failure(result: String) {
+    let result: AuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
+    assert_matches!(result, AuthorizationAnswer::Failure { .. });
+}
+
 #[cfg(feature = "partial-eval")]
 #[track_caller]
 fn assert_partial_authorization_success(result: String) {
@@ -82,7 +88,7 @@ mod authorization_tests {
     }
     "#,
         );
-        assert_authorization_success(result);
+        assert_authorization_failure(result);
     }
 
     #[test]
@@ -106,7 +112,7 @@ mod authorization_tests {
     }
     "#,
         );
-        assert_authorization_success(result);
+        assert_authorization_failure(result);
     }
 
     #[test]
