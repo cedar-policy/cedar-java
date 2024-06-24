@@ -25,4 +25,4 @@ jobs:
     uses: ./.github/workflows/run_cedar_java_reusable.yml
     with:
       cedar_policy_ref: "refs/heads/main" # use the latest commit on main
-      cedar_java_ref: "${{ github.head_ref }}" # use the current PR's commit
+      cedar_java_ref: "${{ github.href }}" # use the current PR's commit
