@@ -3,7 +3,6 @@ package com.cedarpolicy.model;
 import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.slice.Entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
@@ -55,7 +54,7 @@ public class PartialAuthorizationRequest {
     @JsonProperty("validateRequest")
     public final boolean enableRequestValidation;
 
-    
+
     /**
      * Create a partial authorization request from the EUIDs and Context. We recommend using the {@link Builder}
      * for convenience.
@@ -145,7 +144,7 @@ public class PartialAuthorizationRequest {
             return this;
         }
 
-        /** 
+        /**
          * Set the context to be empty, not unknown
          * @return The builder.
          */
