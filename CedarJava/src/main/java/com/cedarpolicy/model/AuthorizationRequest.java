@@ -27,7 +27,7 @@ import java.util.Optional;
 
 /**
  * An authorization request consists of a principal, action, and resource as well as a context mapping
- * strings to Cedar values. When evaluating the request against a slice, the authorization engine
+ * strings to Cedar values. When evaluating the request against a set of policies and entities, the authorization engine
  * determines if the policies allow for the given principal to perform the given action against the
  * given resource.
  *

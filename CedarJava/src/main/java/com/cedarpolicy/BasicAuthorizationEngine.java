@@ -26,11 +26,16 @@ import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
+import com.cedarpolicy.model.slice.BasicSlice;
+import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.model.slice.Slice;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.Set;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
 public final class BasicAuthorizationEngine implements AuthorizationEngine {
@@ -43,18 +48,18 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     @Override
-    public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q, Slice slice)
-            throws AuthException {
-        final AuthorizationRequest request = new AuthorizationRequest(q, slice);
+    public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
+                                              PolicySet policySet, Set<Entity> entities) throws AuthException {
+        final AuthorizationRequest request = new AuthorizationRequest(q, policySet, entities);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
 
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override
-    public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q, Slice slice)
-            throws AuthException {
+    public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
+                                                            PolicySet policySet, Set<Entity> entities) throws AuthException {
         try {
-            final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, slice);
+            final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, policySet, entities);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
         } catch (InternalException e) {
             if (e.getMessage().contains("AuthorizationPartialOperation")) {
@@ -81,6 +86,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                                 + " but JNI Cedar Language version is "
                                 + cedarJNIVersion);
             }
+            // Convert the request POJO to a JSON string
             final String fullRequest = objectWriter().writeValueAsString(request);
 
             final String response = callCedarJNI(operation, fullRequest);
@@ -99,7 +105,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     private static class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
         @JsonProperty private final Slice slice;
 
-        AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, Slice slice) {
+        AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             super(
                     request.principalEUID,
                     request.actionEUID,
@@ -107,7 +113,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.context,
                     request.schema,
                     request.enableRequestValidation);
-            this.slice = slice;
+            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateInstantiations);
         }
     }
 
@@ -116,9 +122,9 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         @JsonProperty public final Slice slice;
         @JsonProperty public final com.cedarpolicy.model.PartialAuthorizationRequest request;
 
-        PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, Slice slice) {
+        PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             this.request = request;
-            this.slice = slice;
+            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateInstantiations);
         }
     }
 

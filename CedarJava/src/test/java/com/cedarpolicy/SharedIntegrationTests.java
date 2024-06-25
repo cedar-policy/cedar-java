@@ -30,10 +30,9 @@ import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
@@ -405,10 +404,10 @@ public class SharedIntegrationTests {
                     Optional.of(request.context),
                     Optional.of(schema),
                     request.validateRequest);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
 
         try {
-            final AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
+            final AuthorizationResponse response = auth.isAuthorized(authRequest, policySet, entities);
             if (response.type == AuthorizationResponse.SuccessOrFailure.Success) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertEquals(request.decision, success.getDecision());

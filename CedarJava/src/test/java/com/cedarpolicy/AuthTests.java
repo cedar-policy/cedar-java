@@ -9,9 +9,9 @@ import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationResponse.SuccessOrFailure;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
-import com.cedarpolicy.model.slice.BasicSlice;
+import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
 import org.junit.jupiter.api.Test;
@@ -19,11 +19,13 @@ import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
+
 public class AuthTests {
 
-    private void assertAllowed(AuthorizationRequest q, Slice slice) {
+    private void assertAllowed(AuthorizationRequest q, PolicySet policySet, Set<Entity> entities) {
         assertDoesNotThrow(() -> {
-            final var response = new BasicAuthorizationEngine().isAuthorized(q, slice);
+            final var response = new BasicAuthorizationEngine().isAuthorized(q, policySet, entities);
             assertEquals(response.type, SuccessOrFailure.Success);
             final var success = response.success.get();
             assertTrue(success.isAllowed());
@@ -37,8 +39,8 @@ public class AuthTests {
         var q = new AuthorizationRequest(alice, view, alice, new HashMap<>());
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal,action,resource);", "p0"));
-        var slice = new BasicSlice(policies, new HashSet<>());
-        assertAllowed(q, slice);
+        var policySet = new PolicySet(policies);
+        assertAllowed(q, policySet, new HashSet<>());
     }
 
     @Test
@@ -49,10 +51,10 @@ public class AuthTests {
         var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(new HashMap<>()).build();
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
-        var slice = new BasicSlice(policies, new HashSet<>());
+        var policySet = new PolicySet(policies);
         assumePartialEvaluation(() -> {
             try {
-                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertEquals(Decision.Allow, response.getDecision());
                 assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
                 assertTrue(response.getNontrivialResiduals().isEmpty());
@@ -70,10 +72,10 @@ public class AuthTests {
         var q = PartialAuthorizationRequest.builder().action(view).resource(alice).context(new HashMap<>()).build();
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
-        var slice = new BasicSlice(policies, new HashSet<>());
+        var policySet = new PolicySet(policies);
         assumePartialEvaluation(() -> {
             try {
-                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, slice);
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertTrue(response.getDecision() == null);
                 assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
             } catch (Exception e) {

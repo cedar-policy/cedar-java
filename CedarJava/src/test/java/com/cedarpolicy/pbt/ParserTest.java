@@ -19,10 +19,9 @@ package com.cedarpolicy.pbt;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.value.Value;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
@@ -54,9 +53,9 @@ public class ParserTest {
         resourceType = EntityTypeName.parse("Resource").get();
     }
 
-    private void assertAllowed(AuthorizationRequest request, Slice slice) {
+    private void assertAllowed(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, slice);
+            final AuthorizationResponse response = new BasicAuthorizationEngine().isAuthorized(request, policySet, entities);
             final var success = response.success.get();
             assertTrue(success.isAllowed());
         });
@@ -106,12 +105,12 @@ public class ParserTest {
         Policy policy = new Policy("permit(principal\n,action\n,resource\n);", ids);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /**
@@ -170,12 +169,12 @@ public class ParserTest {
         Policy policy = new Policy(p, ids);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /*
@@ -227,7 +226,7 @@ public class ParserTest {
         Policy policy = new Policy(p, ids);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
@@ -235,7 +234,7 @@ public class ParserTest {
                         action,
                         resource,
                         currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
 
         String actionList =
                 "[" + actions.stream().map(a -> a.getEUID().toString()).collect(Collectors.joining(",")) + "]";
@@ -255,13 +254,13 @@ public class ParserTest {
         Policy policy2 = new Policy(p2, ids);
         policies = new HashSet<>();
         policies.add(policy2);
-        Slice slice2 = new BasicSlice(policies, entities);
+        PolicySet policySet2 = new PolicySet(policies);
         Map<String, Value> currentContext2 = new HashMap<>();
         int index = Arbitraries.integers().between(0, actions.size() - 1).sample();
         action = actions.get(index);
         AuthorizationRequest request2 =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext2);
-        assertAllowed(request2, slice2);
+        assertAllowed(request2, policySet2, entities);
     }
 }

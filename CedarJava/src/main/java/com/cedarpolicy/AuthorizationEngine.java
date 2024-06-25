@@ -19,14 +19,17 @@ package com.cedarpolicy;
 import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.slice.PolicySet;
+
+import java.util.Set;
 
 /**
  * Implementations of the AuthorizationEngine interface invoke Cedar to respond to an authorization
- * or validation request. For authorization, the input includes the relevant slice of the policy for
- * Cedar to consider. Clients can provide a slice in the form of Java objects constructed by the
+ * or validation request. For authorization, the input includes the relevant policies and entities for
+ * Cedar to consider. Clients can provide these inputs in the form of Java objects constructed by the
  * API, which will be converted to JSON internally. It is the client’s responsibility to ensure that
- * all relevant policy information is within the slice.
+ * all relevant policy information is given.
  *
  * <p>Note that Cedar does not have intrinsic limits on the sizes / number of policies. We could not
  * set such a limit as well as you, the user of the Cedar library. As such, it is your
@@ -34,26 +37,27 @@ import com.cedarpolicy.model.slice.Slice;
  */
 public interface AuthorizationEngine {
     /**
-     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the policies and
-     * entity hierarchy given in the <code>slice</code>.
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policies</code> and
+     * <code>entities</code> hierarchy given.
      *
      * @param request The request to evaluate
-     * @param slice The slice to evaluate against
+     * @param policySet The policy set to evaluate against
+     * @param entities The entities to evaluate against
      * @return The result of the request evaluation
      * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException On failure to make the authorization request. Note that errors inside the
      *     authorization engine are included in the <code>errors</code> field on the
      *     AuthorizationResponse.
      */
-    AuthorizationResponse isAuthorized(AuthorizationRequest request, Slice slice) throws AuthException;
+    AuthorizationResponse isAuthorized(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) throws AuthException;
 
     /**
-     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the policies and
-     * entity hierarchy given in the <code>slice</code>. If information required to answer is missing residual
-     * policies are returned.
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policies</code> and
+     * <code>entities</code> given. If information required to answer is missing residual policies are returned.
      *
      * @param request The request to evaluate
-     * @param slice The slice to evaluate against
+     * @param policySet The policy set to evaluate against
+     * @param entities The entities to evaluate against
      * @return The result of the request evaluation
      * @throws BadRequestException if any errors were found in the syntax of the policies.
      * @throws AuthException On failure to make the authorization request. Note that errors inside the
@@ -61,7 +65,8 @@ public interface AuthorizationEngine {
      *     AuthorizationResponse.
      */
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
-    PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request, Slice slice) throws AuthException;
+    PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request,
+                                                     PolicySet policySet, Set<Entity> entities) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct
