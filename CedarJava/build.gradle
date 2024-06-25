@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.0.17"
+    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.0.18"
     classpath "gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9"
   }
 }
@@ -82,7 +82,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.1'
     implementation 'com.fizzed:jne:4.1.1'
     implementation 'com.google.guava:guava:33.2.1-jre'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.5'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
     testImplementation 'net.jqwik:jqwik:1.8.5'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
