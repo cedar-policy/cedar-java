@@ -15,11 +15,11 @@ import java.util.Optional;
 
 /**
  * A partial authorization request consists of an optional principal, action, and optional resource as well as an
- * optional context mapping strings to Cedar values. When evaluating the request against a slice, the authorization
- * engine determines if the policies allow for the given principal to perform the given action against the given
- * resource. If a decision can be reached, then the response will provide the decision. If a decision can't be reached
- * due to missing information Cedar will attempt to reduce the policies as much as possible and will return the residual
- * policies.
+ * optional context mapping strings to Cedar values. When evaluating the request against a set of policies and entities,
+ * the authorization engine determines if the policies allow for the given principal to perform the given action against
+ * the given resource. If a decision can be reached, then the response will provide the decision. If a decision can't be
+ * reached due to missing information Cedar will attempt to reduce the policies as much as possible and will return the
+ * residual policies.
  *
  * <p>If the (optional) schema is provided, this will inform parsing the
  * `context` from JSON: for instance, it will allow `__entity` and `__extn`

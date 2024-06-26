@@ -25,12 +25,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.EntityTypeAndId;
 import com.cedarpolicy.model.slice.Instantiation;
 import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.model.slice.TemplateInstantiation;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityUID;
@@ -66,9 +65,9 @@ public class IntegrationTests {
         resourceType = EntityTypeName.parse("Resource").get();
     }
 
-    private void assertAllowed(AuthorizationRequest request, Slice slice) {
+    private void assertAllowed(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, policySet, entities);
             if (response.success.isPresent()) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertTrue(success.isAllowed());
@@ -78,9 +77,9 @@ public class IntegrationTests {
         });
     }
 
-    private void assertNotAllowed(AuthorizationRequest request, Slice slice) {
+    private void assertNotAllowed(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, policySet, entities);
             if (response.success.isPresent()) {
                 final var success = assertDoesNotThrow(() -> response.success.get());
                 assertFalse(success.isAllowed());
@@ -90,9 +89,9 @@ public class IntegrationTests {
         });
     }
 
-    private void assertFailure(AuthorizationRequest request, Slice slice) {
+    private void assertFailure(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
         assertDoesNotThrow(() -> {
-            final AuthorizationResponse response = ENGINE.isAuthorized(request, slice);
+            final AuthorizationResponse response = ENGINE.isAuthorized(request, policySet, entities);
             if (response.success.isPresent()) {
                 fail(String.format("Expected a failure, but got this success: %s", response.toString()));
             } else {
@@ -141,12 +140,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "001");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal.getEUID(), action.getEUID(), resource.getEUID(), currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Tests a randomly generated attribute for resource. */
@@ -209,12 +208,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "ID" + count);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Tests a randomly generated with one bad attribute for resource Response: Deny. */
@@ -284,12 +283,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "ID" + count);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertNotAllowed(request, slice);
+        assertNotAllowed(request, policySet, entities);
     }
 
     /** Tests a long expression that crashes the JNI if Rust doesn't spawn a new thread. */
@@ -319,12 +318,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
      /** Tests a long expression that is denied for nearing the stack overflow limit. */
@@ -353,12 +352,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "ID1");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertNotAllowed(request, slice);
+        assertNotAllowed(request, policySet, entities);
     }
 
     private String createNested(int repeats) {
@@ -398,7 +397,7 @@ public class IntegrationTests {
         Policy policy = new Policy(p, "001");
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
@@ -406,7 +405,7 @@ public class IntegrationTests {
                         action,
                         resource,
                         currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Test IpAddress extension. */
@@ -451,12 +450,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, policyId);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Test Decimal extension. */
@@ -501,12 +500,12 @@ public class IntegrationTests {
         Policy policy = new Policy(p, policyId);
         Set<Policy> policies = new HashSet<>();
         policies.add(policy);
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Use template slots to tests a single attribute: resource.owner. */
@@ -568,12 +567,12 @@ public class IntegrationTests {
         ArrayList<TemplateInstantiation> templateInstantiations =
                 new ArrayList<TemplateInstantiation>(Arrays.asList(templateInstantiation));
 
-        Slice slice = new BasicSlice(policies, entities, templates, templateInstantiations);
+        PolicySet policySet = new PolicySet(policies, templates, templateInstantiations);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
                         principal, action, resource, currentContext);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 
     /** Test using schema parsing. */
@@ -622,7 +621,7 @@ public class IntegrationTests {
 
         // Schema says resource.owner is a bool, so we should get a parse failure, which causes
         // `isAuthorized()` to throw a `BadRequestException`.
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
@@ -632,7 +631,7 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_deny_schema.json")),
                         true);
-        assertFailure(request, slice);
+        assertFailure(request, policySet, entities);
     }
 
     /** Test using schema parsing. */
@@ -681,7 +680,7 @@ public class IntegrationTests {
         policies.add(policy);
 
         // Schema says resource.owner is a User, so we should not get a parse failure.
-        Slice slice = new BasicSlice(policies, entities);
+        PolicySet policySet = new PolicySet(policies);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
@@ -691,6 +690,6 @@ public class IntegrationTests {
                         Optional.of(currentContext),
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")),
                         true);
-        assertAllowed(request, slice);
+        assertAllowed(request, policySet, entities);
     }
 }
