@@ -37,7 +37,7 @@ import java.util.Set;
  */
 public interface AuthorizationEngine {
     /**
-     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policies</code> and
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
      * <code>entities</code> hierarchy given.
      *
      * @param request The request to evaluate
@@ -52,8 +52,8 @@ public interface AuthorizationEngine {
     AuthorizationResponse isAuthorized(AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) throws AuthException;
 
     /**
-     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policies</code> and
-     * <code>entities</code> given. If information required to answer is missing residual policies are returned.
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
+     * <code>entities</code> given. If information required to answer is missing, residual policies are returned.
      *
      * @param request The request to evaluate
      * @param policySet The policy set to evaluate against

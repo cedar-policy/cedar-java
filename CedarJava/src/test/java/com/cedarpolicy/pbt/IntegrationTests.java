@@ -567,9 +567,7 @@ public class IntegrationTests {
         ArrayList<TemplateInstantiation> templateInstantiations =
                 new ArrayList<TemplateInstantiation>(Arrays.asList(templateInstantiation));
 
-        PolicySet policySet = new PolicySet(policies);
-        policySet.templates = templates;
-        policySet.templateInstantiations = templateInstantiations;
+        PolicySet policySet = new PolicySet(policies, templates, templateInstantiations);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(
