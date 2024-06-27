@@ -16,12 +16,23 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.loader.LibraryLoader;
+
+import com.cedarpolicy.model.exception.InternalException;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /** Policy Set containing policies in the Cedar language. */
 public class PolicySet {
+    static {
+        LibraryLoader.loadLibrary();
+    }
 
     /** Policy set. */
     public Set<Policy> policies;
@@ -49,4 +60,32 @@ public class PolicySet {
         this.templates = templates;
         this.templateInstantiations = templateInstantiations;
     }
+
+    /**
+     * Parse a multiple policies and templates from a file into a PolicySet.
+     * @param filePath the path to the file containing the policies
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException
+     * @throws IOException
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePolicies(Path filePath) throws InternalException, IOException, NullPointerException {
+        // Read the file contents into a String
+        String policiesString = Files.readString(filePath);
+        return parsePolicies(policiesString);
+    }
+
+    /**
+     * Parse a string containing multiple policies and templates into a PolicySet.
+     * @param policiesString the string containing the policies
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePolicies(String policiesString) throws InternalException, NullPointerException {
+        PolicySet policySet = parsePoliciesJni(policiesString);
+        return policySet;
+    }
+
+    private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
 }

@@ -219,6 +219,78 @@ fn parse_policy_internal<'a>(
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.slice.PolicySet")]
+pub fn parsePoliciesJni<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
+    match parse_policies_internal(&mut env, policies_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policies_set) => policies_set.as_jni(),
+    }
+}
+
+fn parse_policies_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policies_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policies_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        // Parse the string into the Rust PolicySet
+        let policies_jstring = env.get_string(&policies_jstr)?;
+        let policies_string = String::from(policies_jstring);
+        let policy_set = PolicySet::from_str(&policies_string)?;
+
+        // Enumerate over the parsed policies
+        let policies_java_hash_set = create_java_hash_set(env);
+        for policy in policy_set.policies() {
+            let policy_text = format!("{}", policy);
+            let java_policy_object = create_java_policy(env, &env.new_string(&policy_text)?.into());
+            let add_result = env.call_method(&policies_java_hash_set, "add", "(Ljava/lang/Object;)Z", &[JValueGen::Object(&java_policy_object)]);
+
+            match add_result {
+                Err(e) => return Err(Box::new(e)),
+                Ok(_) => {}
+            }
+        }
+
+        let templates_java_hash_set = create_java_hash_set(env);
+        for template in policy_set.templates() {
+            let policy_text = format!("{}", template);
+            let java_policy_object = create_java_policy(env, &env.new_string(&policy_text)?.into());
+            let add_result = env.call_method(&templates_java_hash_set, "add", "(Ljava/lang/Object;)Z", &[JValueGen::Object(&java_policy_object)]);
+
+            match add_result {
+                Err(e) => return Err(Box::new(e)),
+                Ok(_) => {}
+            }
+        }
+
+        let java_policy_set = create_java_policy_set(env, &policies_java_hash_set, &templates_java_hash_set);
+
+        Ok(JValueGen::Object(java_policy_set.into()))
+    }
+}
+
+fn create_java_hash_set<'a>(env: &mut JNIEnv<'a>) -> JObject<'a> {
+    env.new_object("java/util/HashSet", &"()V", &[]).expect("Failed to create new HashSet object")
+}
+
+fn create_java_policy<'a>(env: &mut JNIEnv<'a>, policy_string: &JString) -> JObject<'a> {
+    env.new_object(
+        "com/cedarpolicy/model/slice/Policy",
+        &"(Ljava/lang/String;Ljava/lang/String;)V",
+        &[JValueGen::Object(&policy_string), JValueGen::Object(&JObject::null())],
+    ).expect("Failed to create new Policy object")
+}
+
+fn create_java_policy_set<'a>(env: &mut JNIEnv<'a>, policies_java_hash_set: &JObject<'a>, templates_java_hash_set: &JObject<'a>) -> JObject<'a> {
+    env.new_object(
+        "com/cedarpolicy/model/slice/PolicySet",
+        &"(Ljava/util/Set;Ljava/util/Set;Ljava/util/List;)V",
+        &[JValueGen::Object(&policies_java_hash_set), JValueGen::Object(&templates_java_hash_set), JValueGen::Object(&JObject::null())],
+    )
+    .expect("Failed to create new PolicySet object")
+}
+
 #[jni_fn("com.cedarpolicy.model.slice.Policy")]
 pub fn parsePolicyTemplateJni<'a>(
     mut env: JNIEnv<'a>,
