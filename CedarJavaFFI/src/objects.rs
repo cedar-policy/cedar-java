@@ -343,12 +343,16 @@ impl<'a> AsRef<JObject<'a>> for JEntityUID<'a> {
 /// Typed wrapper for Policy objects
 /// (com.cedarpolicy.model.slice.Policy)
 pub struct JPolicy<'a> {
-    obj: JObject<'a>
+    obj: JObject<'a>,
 }
 
 impl<'a> JPolicy<'a> {
     /// Construct a new Policy object
-    pub fn new(env: &mut JNIEnv<'a>, policy_string: &JString, policy_id_string: &JString) -> Result<Self> {
+    pub fn new(
+        env: &mut JNIEnv<'a>,
+        policy_string: &JString,
+        policy_id_string: &JString,
+    ) -> Result<Self> {
         let obj = env
             .new_object(
                 "com/cedarpolicy/model/slice/Policy",
