@@ -243,15 +243,17 @@ fn parse_policies_internal<'a>(
         // Enumerate over the parsed policies
         let mut policies_java_hash_set = Set::new(env)?;
         for policy in policy_set.policies() {
+            let policy_id = format!("{}", policy.id());
             let policy_text = format!("{}", policy);
-            let java_policy_object = JPolicy::new(env, &env.new_string(&policy_text)?.into(), &JObject::null().into())?;
+            let java_policy_object = JPolicy::new(env, &env.new_string(&policy_text)?.into(), &env.new_string(&policy_id)?.into())?;
             let _ = policies_java_hash_set.add(env, java_policy_object);
         }
 
         let mut templates_java_hash_set = Set::new(env)?;
         for template in policy_set.templates() {
+            let policy_id = format!("{}", template.id());
             let policy_text = format!("{}", template);
-            let java_policy_object = JPolicy::new(env, &env.new_string(&policy_text)?.into(), &JObject::null().into())?;
+            let java_policy_object = JPolicy::new(env, &env.new_string(&policy_text)?.into(), &env.new_string(&policy_id)?.into())?;
             let _ = templates_java_hash_set.add(env, java_policy_object);
         }
 
@@ -272,11 +274,10 @@ fn create_java_policy_set<'a>(
 ) -> JObject<'a> {
     env.new_object(
         "com/cedarpolicy/model/slice/PolicySet",
-        &"(Ljava/util/Set;Ljava/util/Set;Ljava/util/List;)V",
+        &"(Ljava/util/Set;Ljava/util/Set;)V",
         &[
             JValueGen::Object(&policies_java_hash_set),
-            JValueGen::Object(&templates_java_hash_set),
-            JValueGen::Object(&JObject::null()),
+            JValueGen::Object(&templates_java_hash_set)
         ],
     )
     .expect("Failed to create new PolicySet object")

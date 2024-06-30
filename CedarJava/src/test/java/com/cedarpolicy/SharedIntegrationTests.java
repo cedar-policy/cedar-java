@@ -29,6 +29,7 @@ import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
+import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
@@ -211,10 +212,10 @@ public class SharedIntegrationTests {
 
     /**
      * This method is the main entry point for JUnit. It returns a list of containers, which contain
-     * tests for junit to run. JUnit will run all the test returned from this method.
+     * tests for junit to run. JUnit will run all the tests returned from this method.
      */
     @TestFactory
-    public List<DynamicContainer> integrationTestsFromJson() throws IOException {
+    public List<DynamicContainer> integrationTestsFromJson() throws InternalException, IOException {
         List<DynamicContainer> tests = new ArrayList<>();
         // handwritten integration tests
         for (String testFile : JSON_TEST_FILES) {
@@ -236,6 +237,8 @@ public class SharedIntegrationTests {
                                 // inside the forEach we can't throw checked exceptions, but we
                                 // can throw this unchecked exception
                                 throw new UncheckedIOException(e);
+                            } catch (final InternalException e) {
+                                throw new RuntimeException(e);
                             }
                         });
        }
@@ -247,14 +250,14 @@ public class SharedIntegrationTests {
      * test, and all the test in the json file are grouped into the returned container.
      */
     @SuppressFBWarnings("NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD")
-    private DynamicContainer loadJsonTests(String jsonFile) throws IOException {
+    private DynamicContainer loadJsonTests(String jsonFile) throws InternalException, IOException {
         JsonTest test;
         try (InputStream jsonIn =
                 new FileInputStream(resolveIntegrationTestPath(jsonFile).toFile())) {
             test = OBJECT_MAPPER.reader().readValue(jsonIn, JsonTest.class);
         }
         Set<Entity> entities = loadEntities(test.entities);
-        Set<Policy> policies = loadPolicies(test.policies);
+        PolicySet policySet = PolicySet.parsePolicies(resolveIntegrationTestPath(test.policies));
         Schema schema = loadSchema(test.schema);
 
         return DynamicContainer.dynamicContainer(
@@ -263,7 +266,7 @@ public class SharedIntegrationTests {
                     Stream.of(DynamicTest.dynamicTest(
                                 jsonFile + ": validate",
                                 () ->
-                                    executeJsonValidationTest(policies, schema, test.shouldValidate))),
+                                    executeJsonValidationTest(policySet.policies, schema, test.shouldValidate))),
                     test.requests.stream()
                         .map(
                                 request ->
@@ -271,59 +274,8 @@ public class SharedIntegrationTests {
                                                 jsonFile + ": " + request.description,
                                                 () ->
                                                         executeJsonRequestTest(
-                                                                entities, policies, request,
+                                                                entities, policySet, request,
                                                                 schema)))));
-    }
-
-    /**
-     * Load all policies from the policy file. The policy file path must be relative to the shared
-     * integration test root. This should be the case if the path was obtained from a JsonTest
-     * object. Extra processing is required because the test format does not include policy ids, and
-     * does not explicit separate policies in a file other than by semicolons.
-     */
-    private Set<Policy> loadPolicies(String policiesFile) throws IOException {
-        String policiesSrc = String.join("\n", Files.readAllLines(resolveIntegrationTestPath(policiesFile)));
-
-        // Get a list of the policy sources for the individual policies in the
-        // file by splitting the full policy source on semicolons. This will
-        // break if a semicolon shows up in a string, eid, or comment.
-        String[] policyStrings = policiesSrc.split(";");
-        // Some of the corpus tests contain semicolons in strings and/or eids.
-        // A simple way to check if the code above did the wrong thing in this case
-        // is to check for unmatched, unescaped quotes in the resulting policies.
-        for (String policyString : policyStrings) {
-            if (hasUnmatchedQuote(policyString)) {
-                policyStrings = null;
-            }
-        }
-
-        Set<Policy> policies = new HashSet<>();
-        if (policyStrings == null) {
-            // This case will only be reached for corpus tests.
-            // The corpus tests all consist of a single policy, so it is fine to use
-            // the full policy source as a single policy.
-            policies.add(new Policy(policiesSrc, "policy0"));
-        } else {
-            for (int i = 0; i < policyStrings.length; i++) {
-                // The policy source doesn't include an explicit policy id, but the expected output
-                // implicitly assumes policies are numbered by their position in file.
-                String policyId = "policy" + i;
-                String policySrc = policyStrings[i];
-                if (!policySrc.trim().isEmpty()) {
-                    policies.add(new Policy(policySrc + ";", policyId));
-                }
-            }
-        }
-        return policies;
-    }
-
-    /** Check for unmatched quotes. */
-    private Boolean hasUnmatchedQuote(String str) {
-        // Ignore escaped quotes, i.e. \"
-        // Note that backslashes in the regular expression have to be double escaped.
-        String newStr = str.replaceAll("\\\\\"", "");
-        long count = newStr.chars().filter(ch -> ch == '\"').count();
-        return (count % 2 == 1);
     }
 
     /** Load the schema file. */
@@ -394,7 +346,7 @@ public class SharedIntegrationTests {
      * that the result is equal to the expected result.
      */
     private void executeJsonRequestTest(
-            Set<Entity> entities, Set<Policy> policies, JsonRequest request, Schema schema) throws AuthException {
+            Set<Entity> entities, PolicySet policySet, JsonRequest request, Schema schema) throws AuthException {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
         AuthorizationRequest authRequest =
                 new AuthorizationRequest(
@@ -404,7 +356,6 @@ public class SharedIntegrationTests {
                     Optional.of(request.context),
                     Optional.of(schema),
                     request.validateRequest);
-        PolicySet policySet = new PolicySet(policies);
 
         try {
             final AuthorizationResponse response = auth.isAuthorized(authRequest, policySet, entities);

@@ -55,6 +55,12 @@ public class PolicySet {
         this.templateInstantiations = Collections.emptyList();
     }
 
+    public PolicySet(Set<Policy> policies, Set<Policy> templates) {
+        this.policies = policies;
+        this.templates = templates;
+        this.templateInstantiations = Collections.emptyList();
+    }
+
     public PolicySet(Set<Policy> policies, Set<Policy> templates, List<TemplateInstantiation> templateInstantiations) {
         this.policies = policies;
         this.templates = templates;
@@ -62,14 +68,14 @@ public class PolicySet {
     }
 
     /**
-     * Parse a multiple policies and templates from a file into a PolicySet.
+     * Parse multiple policies and templates from a file into a PolicySet.
      * @param filePath the path to the file containing the policies
      * @return a PolicySet containing the parsed policies
      * @throws InternalException
      * @throws IOException
      * @throws NullPointerException
      */
-    public static PolicySet parsePolicies(Path filePath) throws InternalException, IOException, NullPointerException {
+    public static PolicySet parsePolicies(Path filePath) throws InternalException, IOException {
         // Read the file contents into a String
         String policiesString = Files.readString(filePath);
         return parsePolicies(policiesString);
@@ -82,7 +88,7 @@ public class PolicySet {
      * @throws InternalException
      * @throws NullPointerException
      */
-    public static PolicySet parsePolicies(String policiesString) throws InternalException, NullPointerException {
+    public static PolicySet parsePolicies(String policiesString) throws InternalException {
         PolicySet policySet = parsePoliciesJni(policiesString);
         return policySet;
     }
