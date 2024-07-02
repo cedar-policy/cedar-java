@@ -25,12 +25,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
-import com.cedarpolicy.model.slice.Entity;
-import com.cedarpolicy.model.slice.EntityTypeAndId;
-import com.cedarpolicy.model.slice.Instantiation;
-import com.cedarpolicy.model.slice.Policy;
-import com.cedarpolicy.model.slice.PolicySet;
-import com.cedarpolicy.model.slice.TemplateInstantiation;
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.policy.EntityTypeAndId;
+import com.cedarpolicy.model.policy.LinkValue;
+import com.cedarpolicy.model.policy.Policy;
+import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -554,20 +554,19 @@ public class IntegrationTests {
         Set<Policy> templates = new HashSet<>();
         templates.add(policy);
 
-        Instantiation instantiation =
-                new Instantiation(principalSlot, new EntityTypeAndId("User", "alice"));
+        LinkValue linkValue = new LinkValue(principalSlot, new EntityTypeAndId("User", "alice"));
 
-        final String instantiatedPolicyId = "ID0_alice";
-        TemplateInstantiation templateInstantiation =
-                new TemplateInstantiation(
+        final String linkId = "ID0_alice";
+        TemplateLink templateLink =
+                new TemplateLink(
                         policyId,
-                        instantiatedPolicyId,
-                        new ArrayList<Instantiation>(Arrays.asList(instantiation)));
+                        linkId,
+                        new ArrayList<LinkValue>(Arrays.asList(linkValue)));
 
-        ArrayList<TemplateInstantiation> templateInstantiations =
-                new ArrayList<TemplateInstantiation>(Arrays.asList(templateInstantiation));
+        ArrayList<TemplateLink> templateLinks =
+                new ArrayList<TemplateLink>(Arrays.asList(templateLink));
 
-        PolicySet policySet = new PolicySet(policies, templates, templateInstantiations);
+        PolicySet policySet = new PolicySet(policies, templates, templateLinks);
         Map<String, Value> currentContext = new HashMap<>();
         AuthorizationRequest request =
                 new AuthorizationRequest(

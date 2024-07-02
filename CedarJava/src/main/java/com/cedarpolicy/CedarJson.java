@@ -17,8 +17,9 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.ValueCedarDeserializer;
-import com.cedarpolicy.serializer.ValueCedarSerializer;
+import com.cedarpolicy.serializer.SliceSerializer;
+import com.cedarpolicy.serializer.ValueDeserializer;
+import com.cedarpolicy.serializer.ValueSerializer;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -49,9 +50,9 @@ final class CedarJson {
         final ObjectMapper mapper = new ObjectMapper();
 
         final SimpleModule module = new SimpleModule();
-        module.addSerializer(Slice.class, new SliceJsonSerializer());
-        module.addSerializer(Value.class, new ValueCedarSerializer());
-        module.addDeserializer(Value.class, new ValueCedarDeserializer());
+        module.addSerializer(Slice.class, new SliceSerializer());
+        module.addSerializer(Value.class, new ValueSerializer());
+        module.addDeserializer(Value.class, new ValueDeserializer());
         mapper.registerModule(module);
         mapper.registerModule(new Jdk8Module());
 

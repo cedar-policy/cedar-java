@@ -119,7 +119,9 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
             serde_json::to_string(&ires)
         }
     };
-    result.expect("failed to serialize or deserialize")
+    result.unwrap_or_else(|err| {
+        panic!("failed to handle call {call} with input {input}\nError: {err}")
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -193,7 +195,7 @@ fn parse_human_schema_internal<'a>(
     }
 }
 
-#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn parsePolicyJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
     match parse_policy_internal(&mut env, policy_jstr) {
         Err(e) => jni_failed(&mut env, e.as_ref()),
@@ -220,7 +222,7 @@ fn parse_policy_internal<'a>(
     }
 }
 
-#[jni_fn("com.cedarpolicy.model.slice.PolicySet")]
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
 pub fn parsePoliciesJni<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
     match parse_policies_internal(&mut env, policies_jstr) {
         Err(e) => jni_failed(&mut env, e.as_ref()),
@@ -281,7 +283,7 @@ fn create_java_policy_set<'a>(
     templates_java_hash_set: &JObject<'a>,
 ) -> JObject<'a> {
     env.new_object(
-        "com/cedarpolicy/model/slice/PolicySet",
+        "com/cedarpolicy/model/policy/PolicySet",
         &"(Ljava/util/Set;Ljava/util/Set;)V",
         &[
             JValueGen::Object(&policies_java_hash_set),
@@ -291,7 +293,7 @@ fn create_java_policy_set<'a>(
     .expect("Failed to create new PolicySet object")
 }
 
-#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn parsePolicyTemplateJni<'a>(
     mut env: JNIEnv<'a>,
     _: JClass,
@@ -322,7 +324,7 @@ fn parse_policy_template_internal<'a>(
     }
 }
 
-#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn validateTemplateLinkedPolicyJni<'a>(
     mut env: JNIEnv<'a>,
     _: JClass,
@@ -369,11 +371,11 @@ fn validate_template_linked_policy_internal<'a>(
         }
 
         let template_id = template.id().clone();
-        let instantiated_id = PolicyId::from_str("x")?;
+        let link_id = PolicyId::from_str("x")?;
         let mut policy_set = PolicySet::new();
         policy_set.add_template(template)?;
 
-        policy_set.link(template_id, instantiated_id, slots_map)?;
+        policy_set.link(template_id, link_id, slots_map)?;
         Ok(JValueGen::Bool(1))
     }
 }

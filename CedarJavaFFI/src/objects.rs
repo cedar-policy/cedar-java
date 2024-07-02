@@ -341,7 +341,7 @@ impl<'a> AsRef<JObject<'a>> for JEntityUID<'a> {
 }
 
 /// Typed wrapper for Policy objects
-/// (com.cedarpolicy.model.slice.Policy)
+/// (com.cedarpolicy.model.policy.Policy)
 pub struct JPolicy<'a> {
     obj: JObject<'a>,
 }
@@ -355,7 +355,7 @@ impl<'a> JPolicy<'a> {
     ) -> Result<Self> {
         let obj = env
             .new_object(
-                "com/cedarpolicy/model/slice/Policy",
+                "com/cedarpolicy/model/policy/Policy",
                 &"(Ljava/lang/String;Ljava/lang/String;)V",
                 &[
                     JValueGen::Object(&policy_string),
@@ -370,7 +370,7 @@ impl<'a> JPolicy<'a> {
 
 impl<'a> Object<'a> for JPolicy<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
-        assert_is_class(env, &obj, "com/cedarpolicy/model/slice/Policy")?;
+        assert_is_class(env, &obj, "com/cedarpolicy/model/policy/Policy")?;
         Ok(Self { obj })
     }
 }

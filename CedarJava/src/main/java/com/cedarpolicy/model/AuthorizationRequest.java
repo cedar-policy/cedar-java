@@ -17,7 +17,7 @@
 package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;

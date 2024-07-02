@@ -34,7 +34,7 @@ import java.util.Map;
 
 /** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
-public class ValueCedarSerializer extends JsonSerializer<Value> {
+public class ValueSerializer extends JsonSerializer<Value> {
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
@@ -96,7 +96,7 @@ public class ValueCedarSerializer extends JsonSerializer<Value> {
             // main.java.com.cedarpolicy.model.value or that you convert your class to a CedarMap
             throw new InvalidValueSerializationException(
                     "Error serializing `Value`: " + value.toString() + ". No branch matched `instanceof` for this `Value`."
-                            + " If you extended `Value`, please modify `ValueCedarSerializer.java` to handle the new"
+                            + " If you extended `Value`, please modify `ValueSerializer.java` to handle the new"
                             + "type.");
         }
     }

@@ -14,20 +14,7 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.value;
-
-import com.cedarpolicy.serializer.ValueDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-/** A value in the Cedar language model. */
-@JsonDeserialize(using = ValueDeserializer.class)
-public abstract class Value {
-    /**
-     * Convert the Value instance into a string containing the Cedar source code for the equivalent
-     * Cedar value. This is useful if you e.g., want to print the value in a programatically generated
-     * policy.
-     *
-     * @return Cedar source code for the value.
-     */
-    public abstract String toCedarExpr();
-}
+/**
+ * This module represents entities passed into Cedar
+ */
+package com.cedarpolicy.model.entity;

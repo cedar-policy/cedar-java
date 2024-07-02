@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.model.slice;
+package com.cedarpolicy.model.entity;
 
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;

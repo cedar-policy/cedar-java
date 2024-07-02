@@ -14,37 +14,35 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.model.slice;
+package com.cedarpolicy.model.policy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Instantiation for policy template. */
-public class Instantiation {
-    private final String slot;
-    private final EntityTypeAndId value;
+/** Entity type and ID. */
+public class EntityTypeAndId {
+    private final String ty; //We use `ty` to match the JSON format expected by the Rust code
+    private final String eid;
 
     /**
-     * Instantiation for policy template.
+     * Construct Entity type and ID.
      *
-     * @param slot the slot in the template.
-     * @param value the value to put in the slot
+     * @param ty Type string.
+     * @param eid EID string.
      */
     @JsonCreator
-    public Instantiation(
-            @JsonProperty("slot") String slot, @JsonProperty("value") EntityTypeAndId value) {
-        this.slot = slot;
-        this.value = value;
+    public EntityTypeAndId(@JsonProperty("ty") String ty, @JsonProperty("eid") String eid) {
+        this.ty = ty;
+        this.eid = eid;
     }
 
-
-    /** Get the slot in the template. */
-    public String getSlot() {
-        return slot;
+    /** Get entity type. */
+    public String getTy() {
+        return ty;
     }
 
-    /** Get the value to put in the slot. */
-    public EntityTypeAndId getValue() {
-        return value;
+    /** Get entity ID. */
+    public String getEid() {
+        return eid;
     }
 }

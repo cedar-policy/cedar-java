@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.model.slice;
+package com.cedarpolicy.model.policy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 
-/** Template instantiation. */
-public class TemplateInstantiation {
+/** Template-linked policy. */
+public class TemplateLink {
 
     @JsonProperty("templateId")
     private final String templateId;
@@ -30,23 +30,24 @@ public class TemplateInstantiation {
     @JsonProperty("resultPolicyId")
     private final String resultPolicyId;
 
-    private final List<Instantiation> instantiations;
+    @JsonProperty("instantiations")
+    private final List<LinkValue> linkValues;
 
     /**
-     * Template Instantiation.
+     * Template-linked policy.
      *
      * @param templateId the template ID.
      * @param resultPolicyId the id of the resulting policy.
-     * @param instantiations the instantiations.
+     * @param linkValues the link values.
      */
     @JsonCreator
-    public TemplateInstantiation(
+    public TemplateLink(
             @JsonProperty("templateId") String templateId,
             @JsonProperty("resultPolicyId") String resultPolicyId,
-            @JsonProperty("instantiations") List<Instantiation> instantiations) {
+            @JsonProperty("instantiations") List<LinkValue> linkValues) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
-        this.instantiations = ImmutableList.copyOf(instantiations);
+        this.linkValues = ImmutableList.copyOf(linkValues);
     }
 
     /** Get the template ID. */
@@ -59,8 +60,8 @@ public class TemplateInstantiation {
         return resultPolicyId;
     }
 
-    /** Get the instantiations to fill the slots. */
-    public List<Instantiation> getInstantiations() {
-        return instantiations;
+    /** Get the link values, which map slots to EUIDs. */
+    public List<LinkValue> getLinkValues() {
+        return linkValues;
     }
 }

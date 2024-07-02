@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy;
+package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.slice.Slice;
-import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -31,7 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Serialize a slice. Only used internally by CedarJson */
-class SliceJsonSerializer extends JsonSerializer<Slice> {
+public class SliceSerializer extends JsonSerializer<Slice> {
 
     /** Serialize a slice. */
     @Override
@@ -44,7 +43,7 @@ class SliceJsonSerializer extends JsonSerializer<Slice> {
                 "entities", convertEntitiesToJsonEntities(slice.getEntities()));
         jsonGenerator.writeObjectField("templates", slice.getTemplates());
         jsonGenerator.writeObjectField(
-                "templateInstantiations", slice.getTemplateInstantiations());
+                "templateInstantiations", slice.getTemplateLinks());
         jsonGenerator.writeEndObject();
     }
 
