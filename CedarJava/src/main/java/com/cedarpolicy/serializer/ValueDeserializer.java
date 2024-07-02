@@ -40,7 +40,7 @@ import java.util.Map;
 
 /** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
-public class ValueCedarDeserializer extends JsonDeserializer<Value> {
+public class ValueDeserializer extends JsonDeserializer<Value> {
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
