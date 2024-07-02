@@ -17,7 +17,7 @@
 package com.cedarpolicy.model.slice;
 
 import com.cedarpolicy.model.entity.Entity;
-import com.cedarpolicy.model.policy.TemplateInstantiation;
+import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.value.Value;
 import java.util.List;
 import java.util.Map;
@@ -68,9 +68,9 @@ public interface Slice {
     Map<String, String> getTemplates();
 
     /**
-     * Get the template instantiations.
+     * Get the template links.
      *
-     * @return List of template instatiations
+     * @return List of template links
      */
-    List<TemplateInstantiation> getTemplateInstantiations();
+    List<TemplateLink> getTemplateLinks();
 }

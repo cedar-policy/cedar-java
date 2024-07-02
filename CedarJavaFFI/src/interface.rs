@@ -371,11 +371,11 @@ fn validate_template_linked_policy_internal<'a>(
         }
 
         let template_id = template.id().clone();
-        let instantiated_id = PolicyId::from_str("x")?;
+        let link_id = PolicyId::from_str("x")?;
         let mut policy_set = PolicySet::new();
         policy_set.add_template(template)?;
 
-        policy_set.link(template_id, instantiated_id, slots_map)?;
+        policy_set.link(template_id, link_id, slots_map)?;
         Ok(JValueGen::Bool(1))
     }
 }

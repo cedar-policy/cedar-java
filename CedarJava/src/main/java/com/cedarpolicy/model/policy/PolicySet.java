@@ -28,43 +28,43 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Policy Set containing policies in the Cedar language. */
+/** Policy set containing policies in the Cedar language. */
 public class PolicySet {
     static {
         LibraryLoader.loadLibrary();
     }
 
-    /** Policy set. */
+    /** Static policies */
     public Set<Policy> policies;
 
-    /** Template Instantiations. */
-    public List<TemplateInstantiation> templateInstantiations;
+    /** Template-linked policies */
+    public List<TemplateLink> templateLinks;
 
-    /** Templates. */
+    /** Policy templates */
     public Set<Policy> templates;
 
     public PolicySet() {
         this.policies = Collections.emptySet();
         this.templates = Collections.emptySet();
-        this.templateInstantiations = Collections.emptyList();
+        this.templateLinks = Collections.emptyList();
     }
 
     public PolicySet(Set<Policy> policies) {
         this.policies = policies;
         this.templates = Collections.emptySet();
-        this.templateInstantiations = Collections.emptyList();
+        this.templateLinks = Collections.emptyList();
     }
 
     public PolicySet(Set<Policy> policies, Set<Policy> templates) {
         this.policies = policies;
         this.templates = templates;
-        this.templateInstantiations = Collections.emptyList();
+        this.templateLinks = Collections.emptyList();
     }
 
-    public PolicySet(Set<Policy> policies, Set<Policy> templates, List<TemplateInstantiation> templateInstantiations) {
+    public PolicySet(Set<Policy> policies, Set<Policy> templates, List<TemplateLink> templateLinks) {
         this.policies = policies;
         this.templates = templates;
-        this.templateInstantiations = templateInstantiations;
+        this.templateLinks = templateLinks;
     }
 
     /**

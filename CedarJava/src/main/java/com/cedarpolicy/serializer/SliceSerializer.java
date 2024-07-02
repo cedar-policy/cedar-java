@@ -43,7 +43,7 @@ public class SliceSerializer extends JsonSerializer<Slice> {
                 "entities", convertEntitiesToJsonEntities(slice.getEntities()));
         jsonGenerator.writeObjectField("templates", slice.getTemplates());
         jsonGenerator.writeObjectField(
-                "templateInstantiations", slice.getTemplateInstantiations());
+                "templateInstantiations", slice.getTemplateLinks());
         jsonGenerator.writeEndObject();
     }
 

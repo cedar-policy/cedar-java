@@ -18,7 +18,7 @@ package com.cedarpolicy.model.slice;
 
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.Policy;
-import com.cedarpolicy.model.policy.TemplateInstantiation;
+import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -41,7 +41,7 @@ public class BasicSlice implements Slice {
     private final Map<String, String> templatePolicies;
 
     @JsonProperty("templateInstantiations")
-    private final List<TemplateInstantiation> templateInstantiations;
+    private final List<TemplateLink> templateLinks;
 
     /**
      * Construct a Slice from Entity and Policy objects.
@@ -49,14 +49,14 @@ public class BasicSlice implements Slice {
      * @param policies Set of policies.
      * @param entities Set of entities.
      * @param templates Set of policy templates.
-     * @param templateInstantiations List of TemplateInstantiations.
+     * @param templateLinks List of templateLinks.
      */
     @SuppressFBWarnings
     public BasicSlice(
             Set<Policy> policies,
             Set<Entity> entities,
             Set<Policy> templates,
-            List<TemplateInstantiation> templateInstantiations) {
+            List<TemplateLink> templateLinks) {
         // Copy of previous constructor. We can't call the previous constructor because fields are
         // final
         this.policies = new HashMap<>();
@@ -79,7 +79,7 @@ public class BasicSlice implements Slice {
 
         this.templatePolicies =
                 templates.stream().collect(Collectors.toMap(p -> p.policyID, p -> p.policySrc));
-        this.templateInstantiations = new ArrayList<TemplateInstantiation>(templateInstantiations);
+        this.templateLinks = new ArrayList<TemplateLink>(templateLinks);
     }
 
 
@@ -128,8 +128,8 @@ public class BasicSlice implements Slice {
 
     @Override
     @SuppressFBWarnings
-    public List<TemplateInstantiation> getTemplateInstantiations() {
-        return templateInstantiations;
+    public List<TemplateLink> getTemplateLinks() {
+        return templateLinks;
     }
 
     @Override

@@ -113,7 +113,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.context,
                     request.schema,
                     request.enableRequestValidation);
-            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateInstantiations);
+            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateLinks);
         }
     }
 
@@ -124,7 +124,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
 
         PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             this.request = request;
-            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateInstantiations);
+            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateLinks);
         }
     }
 
