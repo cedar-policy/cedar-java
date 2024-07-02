@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.model.slice;
+package com.cedarpolicy.model.policy;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
@@ -76,10 +76,10 @@ public class Policy {
     }
 
     /**
-     * This method takes in a Policy and a list of Instantiations and calls Cedar JNI to ensure those slots
-     * can be used to instantiate the template. If the Template is validated ahead of time by using Policy.parsePolicyTemplate
-     * and the Instantiations are also ensured to be valid (for example, by validating their parts using EntityTypeName.parse
-     * and EntityIdentifier.parse), then this should only fail because the slots in the template don't match the instantiations
+     * This method takes in a template and a list of link values and calls Cedar JNI to ensure those slots
+     * can be used to link the template. If the template is validated ahead of time by using Policy.parsePolicyTemplate
+     * and the link values are also ensured to be valid (for example, by validating their parts using EntityTypeName.parse
+     * and EntityIdentifier.parse), then this should only fail because the slots in the template don't match the link values
      * (barring JNI failures).
      * @param p Policy object constructed from a valid template. Best if built from Policy.parsePolicyTemplate
      * @param principal EntityUid to put into the principal slot. Leave null if there's no principal slot

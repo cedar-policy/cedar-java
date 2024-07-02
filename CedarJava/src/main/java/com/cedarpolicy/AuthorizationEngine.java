@@ -19,8 +19,8 @@ package com.cedarpolicy;
 import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
-import com.cedarpolicy.model.slice.Entity;
-import com.cedarpolicy.model.slice.PolicySet;
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.policy.PolicySet;
 
 import java.util.Set;
 
