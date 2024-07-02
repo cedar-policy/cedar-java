@@ -1,7 +1,7 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.exception.InternalException;
-import com.cedarpolicy.model.slice.Policy;
+import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.value.EntityUID;
 import org.junit.jupiter.api.Test;
 

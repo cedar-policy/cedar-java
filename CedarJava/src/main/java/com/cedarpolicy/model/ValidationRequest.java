@@ -17,7 +17,7 @@
 package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.slice.Policy;
+import com.cedarpolicy.model.policy.Policy;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

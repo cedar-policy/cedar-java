@@ -16,6 +16,9 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.policy.Policy;
+import com.cedarpolicy.model.policy.TemplateInstantiation;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

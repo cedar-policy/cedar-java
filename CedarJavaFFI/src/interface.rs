@@ -119,7 +119,9 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
             serde_json::to_string(&ires)
         }
     };
-    result.expect("failed to serialize or deserialize")
+    result.unwrap_or_else(|err| {
+        panic!("failed to handle call {call} with input {input}\nError: {err}")
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize)]

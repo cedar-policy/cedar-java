@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy.model.slice;
+package com.cedarpolicy.model.policy;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;

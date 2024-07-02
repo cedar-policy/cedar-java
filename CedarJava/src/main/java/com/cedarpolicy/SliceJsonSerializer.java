@@ -16,7 +16,7 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;

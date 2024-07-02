@@ -16,7 +16,7 @@
 
 package com.cedarpolicy.pbt;
 
-import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;

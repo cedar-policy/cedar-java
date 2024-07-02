@@ -16,6 +16,8 @@
 
 package com.cedarpolicy.model.slice;
 
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.policy.TemplateInstantiation;
 import com.cedarpolicy.value.Value;
 import java.util.List;
 import java.util.Map;
