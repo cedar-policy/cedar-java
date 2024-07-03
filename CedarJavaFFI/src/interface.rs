@@ -324,6 +324,26 @@ fn parse_policy_template_internal<'a>(
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn toJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
+    match to_json_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policy_json) => policy_json.as_jni(),
+    }
+}
+
+fn to_json_internal<'a>(env: &mut JNIEnv<'a>, policy_jstr: JString<'a>) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+        let policy = Policy::from_str(&policy_string)?;
+        let policy_json = serde_json::to_string(&policy.to_json().unwrap())?;
+        Ok(JValueGen::Object(env.new_string(&policy_json)?.into()))
+    }
+}
+
 #[jni_fn("com.cedarpolicy.value.EntityIdentifier")]
 pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
     match get_entity_identifier_repr_internal(&mut env, obj) {
