@@ -1,0 +1,25 @@
+{
+  "Library": {
+    "entityTypes": {
+      "User": {},
+      "Book": {},
+      "Page": {
+        "memberOfTypes": [
+          "Book"
+        ]
+      }
+    },
+    "actions": {
+      "read": {
+        "appliesTo": {
+          "resourceTypes": [
+            "Page"
+          ],
+          "principalTypes": [
+            "User"
+          ]
+        }
+      }
+    }
+  }
+}

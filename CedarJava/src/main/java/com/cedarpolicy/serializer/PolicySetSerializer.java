@@ -22,10 +22,10 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
-/** Serialize a policy. Used internally by CedarJson. */
+/** Serialize a policy set. */
 public class PolicySetSerializer extends JsonSerializer<PolicySet> {
 
-    /** Serialize a policy. */
+    /** Serialize a policy set. */
     @Override
     public void serialize(
             PolicySet policySet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

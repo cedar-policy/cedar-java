@@ -18,7 +18,7 @@
 use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
-    EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
+    EntityUid, Policy, PolicySet, Schema, Template,
 };
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
@@ -27,7 +27,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, error::Error, str::FromStr, thread};
+use std::{error::Error, str::FromStr, thread};
 
 use crate::{
     answer::Answer,
@@ -321,62 +321,6 @@ fn parse_policy_template_internal<'a>(
                 Ok(JValueGen::Object(env.new_string(&template_text)?.into()))
             }
         }
-    }
-}
-
-#[jni_fn("com.cedarpolicy.model.policy.Policy")]
-pub fn validateTemplateLinkedPolicyJni<'a>(
-    mut env: JNIEnv<'a>,
-    _: JClass,
-    template_jstr: JString<'a>,
-    jprincipal_euid: JObject<'a>,
-    jresource_euid: JObject<'a>,
-) -> jvalue {
-    match validate_template_linked_policy_internal(
-        &mut env,
-        template_jstr,
-        jprincipal_euid,
-        jresource_euid,
-    ) {
-        Err(e) => jni_failed(&mut env, e.as_ref()),
-        Ok(v) => v.as_jni(),
-    }
-}
-
-fn validate_template_linked_policy_internal<'a>(
-    env: &mut JNIEnv<'a>,
-    template_jstr: JString<'a>,
-    jprincipal_euid: JObject<'a>,
-    jresource_euid: JObject<'a>,
-) -> Result<JValueOwned<'a>> {
-    if template_jstr.is_null() {
-        raise_npe(env)
-    } else {
-        let template_jstring = env.get_string(&template_jstr)?;
-        let template_string = String::from(template_jstring);
-        let template = Template::from_str(&template_string)?;
-        let mut slots_map: HashMap<SlotId, EntityUid> = HashMap::new();
-
-        if !jprincipal_euid.is_null() {
-            slots_map.insert(
-                SlotId::principal(),
-                JEntityUID::cast(env, jprincipal_euid)?.get_rust_repr(),
-            );
-        }
-        if !jresource_euid.is_null() {
-            slots_map.insert(
-                SlotId::resource(),
-                JEntityUID::cast(env, jresource_euid)?.get_rust_repr(),
-            );
-        }
-
-        let template_id = template.id().clone();
-        let link_id = PolicyId::from_str("x")?;
-        let mut policy_set = PolicySet::new();
-        policy_set.add_template(template)?;
-
-        policy_set.link(template_id, link_id, slots_map)?;
-        Ok(JValueGen::Bool(1))
     }
 }
 

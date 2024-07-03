@@ -16,35 +16,30 @@
 
 package com.cedarpolicy.model.policy;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.cedarpolicy.value.EntityUID;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableList;
 
 /** Template-linked policy. */
 public class TemplateLink {
 
-    @JsonProperty("templateId")
     private final String templateId;
 
-    @JsonProperty("newId")
     private final String resultPolicyId;
 
-    @JsonProperty("values")
     private final List<LinkValue> linkValues;
 
     /**
      * Template-linked policy.
      *
-     * @param templateId the template ID.
+     * @param templateId     the template ID.
      * @param resultPolicyId the id of the resulting policy.
-     * @param linkValues the link values.
+     * @param linkValues     the link values.
      */
-    @JsonCreator
-    public TemplateLink(
-            @JsonProperty("templateId") String templateId,
-            @JsonProperty("newId") String resultPolicyId,
-            @JsonProperty("values") List<LinkValue> linkValues) {
+    public TemplateLink(String templateId, String resultPolicyId, List<LinkValue> linkValues) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
         this.linkValues = ImmutableList.copyOf(linkValues);
@@ -60,8 +55,12 @@ public class TemplateLink {
         return resultPolicyId;
     }
 
-    /** Get the link values, which map slots to EUIDs. */
-    public List<LinkValue> getLinkValues() {
-        return linkValues;
+    /**
+     * Get the link values.
+     *
+     * @return A map from slot id to `EntityUID` object
+     */
+    public Map<String, EntityUID> getLinkValues() {
+        return linkValues.stream().collect(Collectors.toMap(LinkValue::getSlot, LinkValue::getValue));
     }
 }

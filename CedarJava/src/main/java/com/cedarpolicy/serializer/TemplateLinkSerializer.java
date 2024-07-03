@@ -16,25 +16,28 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+import com.cedarpolicy.model.policy.TemplateLink;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
-/** Serialize a schema. */
-public class SchemaSerializer extends JsonSerializer<Schema> {
+/** Serialize a template-linked policy. */
+public class TemplateLinkSerializer extends JsonSerializer<TemplateLink> {
 
-    /** Serialize a schema. */
+    /** Serialize a template-linked policy. */
     @Override
     public void serialize(
-            Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            TemplateLink link, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        if (schema.type == JsonOrHuman.Json) {
-            jsonGenerator.writeObject(schema.schemaJson.get());
-        } else {
-            jsonGenerator.writeString(schema.schemaText.get());
-        }
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeObjectField("templateId", link.getTemplateId());
+        jsonGenerator.writeObjectField("newId", link.getResultPolicyId());
+        jsonGenerator.writeObjectField("values", link.getLinkValues().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().asJson())));
+        jsonGenerator.writeEndObject();
     }
 }
