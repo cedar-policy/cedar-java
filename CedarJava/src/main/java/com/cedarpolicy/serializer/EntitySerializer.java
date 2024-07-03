@@ -16,26 +16,27 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
-/** Serialize a slice. Only used internally by CedarJson */
-public class SliceSerializer extends JsonSerializer<Slice> {
+/** Serialize an entity. */
+public class EntitySerializer extends JsonSerializer<Entity> {
 
-    /** Serialize a slice. */
+    /** Serialize an entity. */
     @Override
     public void serialize(
-            Slice slice, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            Entity entity, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeObjectField("policies", slice.getPolicies());
-        jsonGenerator.writeObjectField("entities", slice.getEntities());
-        jsonGenerator.writeObjectField("templates", slice.getTemplates());
-        jsonGenerator.writeObjectField(
-                "templateInstantiations", slice.getTemplateLinks());
+        jsonGenerator.writeObjectField("uid", entity.getEUID().asJson());
+        jsonGenerator.writeObjectField("attrs", entity.attrs);
+        jsonGenerator.writeObjectField("parents",
+                entity.getParents().stream().map(EntityUID::asJson).collect(Collectors.toSet()));
         jsonGenerator.writeEndObject();
     }
 }

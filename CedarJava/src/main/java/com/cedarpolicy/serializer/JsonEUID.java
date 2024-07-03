@@ -20,14 +20,10 @@ import com.cedarpolicy.model.exception.InvalidEUIDException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.cedarpolicy.value.EntityUID;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Represent JSON format of Entity Unique Identifier. */
-@JsonDeserialize
-@JsonSerialize
 public class JsonEUID {
     /** euid (__entity is used as escape sequence in JSON). */
     @JsonProperty("type")

@@ -22,8 +22,9 @@ import com.cedarpolicy.model.exception.InternalException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +66,24 @@ public class PolicySet {
         this.policies = policies;
         this.templates = templates;
         this.templateLinks = templateLinks;
+    }
+
+    /**
+     * Get the static policies in the policy set.
+     *
+     * @return A map from policy id to `Policy` object
+     */
+    public Map<String, String> getStaticPolicies() {
+        return policies.stream().collect(Collectors.toMap(Policy::getID, Policy::getSource));
+    }
+
+    /**
+     * Get the templates in the policy set.
+     *
+     * @return A map from policy id to `Policy` object
+     */
+    public Map<String, String> getTemplates() {
+        return templates.stream().collect(Collectors.toMap(Policy::getID, Policy::getSource));
     }
 
     /**
