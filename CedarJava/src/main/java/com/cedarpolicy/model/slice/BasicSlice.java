@@ -20,7 +20,6 @@ import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.value.Value;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.*;
@@ -37,10 +36,8 @@ public class BasicSlice implements Slice {
 
     private final Set<Entity> entities;
 
-    @JsonProperty("templatePolicies")
     private final Map<String, String> templatePolicies;
 
-    @JsonProperty("templateInstantiations")
     private final List<TemplateLink> templateLinks;
 
     /**

@@ -166,7 +166,7 @@ public class JSONTests {
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "jakob");
         inner.put("type", "silver");
-        n.put(ENTITY_ESCAPE_SEQ, inner);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
 
         String invalidNamespace = "Us,er::\"alice\"";
@@ -181,7 +181,7 @@ public class JSONTests {
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "ali\"ce");
         inner.put("type", "User");
-        n.put(ENTITY_ESCAPE_SEQ, inner);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
 
         String weirdType = "a";
@@ -191,7 +191,7 @@ public class JSONTests {
         inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", weirdId);
         inner.put("type", weirdType);
-        n.put(ENTITY_ESCAPE_SEQ, inner);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
     }
 
@@ -200,7 +200,7 @@ public class JSONTests {
         var inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", id);
         inner.put("type", type);
-        n.put(ENTITY_ESCAPE_SEQ, inner);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
         return n;
     }
 
@@ -213,7 +213,7 @@ public class JSONTests {
         ObjectNode inner = JsonNodeFactory.instance.objectNode();
         inner.put("id", "donut");
         inner.put("type", "long::john::silver");
-        n.put(ENTITY_ESCAPE_SEQ, inner);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
         assertJSONEqual(n, uid);
     }
 
