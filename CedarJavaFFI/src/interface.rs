@@ -249,8 +249,8 @@ fn parse_policies_internal<'a>(
             let policy_text = format!("{}", policy);
             let java_policy_object = JPolicy::new(
                 env,
-                &env.new_string(&policy_text)?.into(),
-                &env.new_string(&policy_id)?.into(),
+                &env.new_string(&policy_text)?,
+                &env.new_string(&policy_id)?,
             )?;
             let _ = policies_java_hash_set.add(env, java_policy_object);
         }
@@ -261,8 +261,8 @@ fn parse_policies_internal<'a>(
             let policy_text = format!("{}", template);
             let java_policy_object = JPolicy::new(
                 env,
-                &env.new_string(&policy_text)?.into(),
-                &env.new_string(&policy_id)?.into(),
+                &env.new_string(&policy_text)?,
+                &env.new_string(&policy_id)?,
             )?;
             let _ = templates_java_hash_set.add(env, java_policy_object);
         }
@@ -273,7 +273,7 @@ fn parse_policies_internal<'a>(
             templates_java_hash_set.as_ref(),
         );
 
-        Ok(JValueGen::Object(java_policy_set.into()))
+        Ok(JValueGen::Object(java_policy_set))
     }
 }
 
@@ -284,10 +284,10 @@ fn create_java_policy_set<'a>(
 ) -> JObject<'a> {
     env.new_object(
         "com/cedarpolicy/model/policy/PolicySet",
-        &"(Ljava/util/Set;Ljava/util/Set;)V",
+        "(Ljava/util/Set;Ljava/util/Set;)V",
         &[
-            JValueGen::Object(&policies_java_hash_set),
-            JValueGen::Object(&templates_java_hash_set),
+            JValueGen::Object(policies_java_hash_set),
+            JValueGen::Object(templates_java_hash_set),
         ],
     )
     .expect("Failed to create new PolicySet object")
