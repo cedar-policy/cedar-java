@@ -380,7 +380,7 @@ fn validate_template_linked_policy_internal<'a>(
     }
 }
 
-#[jni_fn("com.cedarpolicy.model.slice.Policy")]
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn toJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
     match to_json_internal(&mut env, policy_jstr) {
         Err(e) => jni_failed(&mut env, e.as_ref()),

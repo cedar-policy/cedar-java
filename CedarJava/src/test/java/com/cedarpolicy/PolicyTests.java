@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PolicyTests {
     @Test
@@ -99,5 +100,35 @@ public class PolicyTests {
         assertThrows(InternalException.class, () -> {
             Policy.validateTemplateLinkedPolicy(p3, principal, resource);
         });
+    }
+
+    @Test
+    public void staticPolicyToJsonTests() throws InternalException {
+        assertThrows(NullPointerException.class, () -> {
+            Policy p = new Policy(null, null);
+            p.toJson();
+        });
+        assertThrows(InternalException.class, () -> {
+            Policy p = new Policy("permit();", null);
+            p.toJson();
+        });
+
+        Policy p = Policy.parseStaticPolicy("permit(principal, action, resource);");
+        String actualJson = p.toJson();
+        String expectedJson = "{\"effect\":\"permit\",\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"},"
+                + "\"resource\":{\"op\":\"All\"},\"conditions\":[]}";
+        assertEquals(expectedJson, actualJson);
+    }
+
+    @Test
+    public void policyTemplateToJsonFailureTests() throws InternalException {
+        try {
+            String tbody = "permit(principal == ?principal, action, resource in ?resource);";
+            Policy template = Policy.parsePolicyTemplate(tbody);
+            String actualJson = template.toJson();
+            fail("Expected InternalException");
+        } catch (InternalException e) {
+            assertTrue(e.getMessage().contains("expected a static policy, got a template containing the slot ?resource"));
+        }
     }
 }
