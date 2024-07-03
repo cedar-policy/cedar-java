@@ -60,6 +60,20 @@ public class Policy {
         this.policyID = policyID;
     }
 
+    /**
+     * Get the policy ID.
+     */
+    public String getID() {
+        return policyID;
+    }
+
+    /**
+     * Get the policy source.
+     */
+    public String getSource() {
+        return policySrc;
+    }
+
     @Override
     public String toString() {
         return "// Policy ID: " + policyID + "\n" + policySrc;

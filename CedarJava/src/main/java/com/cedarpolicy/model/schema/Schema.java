@@ -18,10 +18,8 @@ package com.cedarpolicy.model.schema;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Optional;
@@ -36,13 +34,12 @@ public final class Schema {
     }
 
     /** Is this schema in the JSON or human format */
-    @JsonIgnore
     public final JsonOrHuman type;
+
     /** This will be present if and only if `type` is `Json`. */
-    @JsonProperty("json")
-    private final Optional<JsonNode> schemaJson;
+    public final Optional<JsonNode> schemaJson;
+
     /** This will be present if and only if `type` is `Human`. */
-    @JsonProperty("human")
     public final Optional<String> schemaText;
 
     /**

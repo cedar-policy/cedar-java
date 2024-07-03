@@ -38,7 +38,6 @@ import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.FileInputStream;
@@ -91,7 +90,6 @@ public class SharedIntegrationTests {
      * populated by Jackson when the test files are deserialized.
      */
     @SuppressWarnings("visibilitymodifier")
-    @JsonDeserialize
     private static class JsonTest {
         /**
          * File name of the file containing policies. Path is relative to the integration tests
@@ -123,7 +121,6 @@ public class SharedIntegrationTests {
 
     /** Directly corresponds to the structure of a request in the JSON formatted tests files. */
     @SuppressWarnings("visibilitymodifier")
-    @JsonDeserialize
     private static class JsonRequest {
         /** Textual description of the request. */
         public String description;
@@ -159,7 +156,6 @@ public class SharedIntegrationTests {
      * String, rather than String to Values.
      */
     @SuppressWarnings("visibilitymodifier")
-    @JsonDeserialize
     private static class JsonEntity {
         /** Entity uid for the entity. */
         @SuppressFBWarnings(

@@ -16,26 +16,27 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
-/** Serialize a slice. Only used internally by CedarJson */
-public class SliceSerializer extends JsonSerializer<Slice> {
+/** Serialize a schema. */
+public class SchemaSerializer extends JsonSerializer<Schema> {
 
-    /** Serialize a slice. */
+    /** Serialize a schema. */
     @Override
     public void serialize(
-            Slice slice, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeObjectField("policies", slice.getPolicies());
-        jsonGenerator.writeObjectField("entities", slice.getEntities());
-        jsonGenerator.writeObjectField("templates", slice.getTemplates());
-        jsonGenerator.writeObjectField(
-                "templateInstantiations", slice.getTemplateLinks());
+        if (schema.type == JsonOrHuman.Json) {
+            jsonGenerator.writeObjectField("json", schema.schemaJson.get());
+        } else {
+            jsonGenerator.writeStringField("human", schema.schemaText.get());
+        }
         jsonGenerator.writeEndObject();
     }
 }
