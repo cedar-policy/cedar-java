@@ -125,7 +125,7 @@ public class PolicyTests {
         try {
             String tbody = "permit(principal == ?principal, action, resource in ?resource);";
             Policy template = Policy.parsePolicyTemplate(tbody);
-            String actualJson = template.toJson();
+            template.toJson();
             fail("Expected InternalException");
         } catch (InternalException e) {
             assertTrue(e.getMessage().contains("expected a static policy, got a template containing the slot ?resource"));
