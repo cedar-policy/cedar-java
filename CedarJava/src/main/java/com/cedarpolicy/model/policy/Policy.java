@@ -79,6 +79,10 @@ public class Policy {
         return "// Policy ID: " + policyID + "\n" + policySrc;
     }
 
+    public String toJson() throws InternalException, NullPointerException {
+        return toJsonJni(policySrc);
+    }
+
     public static Policy parseStaticPolicy(String policyStr) throws InternalException, NullPointerException {
         var policyText = parsePolicyJni(policyStr);
         return new Policy(policyText, null);
@@ -110,4 +114,6 @@ public class Policy {
             throws InternalException, NullPointerException;
     private static native boolean validateTemplateLinkedPolicyJni(String templateText, EntityUID principal, EntityUID resource)
             throws InternalException, NullPointerException;
+
+    private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;
 }
