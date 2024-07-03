@@ -16,8 +16,10 @@
 
 package com.cedarpolicy;
 
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.serializer.EntitySerializer;
 import com.cedarpolicy.serializer.PolicySetSerializer;
 import com.cedarpolicy.serializer.SchemaSerializer;
 import com.cedarpolicy.serializer.ValueDeserializer;
@@ -52,10 +54,11 @@ final class CedarJson {
         final ObjectMapper mapper = new ObjectMapper();
 
         final SimpleModule module = new SimpleModule();
+        module.addSerializer(Entity.class, new EntitySerializer());
+        module.addSerializer(Schema.class, new SchemaSerializer());
+        module.addSerializer(PolicySet.class, new PolicySetSerializer());
         module.addSerializer(Value.class, new ValueSerializer());
         module.addDeserializer(Value.class, new ValueDeserializer());
-        module.addSerializer(PolicySet.class, new PolicySetSerializer());
-        module.addSerializer(Schema.class, new SchemaSerializer());
         mapper.registerModule(module);
         mapper.registerModule(new Jdk8Module());
 

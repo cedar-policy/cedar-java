@@ -18,15 +18,12 @@ package com.cedarpolicy.model.schema;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
-import com.cedarpolicy.serializer.SchemaSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.Optional;
 
 /** Represents a schema. */
-@JsonSerialize(using = SchemaSerializer.class)
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
