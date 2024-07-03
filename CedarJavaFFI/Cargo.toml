@@ -31,4 +31,4 @@ crate_type = ["cdylib"]
 [dependencies.cedar-policy]
 version = "4.0.0"
 git = "https://github.com/cedar-policy/cedar"
-branch = "khieta/cedar-757"
+branch = "main"
