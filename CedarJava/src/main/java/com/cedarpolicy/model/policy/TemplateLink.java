@@ -27,10 +27,10 @@ public class TemplateLink {
     @JsonProperty("templateId")
     private final String templateId;
 
-    @JsonProperty("resultPolicyId")
+    @JsonProperty("newId")
     private final String resultPolicyId;
 
-    @JsonProperty("instantiations")
+    @JsonProperty("values")
     private final List<LinkValue> linkValues;
 
     /**
@@ -43,8 +43,8 @@ public class TemplateLink {
     @JsonCreator
     public TemplateLink(
             @JsonProperty("templateId") String templateId,
-            @JsonProperty("resultPolicyId") String resultPolicyId,
-            @JsonProperty("instantiations") List<LinkValue> linkValues) {
+            @JsonProperty("newId") String resultPolicyId,
+            @JsonProperty("values") List<LinkValue> linkValues) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
         this.linkValues = ImmutableList.copyOf(linkValues);

@@ -56,10 +56,8 @@ mod authorization_tests {
     "principal" : { "type" : "User", "id" : "alice" },
     "action" : { "type" : "Photo", "id" : "view" },
     "resource" : { "type" : "Photo", "id" : "photo" },
-    "slice": {
     "policies": {},
-    "entities": []
-    },
+    "entities": [],
     "context": {}
     }
             "#,
@@ -74,14 +72,14 @@ mod authorization_tests {
             r#"
     {
         "context": {},
-        "slice": {
-            "policies": {
+        "policies": {
+            "staticPolicies": {
             "001": "permit(principal, action, resource);"
             },
-            "entities": [],
             "templates": {},
-            "templateInstantiations": []
+            "templateLinks": []
         },
+        "entities": [],
         "principal": null,
         "action" : { "type" : "Action", "id" : "view" },
         "resource" : { "type" : "Resource", "id" : "thing" }
@@ -98,14 +96,14 @@ mod authorization_tests {
             r#"
     {
         "context": {},
-        "slice": {
-            "policies": {
+        "policies": {
+            "staticPolicies": {
             "001": "permit(principal, action, resource);"
             },
-            "entities": [],
             "templates": {},
-            "templateInstantiations": []
+            "templateLinks": []
         },
+        "entities": [],
         "principal" : { "type" : "User", "id" : "alice" },
         "action" : { "type" : "Action", "id" : "view" },
         "resource": null
@@ -121,7 +119,7 @@ mod authorization_tests {
             "AuthorizationOperation",
             r#"
         {
-                "principal" : {
+            "principal" : {
                 "type" : "User",
                 "id" : "alice"
             },
@@ -134,29 +132,26 @@ mod authorization_tests {
                 "id" : "door"
             },
             "context" : {},
-            "slice" : {
-                    "policies" : {}
-                    , "entities" : []
-                    , "templates" : {
+            "policies" : {
+                "staticPolicies" : {},
+                "templates" : {
                     "ID0": "permit(principal == ?principal, action, resource);"
-                    }
-                    , "templateInstantiations" : [
+                },
+                "templateLinks" : [
                     {
                         "templateId" : "ID0",
-                        "resultPolicyId" : "ID0_User_alice",
-                        "instantiations" : [
-                            {
-                                "slot": "?principal",
-                                "value": {
-                                    "ty" : "User",
-                                    "eid" : "alice"
-                                }
+                        "newId" : "ID0_User_alice",
+                        "values" : {
+                            "?principal": {
+                                "type" : "User",
+                                "id" : "alice"
                             }
-                        ]
+                        }
                     }
-                    ]
-                }
-            }
+                ]
+            },
+            "entities" : []
+        }
             "#,
         );
         assert_authorization_success(result);
@@ -168,19 +163,13 @@ mod validation_tests {
 
     #[test]
     fn empty_validation_call_json_schema_succeeds() {
-        let result = call_cedar(
-            "ValidateOperation",
-            r#"{ "schema": { "json": {} }, "policies": {} }"#,
-        );
+        let result = call_cedar("ValidateOperation", r#"{ "schema": {}, "policies": {} }"#);
         assert_validation_success(result);
     }
 
     #[test]
     fn empty_validation_call_succeeds() {
-        let result = call_cedar(
-            "ValidateOperation",
-            r#"{ "schema": { "human": "" }, "policies": {} }"#,
-        );
+        let result = call_cedar("ValidateOperation", r#"{ "schema": "", "policies": {} }"#);
         assert_validation_success(result);
     }
 }
@@ -196,14 +185,14 @@ mod partial_authorization_tests {
             r#"
     {
         "context": {},
-        "slice": {
-            "policies": {
+        "policies": {
+            "staticPolicies": {
             "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
             },
-            "entities": [],
             "templates": {},
-            "templateInstantiations": []
+            "templateLinks": []
         },
+        "entities": [],
         "principal" : { "type" : "User", "id" : "alice" },
         "action" : { "type" : "Action", "id" : "view" }
     }
@@ -219,14 +208,14 @@ mod partial_authorization_tests {
             r#"
     {
         "context": {},
-        "slice": {
-            "policies": {
+        "policies": {
+            "staticPolicies": {
             "001": "permit(principal == User::\"alice\", action, resource == Photo::\"door\");"
             },
-            "entities": [],
             "templates": {},
-            "templateInstantiations": []
+            "templateLinks": []
         },
+        "entities": [],
         "action" : { "type" : "Action", "id" : "view" },
         "resource" : { "type" : "Photo", "id" : "door" }
     }
