@@ -16,26 +16,28 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.policy.TemplateLink;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
-/** Serialize a slice. Only used internally by CedarJson */
-public class SliceSerializer extends JsonSerializer<Slice> {
+/** Serialize a template-linked policy. */
+public class TemplateLinkSerializer extends JsonSerializer<TemplateLink> {
 
-    /** Serialize a slice. */
+    /** Serialize a template-linked policy. */
     @Override
     public void serialize(
-            Slice slice, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            TemplateLink link, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeObjectField("policies", slice.getPolicies());
-        jsonGenerator.writeObjectField("entities", slice.getEntities());
-        jsonGenerator.writeObjectField("templates", slice.getTemplates());
-        jsonGenerator.writeObjectField(
-                "templateInstantiations", slice.getTemplateLinks());
+        jsonGenerator.writeObjectField("templateId", link.getTemplateId());
+        jsonGenerator.writeObjectField("newId", link.getResultPolicyId());
+        jsonGenerator.writeObjectField("values", link.getLinkValues().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().asJson())));
         jsonGenerator.writeEndObject();
     }
 }

@@ -15,28 +15,24 @@
  */
 
 package com.cedarpolicy.model.policy;
+import com.cedarpolicy.value.EntityUID;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Link for policy template. */
 public class LinkValue {
     private final String slot;
-    private final EntityTypeAndId value;
+    private final EntityUID value;
 
     /**
      * Link for policy template.
      *
-     * @param slot the slot in the template.
+     * @param slot  the slot in the template.
      * @param value the value to put in the slot
      */
-    @JsonCreator
-    public LinkValue(
-            @JsonProperty("slot") String slot, @JsonProperty("value") EntityTypeAndId value) {
+    public LinkValue(String slot, EntityUID value) {
         this.slot = slot;
         this.value = value;
     }
-
 
     /** Get the slot in the template. */
     public String getSlot() {
@@ -44,7 +40,7 @@ public class LinkValue {
     }
 
     /** Get the value to put in the slot. */
-    public EntityTypeAndId getValue() {
+    public EntityUID getValue() {
         return value;
     }
 }

@@ -17,21 +17,18 @@
 package com.cedarpolicy.model;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.policy.Policy;
+import com.cedarpolicy.model.policy.PolicySet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /** Information passed to Cedar for validation. */
 public final class ValidationRequest {
     private final Schema schema;
     @JsonProperty("policies")
-    private final Map<String, String> policies;
+    private final PolicySet policies;
 
     /**
      * Construct a validation request.
@@ -40,7 +37,7 @@ public final class ValidationRequest {
      * @param policies Map of Policy ID to policy.
      */
     @SuppressFBWarnings
-    public ValidationRequest(Schema schema, Map<String, String> policies) {
+    public ValidationRequest(Schema schema, PolicySet policies) {
         if (schema == null) {
             throw new NullPointerException("schema");
         }
@@ -51,22 +48,6 @@ public final class ValidationRequest {
 
         this.schema = schema;
         this.policies = policies;
-    }
-
-    public ValidationRequest(Schema schema, Set<Policy> policies) {
-        if (schema == null) {
-            throw new NullPointerException("schema");
-        }
-
-        if (policies == null) {
-            throw new NullPointerException("policies");
-        }
-
-        this.schema = schema;
-        this.policies = new HashMap<>();
-        for (Policy p : policies) {
-            this.policies.put(p.policyID, p.policySrc);
-        }
     }
 
     /**
@@ -81,10 +62,10 @@ public final class ValidationRequest {
     /**
      * Get the policy set.
      *
-     * @return Map of policy ID to policy.
+     * @return A `PolicySet` object
      */
     @SuppressFBWarnings
-    public Map<String, String> getPolicySet() {
+    public PolicySet getPolicySet() {
         return this.policies;
     }
 

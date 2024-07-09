@@ -32,7 +32,6 @@ import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.entity.Entity;
-import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
@@ -262,7 +261,7 @@ public class SharedIntegrationTests {
                     Stream.of(DynamicTest.dynamicTest(
                                 jsonFile + ": validate",
                                 () ->
-                                    executeJsonValidationTest(policySet.policies, schema, test.shouldValidate))),
+                                    executeJsonValidationTest(policySet, schema, test.shouldValidate))),
                     test.requests.stream()
                         .map(
                                 request ->
@@ -320,7 +319,7 @@ public class SharedIntegrationTests {
     /**
      * Check that the outcome of validation matches the expected result.
      */
-    private void executeJsonValidationTest(Set<Policy> policies, Schema schema, Boolean shouldValidate) throws AuthException {
+    private void executeJsonValidationTest(PolicySet policies, Schema schema, Boolean shouldValidate) throws AuthException {
         AuthorizationEngine auth = new BasicAuthorizationEngine();
         ValidationRequest validationQuery = new ValidationRequest(schema, policies);
         try {

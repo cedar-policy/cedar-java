@@ -20,12 +20,10 @@ import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Optional;
 
 /** Represents a schema. */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

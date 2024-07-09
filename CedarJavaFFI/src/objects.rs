@@ -264,7 +264,6 @@ impl<'a> AsRef<JObject<'a>> for JEntityId<'a> {
 /// (com.cedarpolicy.value.EntityUID)
 pub struct JEntityUID<'a> {
     obj: JObject<'a>,
-    entity_uid: EntityUid,
 }
 
 impl<'a> JEntityUID<'a> {
@@ -274,8 +273,6 @@ impl<'a> JEntityUID<'a> {
         entity_type: JEntityTypeName<'a>,
         id: JEntityId<'a>,
     ) -> Result<Self> {
-        let entity_uid: EntityUid =
-            EntityUid::from_type_name_and_id(entity_type.get_rust_repr(), id.get_rust_repr());
         let obj = env.new_object(
             "com/cedarpolicy/value/EntityUID",
             "(Lcom/cedarpolicy/value/EntityTypeName;Lcom/cedarpolicy/value/EntityIdentifier;)V",
@@ -284,7 +281,7 @@ impl<'a> JEntityUID<'a> {
                 JValueGen::Object(id.as_ref()),
             ],
         )?;
-        Ok(Self { obj, entity_uid })
+        Ok(Self { obj })
     }
 
     /// Attempt to parse an EntityUID from a string, and return the result as a Java optional
@@ -300,37 +297,12 @@ impl<'a> JEntityUID<'a> {
             Err(_) => JOptional::empty(env),
         }
     }
-
-    /// public method to return the rust representation of this EntityUid
-    pub fn get_rust_repr(&self) -> EntityUid {
-        self.entity_uid.clone()
-    }
 }
 
 impl<'a> Object<'a> for JEntityUID<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
         assert_is_class(env, &obj, "com/cedarpolicy/value/EntityUID")?;
-        let entity_type_name_jref = env.call_method(
-            &obj,
-            "getType",
-            "()Lcom/cedarpolicy/value/EntityTypeName;",
-            &[],
-        )?;
-        let entity_type_name_field = get_object_ref(entity_type_name_jref)?;
-        let entity_type_name = JEntityTypeName::cast(env, entity_type_name_field)?;
-        let entity_id_jref = env.call_method(
-            &obj,
-            "getId",
-            "()Lcom/cedarpolicy/value/EntityIdentifier;",
-            &[],
-        )?;
-        let entity_id_field = get_object_ref(entity_id_jref)?;
-        let entity_id = JEntityId::cast(env, entity_id_field)?;
-        let entity_uid = EntityUid::from_type_name_and_id(
-            entity_type_name.get_rust_repr(),
-            entity_id.get_rust_repr(),
-        );
-        Ok(Self { obj, entity_uid })
+        Ok(Self { obj })
     }
 }
 
@@ -356,10 +328,10 @@ impl<'a> JPolicy<'a> {
         let obj = env
             .new_object(
                 "com/cedarpolicy/model/policy/Policy",
-                &"(Ljava/lang/String;Ljava/lang/String;)V",
+                "(Ljava/lang/String;Ljava/lang/String;)V",
                 &[
-                    JValueGen::Object(&policy_string),
-                    JValueGen::Object(&policy_id_string),
+                    JValueGen::Object(policy_string),
+                    JValueGen::Object(policy_id_string),
                 ],
             )
             .expect("Failed to create new Policy object");

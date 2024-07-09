@@ -17,7 +17,6 @@
 package com.cedarpolicy.model.policy;
 
 import com.cedarpolicy.loader.LibraryLoader;
-
 import com.cedarpolicy.model.exception.InternalException;
 
 import java.util.Collections;

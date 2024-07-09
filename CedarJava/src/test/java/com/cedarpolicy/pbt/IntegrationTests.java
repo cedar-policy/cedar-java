@@ -26,7 +26,6 @@ import com.cedarpolicy.BasicAuthorizationEngine;
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.entity.Entity;
-import com.cedarpolicy.model.policy.EntityTypeAndId;
 import com.cedarpolicy.model.policy.LinkValue;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
@@ -554,7 +553,7 @@ public class IntegrationTests {
         Set<Policy> templates = new HashSet<>();
         templates.add(policy);
 
-        LinkValue linkValue = new LinkValue(principalSlot, new EntityTypeAndId("User", "alice"));
+        LinkValue linkValue = new LinkValue(principalSlot, new EntityUID(principalType, "alice"));
 
         final String linkId = "ID0_alice";
         TemplateLink templateLink =

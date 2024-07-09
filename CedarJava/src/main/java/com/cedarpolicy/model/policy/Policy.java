@@ -18,7 +18,6 @@ package com.cedarpolicy.model.policy;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
-import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -93,26 +92,8 @@ public class Policy {
         return new Policy(templateText, null);
     }
 
-    /**
-     * This method takes in a template and a list of link values and calls Cedar JNI to ensure those slots
-     * can be used to link the template. If the template is validated ahead of time by using Policy.parsePolicyTemplate
-     * and the link values are also ensured to be valid (for example, by validating their parts using EntityTypeName.parse
-     * and EntityIdentifier.parse), then this should only fail because the slots in the template don't match the link values
-     * (barring JNI failures).
-     * @param p Policy object constructed from a valid template. Best if built from Policy.parsePolicyTemplate
-     * @param principal EntityUid to put into the principal slot. Leave null if there's no principal slot
-     * @param resource EntityUid to put into the resource slot. Leave null if there's no resource slot
-     * @return
-     */
-    public static boolean validateTemplateLinkedPolicy(Policy p, EntityUID principal, EntityUID resource)
-            throws InternalException, NullPointerException {
-        return validateTemplateLinkedPolicyJni(p.policySrc, principal, resource);
-    }
-
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
     private static native String parsePolicyTemplateJni(String policyTemplateStr)
-            throws InternalException, NullPointerException;
-    private static native boolean validateTemplateLinkedPolicyJni(String templateText, EntityUID principal, EntityUID resource)
             throws InternalException, NullPointerException;
 
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;

@@ -26,10 +26,8 @@ import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
-import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
-import com.cedarpolicy.model.slice.Slice;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -103,7 +101,8 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     private static class AuthorizationRequest extends com.cedarpolicy.model.AuthorizationRequest {
-        @JsonProperty private final Slice slice;
+        @JsonProperty private final PolicySet policies;
+        @JsonProperty private final Set<Entity> entities;
 
         AuthorizationRequest(com.cedarpolicy.model.AuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             super(
@@ -113,18 +112,21 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.context,
                     request.schema,
                     request.enableRequestValidation);
-            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateLinks);
+            this.policies = policySet;
+            this.entities = entities;
         }
     }
 
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
     private static final class PartialAuthorizationRequest {
-        @JsonProperty public final Slice slice;
+        @JsonProperty private final PolicySet policies;
+        @JsonProperty private final Set<Entity> entities;
         @JsonProperty public final com.cedarpolicy.model.PartialAuthorizationRequest request;
 
         PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             this.request = request;
-            this.slice = new BasicSlice(policySet.policies, entities, policySet.templates, policySet.templateLinks);
+            this.policies = policySet;
+            this.entities = entities;
         }
     }
 

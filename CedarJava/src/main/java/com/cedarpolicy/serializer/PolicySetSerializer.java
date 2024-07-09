@@ -16,25 +16,24 @@
 
 package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+import com.cedarpolicy.model.policy.PolicySet;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
-/** Serialize a schema. */
-public class SchemaSerializer extends JsonSerializer<Schema> {
+/** Serialize a policy set. */
+public class PolicySetSerializer extends JsonSerializer<PolicySet> {
 
-    /** Serialize a schema. */
+    /** Serialize a policy set. */
     @Override
     public void serialize(
-            Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            PolicySet policySet, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        if (schema.type == JsonOrHuman.Json) {
-            jsonGenerator.writeObject(schema.schemaJson.get());
-        } else {
-            jsonGenerator.writeString(schema.schemaText.get());
-        }
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeObjectField("staticPolicies", policySet.getStaticPolicies());
+        jsonGenerator.writeObjectField("templates", policySet.getTemplates());
+        jsonGenerator.writeObjectField("templateLinks", policySet.templateLinks);
+        jsonGenerator.writeEndObject();
     }
 }
