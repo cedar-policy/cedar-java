@@ -27,7 +27,6 @@ import java.util.Objects;
 /** Information passed to Cedar for validation. */
 public final class ValidationRequest {
     private final Schema schema;
-    @JsonProperty("policies")
     private final PolicySet policies;
 
     /**
@@ -64,7 +63,7 @@ public final class ValidationRequest {
      *
      * @return A `PolicySet` object
      */
-    @SuppressFBWarnings
+    @JsonProperty("policies")
     public PolicySet getPolicySet() {
         return this.policies;
     }
