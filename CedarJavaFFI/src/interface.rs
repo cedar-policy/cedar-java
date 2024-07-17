@@ -20,6 +20,7 @@ use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     EntityUid, Policy, PolicySet, Schema, Template,
 };
+use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
     sys::{jstring, jvalue},
@@ -458,5 +459,33 @@ fn get_euid_repr_internal<'a>(
         let euid = EntityUid::from_type_name_and_id(etype, id);
         let jstring = env.new_string(euid.to_string())?;
         Ok(jstring.into())
+    }
+}
+
+#[jni_fn("com.cedarpolicy.formatter.PolicyFormatter")]
+pub fn policiesStrToPretty<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_jstr: JString<'a>,
+) -> jvalue {
+    match policies_str_to_pretty_internal(&mut env, policies_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn policies_str_to_pretty_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policies_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policies_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let config = Config::default();
+        let policies_str = String::from(env.get_string(&policies_jstr)?);
+        match policies_str_to_pretty(&policies_str, &config) {
+            Ok(formatted_policies) => Ok(env.new_string(formatted_policies)?.into()),
+            Err(e) => Err(e.into()),
+        }
     }
 }
