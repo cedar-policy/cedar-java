@@ -27,3 +27,6 @@ crate_type = ["cdylib"]
 
 [dependencies.cedar-policy]
 version = "3.3"
+
+[dependencies.cedar-policy-formatter]
+version = "3.3"
