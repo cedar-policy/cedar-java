@@ -105,7 +105,6 @@ public class ValidationTests {
         templates.add(new Policy("permit(principal == ?principal, action, resource in ?resource);", "template0"));
         templates.add(new Policy("permit(principal, action, resource in ?resource);", "template1"));
         templates.add(new Policy("permit(principal == ?principal, action, resource);", "template2"));
-        templates.add(new Policy("permit(principal, action, resource);", "template3"));
 
         List<TemplateLink> templateLinks = new ArrayList<>();
         LinkValue principalLink = new LinkValue("?principal", EntityUID.parse("Library::User::\"Victor\"").get());
@@ -116,7 +115,6 @@ public class ValidationTests {
         templateLinks.add(new TemplateLink("template0", "policy0", List.of(principalLink, resourceLink1)));
         templateLinks.add(new TemplateLink("template1", "policy1", List.of(resourceLink2)));
         templateLinks.add(new TemplateLink("template2", "policy2", List.of(principalLink)));
-        templateLinks.add(new TemplateLink("template3", "policy3", List.of()));
 
         this.policies = new PolicySet(new HashSet<>(), templates, templateLinks);
         ValidationResponse response = whenValidated();
@@ -131,16 +129,9 @@ public class ValidationTests {
         templates.add(new Policy("permit(principal == ?principal, action, resource in ?resource);", "template0"));
         templates.add(new Policy("permit(principal, action, resource in ?resource);", "template1"));
         templates.add(new Policy("permit(principal == ?principal, action, resource);", "template2"));
-        templates.add(new Policy("permit(principal, action, resource);", "template3"));
 
         LinkValue principalLink = new LinkValue("?principal", EntityUID.parse("Library::User::\"Victor\"").get());
         LinkValue resourceLink = new LinkValue("?resource", EntityUID.parse("Library::Book::\"The black Swan\"").get());
-
-        // fails if we try to link a template with no slots
-        this.policies = new PolicySet(new HashSet<>(), templates,
-                List.of(new TemplateLink("template3", "policy", List.of(principalLink))));
-        ValidationResponse response1 = whenValidated();
-        thenValidationFailed(response1);
 
         // fails if we provide a value for the wrong slot
         this.policies = new PolicySet(new HashSet<>(), templates,

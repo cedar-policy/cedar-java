@@ -45,13 +45,19 @@ public class PolicyTests {
 
     @Test
     public void parsePolicyTemplateTests() {
+        // valid template
         assertDoesNotThrow(() -> {
             String tbody = "permit(principal == ?principal, action, resource in ?resource);";
             var template = Policy.parsePolicyTemplate(tbody);
             assertEquals(tbody, template.policySrc);
         });
+        // ?resource slot shouldn't be used in the principal scope
         assertThrows(InternalException.class, () -> {
             Policy.parsePolicyTemplate("permit(principal in ?resource, action, resource);");
+        });
+        // a static policy is not a template
+        assertThrows(InternalException.class, () -> {
+            Policy.parsePolicyTemplate("permit(principal, action, resource);");
         });
     }
 
@@ -75,6 +81,7 @@ public class PolicyTests {
 
     @Test
     public void policyTemplateToJsonFailureTests() throws InternalException {
+        // conversion to JSON currently only works for static policies
         try {
             String tbody = "permit(principal == ?principal, action, resource in ?resource);";
             Policy template = Policy.parsePolicyTemplate(tbody);

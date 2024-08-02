@@ -78,6 +78,9 @@ public class Policy {
         return "// Policy ID: " + policyID + "\n" + policySrc;
     }
 
+    /**
+     * Get the JSON representation of the policy. Currently only supports static policies.
+     */
     public String toJson() throws InternalException, NullPointerException {
         return toJsonJni(policySrc);
     }
