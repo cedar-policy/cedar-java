@@ -189,7 +189,7 @@ fn parse_human_schema_internal<'a>(
     } else {
         let schema_jstring = env.get_string(&schema_jstr)?;
         let schema_string = String::from(schema_jstring);
-        match Schema::from_str_natural(&schema_string) {
+        match Schema::from_str_cedar(&schema_string) {
             Err(e) => Err(Box::new(e)),
             Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
