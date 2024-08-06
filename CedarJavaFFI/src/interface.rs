@@ -173,7 +173,7 @@ fn parse_json_schema_internal<'a>(
     } else {
         let schema_jstring = env.get_string(&schema_jstr)?;
         let schema_string = String::from(schema_jstring);
-        match Schema::from_str(&schema_string) {
+        match Schema::from_json_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
             Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
