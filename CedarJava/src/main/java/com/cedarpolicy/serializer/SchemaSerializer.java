@@ -17,7 +17,7 @@
 package com.cedarpolicy.serializer;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -31,7 +31,7 @@ public class SchemaSerializer extends JsonSerializer<Schema> {
     public void serialize(
             Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        if (schema.type == JsonOrHuman.Json) {
+        if (schema.type == JsonOrCedar.Json) {
             jsonGenerator.writeObject(schema.schemaJson.get());
         } else {
             jsonGenerator.writeString(schema.schemaText.get());

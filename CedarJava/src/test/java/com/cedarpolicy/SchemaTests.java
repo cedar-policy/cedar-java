@@ -17,7 +17,7 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,8 +28,8 @@ public class SchemaTests {
     @Test
     public void parseJsonSchema() {
         assertDoesNotThrow(() -> {
-            Schema.parse(JsonOrHuman.Json, "{}");
-            Schema.parse(JsonOrHuman.Json, """
+            Schema.parse(JsonOrCedar.Json, "{}");
+            Schema.parse(JsonOrCedar.Json, """
                     {
                         "Foo::Bar": {
                             "entityTypes": {},
@@ -37,7 +37,7 @@ public class SchemaTests {
                         }
                     }
                     """);
-            Schema.parse(JsonOrHuman.Json, """
+            Schema.parse(JsonOrCedar.Json, """
                     {
                         "": {
                             "entityTypes": {
@@ -74,17 +74,17 @@ public class SchemaTests {
                     """);
         });
         assertThrows(Exception.class, () -> {
-            Schema.parse(JsonOrHuman.Json, "{\"foo\": \"bar\"}");
-            Schema.parse(JsonOrHuman.Json, "namespace Foo::Bar;");
+            Schema.parse(JsonOrCedar.Json, "{\"foo\": \"bar\"}");
+            Schema.parse(JsonOrCedar.Json, "namespace Foo::Bar;");
         });
     }
 
     @Test
-    public void parseHumanSchema() {
+    public void parseCedarSchema() {
         assertDoesNotThrow(() -> {
-            Schema.parse(JsonOrHuman.Human, "");
-            Schema.parse(JsonOrHuman.Human, "namespace Foo::Bar {}");
-            Schema.parse(JsonOrHuman.Human, """
+            Schema.parse(JsonOrCedar.Cedar, "");
+            Schema.parse(JsonOrCedar.Cedar, "namespace Foo::Bar {}");
+            Schema.parse(JsonOrCedar.Cedar, """
                     entity User = {
                         name: String,
                         age?: Long,
@@ -96,7 +96,7 @@ public class SchemaTests {
                     """);
         });
         assertThrows(Exception.class, () -> {
-            Schema.parse(JsonOrHuman.Human, """
+            Schema.parse(JsonOrCedar.Cedar, """
                     {
                         "Foo::Bar": {
                             "entityTypes" {},
@@ -104,7 +104,7 @@ public class SchemaTests {
                         }
                     }
                     """);
-            Schema.parse(JsonOrHuman.Human, "namspace Foo::Bar;");
+            Schema.parse(JsonOrCedar.Cedar, "namspace Foo::Bar;");
         });
     }
 }

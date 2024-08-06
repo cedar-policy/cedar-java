@@ -17,7 +17,7 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrHuman;
+import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -40,7 +40,7 @@ public final class TestUtil {
                     Paths.get(
                             ValidationTests.class.getResource(schemaFile).toURI())),
                     StandardCharsets.UTF_8);
-            return new Schema(JsonOrHuman.Json, Optional.of(text), Optional.empty());
+            return new Schema(JsonOrCedar.Json, Optional.of(text), Optional.empty());
         } catch (Exception e) {
             throw new RuntimeException("Failed to load test schema file " + schemaFile, e);
         }
