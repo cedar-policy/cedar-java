@@ -31,26 +31,26 @@ public final class Schema {
         LibraryLoader.loadLibrary();
     }
 
-    /** Is this schema in the JSON or human format */
-    public final JsonOrHuman type;
+    /** Is this schema in the JSON or Cedar format */
+    public final JsonOrCedar type;
 
     /** This will be present if and only if `type` is `Json`. */
     public final Optional<JsonNode> schemaJson;
 
-    /** This will be present if and only if `type` is `Human`. */
+    /** This will be present if and only if `type` is `Cedar`. */
     public final Optional<String> schemaText;
 
     /**
      * If `type` is `Json`, `schemaJson` should be present and `schemaText` empty.
-     * If `type` is `Human`, `schemaText` should be present and `schemaJson` empty.
+     * If `type` is `Cedar`, `schemaText` should be present and `schemaJson` empty.
      * This constructor does not check that the input text represents a valid JSON
      * or Cedar schema. Use the `parse` function to ensure schema validity.
      *
      * @param type       The schema format used.
-     * @param schemaJson Optional schema in Cedar's JSON schema format.
-     * @param schemaText Optional schema in Cedar's human-readable schema format.
+     * @param schemaJson Optional schema in the JSON schema format.
+     * @param schemaText Optional schema in the Cedar schema format.
      */
-    public Schema(JsonOrHuman type, Optional<String> schemaJson, Optional<String> schemaText) {
+    public Schema(JsonOrCedar type, Optional<String> schemaJson, Optional<String> schemaText) {
         this.type = type;
         this.schemaJson = schemaJson.map(jsonStr -> {
             try {
@@ -73,7 +73,7 @@ public final class Schema {
         if (schemaJson == null) {
             throw new NullPointerException("schemaJson");
         }
-        this.type = JsonOrHuman.Json;
+        this.type = JsonOrCedar.Json;
         this.schemaJson = Optional.of(schemaJson);
         this.schemaText = Optional.empty();
     }
@@ -82,19 +82,19 @@ public final class Schema {
      * Build a Schema from a string. This does not check that the string represents
      * a valid schema. Use `parse` to check validity.
      *
-     * @param schemaText Schema in Cedar's human-readable schema format.
+     * @param schemaText Schema in the Cedar schema format.
      */
     public Schema(String schemaText) {
         if (schemaText == null) {
             throw new NullPointerException("schemaText");
         }
-        this.type = JsonOrHuman.Human;
+        this.type = JsonOrCedar.Cedar;
         this.schemaJson = Optional.empty();
         this.schemaText = Optional.of(schemaText);
     }
 
     public String toString() {
-        if (type == JsonOrHuman.Json) {
+        if (type == JsonOrCedar.Json) {
             return "Schema(schemaJson=" + schemaJson.get() + ")";
         } else {
             return "Schema(schemaText=" + schemaText.get() + ")";
@@ -111,19 +111,19 @@ public final class Schema {
      * @throws NullPointerException If the input text is null.
      * @return A {@link Schema} that is guaranteed to be valid.
      */
-    public static Schema parse(JsonOrHuman type, String str) throws InternalException, NullPointerException {
-        if (type == JsonOrHuman.Json) {
+    public static Schema parse(JsonOrCedar type, String str) throws InternalException, NullPointerException {
+        if (type == JsonOrCedar.Json) {
             parseJsonSchemaJni(str);
-            return new Schema(JsonOrHuman.Json, Optional.of(str), Optional.empty());
+            return new Schema(JsonOrCedar.Json, Optional.of(str), Optional.empty());
         } else {
-            parseHumanSchemaJni(str);
-            return new Schema(JsonOrHuman.Human, Optional.empty(), Optional.of(str));
+            parseCedarSchemaJni(str);
+            return new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.of(str));
         }
 
     }
 
     /** Specifies the schema format used. */
-    public enum JsonOrHuman {
+    public enum JsonOrCedar {
         /**
          * Cedar JSON schema format. See <a href="https://docs.cedarpolicy.com/schema/json-schema.html">
          *     https://docs.cedarpolicy.com/schema/json-schema.html</a>
@@ -133,10 +133,10 @@ public final class Schema {
          * Cedar schema format. See <a href="https://docs.cedarpolicy.com/schema/human-readable-schema.html">
          *     https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
          */
-        Human
+        Cedar
     }
 
     private static native String parseJsonSchemaJni(String schemaJson) throws InternalException, NullPointerException;
 
-    private static native String parseHumanSchemaJni(String schemaText) throws InternalException, NullPointerException;
+    private static native String parseCedarSchemaJni(String schemaText) throws InternalException, NullPointerException;
 }

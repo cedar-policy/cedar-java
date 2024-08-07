@@ -155,10 +155,10 @@ pub fn parseJsonSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JStri
     }
 }
 
-/// public string-based JSON interface to parse a schema in Cedar's human-readable format
+/// public string-based JSON interface to parse a schema in Cedar's cedar-readable format
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
-pub fn parseHumanSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
-    match parse_human_schema_internal(&mut env, schema_jstr) {
+pub fn parseCedarSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
+    match parse_cedar_schema_internal(&mut env, schema_jstr) {
         Ok(v) => v.as_jni(),
         Err(e) => jni_failed(&mut env, e.as_ref()),
     }
@@ -173,14 +173,14 @@ fn parse_json_schema_internal<'a>(
     } else {
         let schema_jstring = env.get_string(&schema_jstr)?;
         let schema_string = String::from(schema_jstring);
-        match Schema::from_str(&schema_string) {
+        match Schema::from_json_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
             Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
     }
 }
 
-fn parse_human_schema_internal<'a>(
+fn parse_cedar_schema_internal<'a>(
     env: &mut JNIEnv<'a>,
     schema_jstr: JString<'a>,
 ) -> Result<JValueOwned<'a>> {
@@ -189,7 +189,7 @@ fn parse_human_schema_internal<'a>(
     } else {
         let schema_jstring = env.get_string(&schema_jstr)?;
         let schema_string = String::from(schema_jstring);
-        match Schema::from_str_natural(&schema_string) {
+        match Schema::from_cedarschema_str(&schema_string) {
             Err(e) => Err(Box::new(e)),
             Ok(_) => Ok(JValueGen::Object(env.new_string("success")?.into())),
         }
