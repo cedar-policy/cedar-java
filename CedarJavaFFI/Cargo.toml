@@ -6,7 +6,7 @@ description = "Java FFI for Cedar (from the cedar-policy crate)."
 edition = "2021"
 
 
-version = "3.2.0"
+version = "3.3.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc"] }
@@ -26,4 +26,4 @@ partial-eval = ["cedar-policy/partial-eval"]
 crate_type = ["cdylib"]
 
 [dependencies.cedar-policy]
-version = "3.2"
+version = "3.3"
