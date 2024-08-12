@@ -28,13 +28,19 @@ public class PolicyTests {
 
     @Test
     public void parsePolicyTemplateTests() {
+        // valid template
         assertDoesNotThrow(() -> {
             String tbody = "permit(principal == ?principal, action, resource in ?resource);";
             var template = Policy.parsePolicyTemplate(tbody);
             assertTrue(template.policySrc.equals(tbody));
         });
+        // ?resource slot shouldn't be used in the principal scope
         assertThrows(InternalException.class, () -> {
             Policy.parsePolicyTemplate("permit(principal in ?resource, action, resource);");
+        });
+        // a static policy is not a template
+        assertThrows(InternalException.class, () -> {
+            Policy.parsePolicyTemplate("permit(principal, action, resource);");
         });
     }
 
@@ -49,54 +55,33 @@ public class PolicyTests {
 
         Policy p3 = new Policy("permit(principal == ?principal, action, resource);", null);
 
-        Policy p4 = new Policy("permit(principal, action, resource);", null);
-
         assertDoesNotThrow(() -> {
             assertTrue(Policy.validateTemplateLinkedPolicy(p, principal1, resource1));
             assertTrue(Policy.validateTemplateLinkedPolicy(p2, null, resource2));
             assertTrue(Policy.validateTemplateLinkedPolicy(p3, principal1, null));
-            assertTrue(Policy.validateTemplateLinkedPolicy(p4, null, null));
         });
     }
     @Test
     public void validateTemplateLinkedPolicyFailsWhenExpected() {
-        Policy p1 = new Policy("permit(principal, action, resource);", null);
         EntityUID principal = EntityUID.parse("Library::User::\"Victor\"").get();
         EntityUID resource = EntityUID.parse("Library::Book::\"Thinking Fast and Slow\"").get();
 
-        Policy p2 = new Policy("permit(principal, action, resource in ?resource);", null);
+        Policy p1 = new Policy("permit(principal, action, resource in ?resource);", null);
+        Policy p2 = new Policy("permit(principal == ?principal, action, resource);", null);
 
-
-        Policy p3 = new Policy("permit(principal == ?principal, action, resource);", null);
-
-        // fails if we fill either slot in a policy with no slots
+        // fails if we fill both slots or the wrong slot in a policy with one slot
         assertThrows(InternalException.class, () -> {
             Policy.validateTemplateLinkedPolicy(p1, principal, null);
-        });
-        assertThrows(InternalException.class, () -> {
-            Policy.validateTemplateLinkedPolicy(p1, null, resource);
-        });
-        assertThrows(InternalException.class, () -> {
-            Policy.validateTemplateLinkedPolicy(p1, null, resource);
         });
         assertThrows(InternalException.class, () -> {
             Policy.validateTemplateLinkedPolicy(p1, principal, resource);
         });
 
-
-        // fails if we fill both slots or the wrong slot in a policy with one slot
         assertThrows(InternalException.class, () -> {
-            Policy.validateTemplateLinkedPolicy(p2, principal, null);
+            Policy.validateTemplateLinkedPolicy(p2, null, resource);
         });
         assertThrows(InternalException.class, () -> {
             Policy.validateTemplateLinkedPolicy(p2, principal, resource);
-        });
-
-        assertThrows(InternalException.class, () -> {
-            Policy.validateTemplateLinkedPolicy(p3, null, resource);
-        });
-        assertThrows(InternalException.class, () -> {
-            Policy.validateTemplateLinkedPolicy(p3, principal, resource);
         });
     }
 }
