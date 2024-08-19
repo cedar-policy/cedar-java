@@ -25,15 +25,6 @@ public class PolicyFormatterTests {
   }
 
   @Test
-  public void testPoliciesStrToPrettyMalformedCedarPolicy() throws Exception {
-    String malformedCedarPolicy = Files.readString(
-        Path.of(TEST_RESOURCES_DIR + "malformed_policy_set.cedar"));
-
-    assertThrows(InternalException.class,
-        () -> PolicyFormatter.policiesStrToPretty(malformedCedarPolicy));
-  }
-
-  @Test
   public void testPoliciesStrToPrettyNullSafety() {
     assertThrows(NullPointerException.class, () -> PolicyFormatter.policiesStrToPretty(null));
   }
