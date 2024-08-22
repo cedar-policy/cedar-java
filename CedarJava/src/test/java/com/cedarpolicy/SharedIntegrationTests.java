@@ -32,6 +32,7 @@ import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.slice.BasicSlice;
 import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Policy;
+import com.cedarpolicy.model.slice.PolicySet;
 import com.cedarpolicy.model.slice.Slice;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
@@ -59,7 +60,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -272,7 +272,7 @@ public class SharedIntegrationTests {
                                 jsonFile + ": validate",
                                 () ->
                                     executeJsonValidationTest(policySet.policies, schema, test.shouldValidate))),
-                    test.requests.stream()
+                    test.queries.stream()
                         .map(
                                 request ->
                                         DynamicTest.dynamicTest(
@@ -358,7 +358,8 @@ public class SharedIntegrationTests {
                     request.resource == null ? Optional.empty() : Optional.of(EntityUID.parseFromJson(request.resource).get()),
                     Optional.of(request.context),
                     Optional.of(schema),
-                    request.validateRequest);
+                    request.enable_request_validation);
+        Slice slice = new BasicSlice(policySet, entities);
 
         try {
             AuthorizationResponse response = auth.isAuthorized(authRequest, slice);
