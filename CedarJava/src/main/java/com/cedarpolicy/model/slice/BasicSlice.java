@@ -90,7 +90,16 @@ public class BasicSlice implements Slice {
         this(policies, entities, Collections.emptySet(), Collections.emptyList());
     }
 
-
+    /**
+     * Construct a Slice from Entity and PolicySet objects.
+     *
+     * @param policySet Set of policies.
+     * @param entities Set of entities.
+     */
+    @SuppressFBWarnings
+    public BasicSlice(PolicySet policySet, Set<Entity> entities) {
+        this(policySet.policies, entities, policySet.templates, policySet.templateInstantiations);
+    }
 
     @Override
     @SuppressFBWarnings
