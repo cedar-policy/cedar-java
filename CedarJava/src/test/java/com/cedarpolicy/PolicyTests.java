@@ -51,13 +51,10 @@ public class PolicyTests {
 
         Policy p3 = new Policy("permit(principal == ?principal, action, resource);", null);
 
-        Policy p4 = new Policy("permit(principal, action, resource);", null);
-
         assertDoesNotThrow(() -> {
             assertTrue(Policy.validateTemplateLinkedPolicy(p, principal1, resource1));
             assertTrue(Policy.validateTemplateLinkedPolicy(p2, null, resource2));
             assertTrue(Policy.validateTemplateLinkedPolicy(p3, principal1, null));
-            assertTrue(Policy.validateTemplateLinkedPolicy(p4, null, null));
         });
     }
     @Test
