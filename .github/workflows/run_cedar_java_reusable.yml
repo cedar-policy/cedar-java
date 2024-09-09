@@ -56,7 +56,7 @@ jobs:
           cache: 'gradle'
       - name: Build FFI and Java Libraries
         working-directory: CedarJava
-        run: ./gradlew build
+        run: clang --version && ./gradlew build
       - name: Generate Java Documentation
         working-directory: CedarJava
         run: ./gradlew javadoc
