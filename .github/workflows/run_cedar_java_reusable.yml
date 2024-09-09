@@ -21,7 +21,7 @@ jobs:
         include:
           - os: macos-14
             name: Build on macOS
-            zigInstall: wget https://ziglang.org/download/0.13.0/zig-macos-x86_64-0.13.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-macos-x86_64-0.13.0" >> $GITHUB_PATH
+            zigInstall: wget https://ziglang.org/download/0.11.0/zig-macos-x86_64-0.11.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-macos-x86_64-0.11.0" >> $GITHUB_PATH
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     steps:
