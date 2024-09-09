@@ -81,7 +81,7 @@ public class SharedIntegrationTests {
         if (resolved.isAbsolute()) {
             return resolved;
         } else {
-            final URL integrationTestsLocation = getClass().getResource("/cedar-main/cedar-integration-tests");
+            final URL integrationTestsLocation = getClass().getResource("/cedar-release-3.3.x/cedar-integration-tests");
             return integrationTestsLocation == null ? resolved : Paths.get(integrationTestsLocation.getPath(), path);
         }
     }
@@ -217,9 +217,9 @@ public class SharedIntegrationTests {
     @TestFactory
     public List<DynamicContainer> integrationTestsFromJson() throws InternalException, IOException {
         List<DynamicContainer> tests = new ArrayList<>();
-        //If we can't find the `cedar` package, don't try to load integration tests.
+        //If we can't find the `cedar` package, throw an IO exception
         if (Files.notExists(resolveIntegrationTestPath("corpus_tests"))) {
-            return tests;
+            throw new IOException(resolveIntegrationTestPath("corpus_tests").toString() + " not found");
         }
         // tests other than corpus tests
         for (String testFile : JSON_TEST_FILES) {
@@ -231,8 +231,10 @@ public class SharedIntegrationTests {
            stream
                 // ignore non-JSON files
                 .filter(path -> path.getFileName().toString().endsWith(".json"))
-                // ignore files that end with `.entities.json`
-                .filter(path -> !path.getFileName().toString().endsWith(".entities.json"))
+                // ignore files that start with `[schema|policies|entities]_`
+                .filter(path -> !path.getFileName().toString().startsWith("schema_"))
+                .filter(path -> !path.getFileName().toString().startsWith("policies_"))
+                .filter(path -> !path.getFileName().toString().startsWith("entities_"))
                 // add the test
                 .forEach(
                         path -> {
