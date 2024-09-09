@@ -17,11 +17,8 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-14]
+        os: [macos-14]
         include:
-          - os: ubuntu-latest
-            name: Build on Linux
-            zigInstall: wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
           - os: macos-14
             name: Build on macOS
             zigInstall: wget https://ziglang.org/download/0.13.0/zig-macos-x86_64-0.13.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-macos-x86_64-0.13.0" >> $GITHUB_PATH
