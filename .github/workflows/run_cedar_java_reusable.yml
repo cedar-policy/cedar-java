@@ -37,7 +37,7 @@ jobs:
           ref: ${{ inputs.cedar_policy_ref }}
           path: ./cedar
       - name: Prepare Rust Build
-        run: rustup update stable && rustup default stable
+        run: rustup update stable && rustup default 1.80.0
       - name: Configure CedarJavaFFI for CI build
         run: bash configure_ci_build.sh
       - name: Check FFI Formatting
