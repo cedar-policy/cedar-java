@@ -20,7 +20,7 @@ use cedar_policy::{
     frontend::{
         is_authorized::json_is_authorized, utils::InterfaceResult, validate::json_validate,
     },
-    EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
+    Entities, EntityUid, Policy, PolicyId, PolicySet, Schema, SlotId, Template,
 };
 use jni::{
     objects::{JClass, JObject, JString, JValueGen, JValueOwned},
@@ -30,6 +30,7 @@ use jni::{
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, error::Error, str::FromStr, thread};
+use serde_json::{from_str, Value};
 
 use crate::{
     objects::{JEntityId, JEntityTypeName, JEntityUID, Object},
@@ -42,6 +43,7 @@ const V0_AUTH_OP: &str = "AuthorizationOperation";
 #[cfg(feature = "partial-eval")]
 const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
+const V0_VALIDATE_ENTITIES: &str = "ValidateEntities";
 const V0_PARSE_EUID_OP: &str = "ParseEntityUidOperation";
 
 fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
@@ -117,10 +119,40 @@ fn call_cedar(call: &str, input: &str) -> String {
         #[cfg(feature = "partial-eval")]
         V0_AUTH_PARTIAL_OP => json_is_authorized_partial(&input),
         V0_VALIDATE_OP => json_validate(&input),
+        V0_VALIDATE_ENTITIES => json_validate_entities(&input),
         V0_PARSE_EUID_OP => json_parse_entity_uid(&input),
         _ => InterfaceResult::fail_internally(format!("unsupported operation: {}", call)),
     };
     serde_json::to_string(&result).expect("could not serialise response")
+}
+
+#[derive(Serialize, Deserialize)]
+struct ValidateEntityCall {
+    #[serde(rename = "schema")]
+    schema: Value,
+    #[serde(rename = "entities")]
+    entities: Value,
+}
+
+/// public string-based JSON interface to be invoked by FFIs. Takes in a `ParseEUIDCall`, parses it and (if successful)
+/// returns a serialized `ParseEUIDOutput`
+pub fn json_validate_entities(input: &str) -> InterfaceResult {
+    match from_str::<ValidateEntityCall>(&input).map_err(|_| "Failed to parse JSON") {
+        Err(e) => InterfaceResult::fail_internally(format!("error parsing call object: {e:}")),
+        Ok(validateEntityCall) => {
+            match cedar_policy::Schema::from_json_value(validateEntityCall.schema) {
+                Err(e) => InterfaceResult::fail_bad_request(vec![format!("{e:}")]),
+                Ok(schema) => {
+                    match Entities::from_json_value(validateEntityCall.entities, Some(&schema)) {
+                        Err(e) => InterfaceResult::fail_bad_request(vec![format!("{e:}")]),
+                        Ok(entities) => {
+                            InterfaceResult::succeed("Entities parsed correctly".to_string())
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -455,6 +487,7 @@ fn get_euid_repr_internal<'a>(
 
 #[cfg(test)]
 mod test {
+    use serde_json::json;
     use super::*;
 
     #[test]
@@ -490,6 +523,267 @@ mod test {
             r#"{ "schema": { "": {"entityTypes": {}, "actions": {} } }, "policySet": {} }"#,
         );
         assert_success(result);
+    }
+
+    #[test]
+    fn validate_entities_succeeds() {
+        let json_data = json!(
+            {
+              "entities":[
+                {
+                    "uid": {
+                        "type": "PhotoApp::User",
+                        "id": "alice"
+                    },
+                    "attrs": {
+                        "userId": "897345789237492878",
+                        "personInformation": {
+                            "age": 25,
+                            "name": "alice"
+                        }
+                    },
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "alice_friends"
+                        },
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::Photo",
+                        "id": "vacationPhoto.jpg"
+                    },
+                    "attrs": {
+                        "private": false,
+                        "account": {
+                            "__entity": {
+                                "type": "PhotoApp::Account",
+                                "id": "ahmad"
+                            }
+                        }
+                    },
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "alice_friends"
+                    },
+                    "attrs": {},
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": []
+                }
+              ],
+              "schema":{
+                "PhotoApp": {
+                    "commonTypes": {
+                        "PersonType": {
+                            "type": "Record",
+                            "attributes": {
+                                "age": {
+                                    "type": "Long"
+                                },
+                                "name": {
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "ContextType": {
+                            "type": "Record",
+                            "attributes": {
+                                "ip": {
+                                    "type": "Extension",
+                                    "name": "ipaddr",
+                                    "required": false
+                                },
+                                "authenticated": {
+                                    "type": "Boolean",
+                                    "required": true
+                                }
+                            }
+                        }
+                    },
+                    "entityTypes": {
+                        "User": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "userId": {
+                                        "type": "String"
+                                    },
+                                    "personInformation": {
+                                        "type": "PersonType"
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        },
+                        "UserGroup": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Photo": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "account": {
+                                        "type": "Entity",
+                                        "name": "Account",
+                                        "required": true
+                                    },
+                                    "private": {
+                                        "type": "Boolean",
+                                        "required": true
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "Album",
+                                "Account"
+                            ]
+                        },
+                        "Album": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Account": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar(
+            "ValidateEntities",
+            json_data.to_string().as_str(),
+        );
+        assert_success(result);
+    }
+
+    #[test]
+    fn validate_entities_invalid_json_fails() {
+        let result = call_cedar(
+            "ValidateEntities",
+            "{]",
+        );
+        assert_failure(result.clone());
+
+        assert!(result.contains("Failed to parse JSON"));
+    }
+
+    #[test]
+    fn validate_entities_invalid_schema_fails() {
+        let json_data = json!(
+            {
+                "entities": [
+
+                ],
+                "schema": {
+                    "PhotoApp": {
+                        "commonTypes": {},
+                        "entityTypes": {
+                            "UserGroup": {
+                                "shape44": {
+                                    "type": "Record",
+                                    "attributes": {}
+                                },
+                                "memberOfTypes": [
+                                    "UserGroup"
+                                ]
+                            }
+                        },
+                        "actions": {}
+                    }
+                }
+            });
+        let result = call_cedar(
+            "ValidateEntities",
+            json_data.to_string().as_str(),
+        );
+        assert_failure(result.clone());
+
+        assert!(result.contains("failed to parse schema"));
+    }
+
+    #[test]
+    fn validate_entities_detect_cycle_fails() {
+        let json_data = json!(
+            {
+                "entities": [
+                    {
+                        "uid": {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "ABCTeam"
+                        },
+                        "attrs": {},
+                        "parents": [
+                            {
+                                "type": "PhotoApp::UserGroup",
+                                "id": "AVTeam"
+                            }
+                        ]
+                    },
+                    {
+                        "uid": {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        },
+                        "attrs": {},
+                        "parents": [
+                            {
+                                "type": "PhotoApp::UserGroup",
+                                "id": "ABCTeam"
+                            }
+                        ]
+                    }
+                ],
+                "schema": {
+                    "PhotoApp": {
+                        "commonTypes": {},
+                        "entityTypes": {
+                            "UserGroup": {
+                                "shape": {
+                                    "type": "Record",
+                                    "attributes": {}
+                                },
+                                "memberOfTypes": [
+                                    "UserGroup"
+                                ]
+                            }
+                        },
+                        "actions": {}
+                    }
+                }
+            });
+        let result = call_cedar(
+            "ValidateEntities",
+            json_data.to_string().as_str(),
+        );
+        assert_failure(result.clone());
+
+        assert!(result.contains("input graph has a cycle containing vertex"));
     }
 
     #[test]
