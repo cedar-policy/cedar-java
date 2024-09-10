@@ -185,7 +185,7 @@ tasks.register('downloadIntegrationTests', Download) {
     group 'Build'
     description 'Downloads Cedar repository with integration tests.'
 
-    src 'https://codeload.github.com/cedar-policy/cedar/zip/main'
+    src 'https://codeload.github.com/cedar-policy/cedar/zip/release%2F3.3.x'
     dest layout.buildDirectory.file('cedar-main.zip')
     overwrite false
 }
