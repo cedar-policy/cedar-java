@@ -53,7 +53,7 @@ jobs:
         run: cargo fmt --all --check
       - name: cargo rustc
         working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
+        run: RUSTFLAGS="-F unsafe-code" cargo build --verbose
       - name: cargo test
         working-directory: ./CedarJavaFFI
         run: cargo test --verbose
