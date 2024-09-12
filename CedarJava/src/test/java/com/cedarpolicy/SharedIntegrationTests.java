@@ -81,7 +81,7 @@ public class SharedIntegrationTests {
         if (resolved.isAbsolute()) {
             return resolved;
         } else {
-            final URL integrationTestsLocation = getClass().getResource("/cedar-release-3.3.x/cedar-integration-tests");
+            final URL integrationTestsLocation = getClass().getResource("/cedar-release-3.4.x/cedar-integration-tests");
             return integrationTestsLocation == null ? resolved : Paths.get(integrationTestsLocation.getPath(), path);
         }
     }
