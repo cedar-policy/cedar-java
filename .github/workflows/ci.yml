@@ -24,7 +24,7 @@ jobs:
     needs: get-branch-name
     uses: ./.github/workflows/run_cedar_java_reusable.yml
     with:
-      cedar_policy_ref: "refs/heads/release/3.3.x" # use the latest commit on 3.3.x
+      cedar_policy_ref: "refs/heads/release/3.4.x" # use the latest commit on 3.4.x
       cedar_java_ref: "${{ github.head_ref }}" # use the current PR's commit
 
 
