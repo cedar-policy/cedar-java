@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +77,12 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     public ValidationResponse validate(ValidationRequest q) throws AuthException {
         LOG.trace("Making a validate request:\n{}", q);
         return call("ValidateOperation", ValidationResponse.class, q);
+    }
+
+    @Override
+    public void validateEntities(EntityValidationRequest q) throws AuthException {
+        LOG.trace("Making an entities validate request:\n{}", q);
+        call("ValidateEntities", Object.class, q);
     }
 
     private static <REQ, RESP> RESP call(String operation, Class<RESP> responseClass, REQ request)
