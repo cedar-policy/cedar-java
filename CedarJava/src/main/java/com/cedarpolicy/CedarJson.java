@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 package com.cedarpolicy;
 
+import com.cedarpolicy.model.slice.Entity;
 import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.serializer.EntitySerializer;
 import com.cedarpolicy.serializer.ValueCedarDeserializer;
 import com.cedarpolicy.serializer.ValueCedarSerializer;
 import com.cedarpolicy.value.Value;
@@ -50,6 +52,7 @@ final class CedarJson {
 
         final SimpleModule module = new SimpleModule();
         module.addSerializer(Slice.class, new SliceJsonSerializer());
+        module.addSerializer(Entity.class, new EntitySerializer());
         module.addSerializer(Value.class, new ValueCedarSerializer());
         module.addDeserializer(Value.class, new ValueCedarDeserializer());
         mapper.registerModule(module);
