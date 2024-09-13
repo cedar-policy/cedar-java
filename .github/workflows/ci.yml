@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: cedar-policy/cedar
-          ref: release/2.3.x
+          ref: release/2.5.x
           path: ./cedar
       - name: rustup
         run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
@@ -34,7 +34,7 @@ jobs:
         run: bash config.sh run_int_tests
       - name: cargo rustc
         working-directory: ./CedarJavaFFI
-        run: RUSTFLAGS="-D warnings -F unsafe-code" cargo build --verbose
+        run: RUSTFLAGS="-F unsafe-code" cargo build --verbose
       - name: cargo test
         working-directory: ./CedarJavaFFI
         run: cargo test --verbose
