@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,17 @@ public interface AuthorizationEngine {
      * @throws AuthException if any internal errors occurred while validating the policies.
      */
     ValidationResponse validate(ValidationRequest request) throws AuthException;
+
+    /**
+     * Asks whether the entities in the given {@link EntityValidationRequest} <code>q</code> are correct
+     * when validated against the schema it describes.
+     *
+     * @param request The request containing the entities to validate and the schema to validate them
+     *                against.
+     * @throws BadRequestException if any errors were found in the syntax of the entities.
+     * @throws AuthException if any internal errors occurred while validating the policies.
+     */
+    void validateEntities(EntityValidationRequest request) throws AuthException;
 
     /**
      * Get the Cedar language major version (e.g., "1.2") used by this CedarJava library.

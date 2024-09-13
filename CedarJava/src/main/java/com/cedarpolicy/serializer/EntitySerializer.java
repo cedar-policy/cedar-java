@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2022-2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,29 @@
  * limitations under the License.
  */
 
-package com.cedarpolicy;
+package com.cedarpolicy.serializer;
 
-import com.cedarpolicy.model.slice.Slice;
+import com.cedarpolicy.model.slice.Entity;
+import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
+/** Serialize an entity. */
+public class EntitySerializer extends JsonSerializer<Entity> {
 
-/** Serialize a slice. Only used internally by CedarJson */
-class SliceJsonSerializer extends JsonSerializer<Slice> {
-
-    /** Serialize a slice. */
+    /** Serialize an entity. */
     @Override
     public void serialize(
-            Slice slice, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            Entity entity, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeObjectField("policies", slice.getPolicies());
-        jsonGenerator.writeObjectField(
-                "entities", slice.getEntities());
-        jsonGenerator.writeObjectField("templates", slice.getTemplates());
-        jsonGenerator.writeObjectField(
-                "template_instantiations", slice.getTemplateInstantiations());
+        jsonGenerator.writeObjectField("uid", entity.getEUID().asJson());
+        jsonGenerator.writeObjectField("attrs", entity.attrs);
+        jsonGenerator.writeObjectField("parents",
+                entity.getParents().stream().map(EntityUID::asJson).collect(Collectors.toSet()));
         jsonGenerator.writeEndObject();
     }
 }
