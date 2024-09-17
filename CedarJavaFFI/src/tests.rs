@@ -29,6 +29,14 @@ fn assert_failure(result: String) {
     assert_matches!(result, Answer::Failure { .. });
 }
 
+fn assert_success(result: String) {
+    let result: Answer = serde_json::from_str(result.as_str()).unwrap();
+    match result {
+        Answer::Success { .. } => {}
+        Answer::Failure { .. } => panic!("expected a success, not {:?}", result),
+    };
+}
+
 #[track_caller]
 fn assert_authorization_success(result: String) {
     let result: AuthorizationAnswer = serde_json::from_str(result.as_str()).unwrap();
@@ -187,6 +195,408 @@ mod validation_tests {
     fn empty_validation_call_succeeds() {
         let result = call_cedar("ValidateOperation", r#"{ "schema": "", "policies": {} }"#);
         assert_validation_success(result);
+    }
+}
+
+mod entity_validation_tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn validate_entities_succeeds() {
+        let json_data = json!(
+            {
+              "entities":[
+                {
+                    "uid": {
+                        "type": "PhotoApp::User",
+                        "id": "alice"
+                    },
+                    "attrs": {
+                        "userId": "897345789237492878",
+                        "personInformation": {
+                            "age": 25,
+                            "name": "alice"
+                        },
+                    },
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "alice_friends"
+                        },
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::Photo",
+                        "id": "vacationPhoto.jpg"
+                    },
+                    "attrs": {
+                        "private": false,
+                        "account": {
+                            "__entity": {
+                                "type": "PhotoApp::Account",
+                                "id": "ahmad"
+                            }
+                        }
+                    },
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "alice_friends"
+                    },
+                    "attrs": {},
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": []
+                }
+              ],
+              "schema":{
+                "PhotoApp": {
+                    "commonTypes": {
+                        "PersonType": {
+                            "type": "Record",
+                            "attributes": {
+                                "age": {
+                                    "type": "Long"
+                                },
+                                "name": {
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "ContextType": {
+                            "type": "Record",
+                            "attributes": {
+                                "ip": {
+                                    "type": "Extension",
+                                    "name": "ipaddr",
+                                    "required": false
+                                },
+                                "authenticated": {
+                                    "type": "Boolean",
+                                    "required": true
+                                }
+                            }
+                        }
+                    },
+                    "entityTypes": {
+                        "User": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "userId": {
+                                        "type": "String"
+                                    },
+                                    "personInformation": {
+                                        "type": "PersonType"
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        },
+                        "UserGroup": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Photo": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "account": {
+                                        "type": "Entity",
+                                        "name": "Account",
+                                        "required": true
+                                    },
+                                    "private": {
+                                        "type": "Boolean",
+                                        "required": true
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "Album",
+                                "Account"
+                            ]
+                        },
+                        "Album": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Account": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_success(result);
+    }
+
+    #[test]
+    fn validate_entities_field_missing() {
+        let json_data = json!(
+            {
+              "entities":[
+                {
+                    "uid": {
+                        "type": "PhotoApp::User",
+                        "id": "alice"
+                    },
+                    "attrs": {
+                        "userId": "897345789237492878"
+                    },
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "alice_friends"
+                        },
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::Photo",
+                        "id": "vacationPhoto.jpg"
+                    },
+                    "attrs": {
+                        "private": false,
+                        "account": {
+                            "__entity": {
+                                "type": "PhotoApp::Account",
+                                "id": "ahmad"
+                            }
+                        }
+                    },
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "alice_friends"
+                    },
+                    "attrs": {},
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": []
+                }
+              ],
+              "schema":{
+                "PhotoApp": {
+                    "commonTypes": {
+                        "PersonType": {
+                            "type": "Record",
+                            "attributes": {
+                                "age": {
+                                    "type": "Long"
+                                },
+                                "name": {
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "ContextType": {
+                            "type": "Record",
+                            "attributes": {
+                                "ip": {
+                                    "type": "Extension",
+                                    "name": "ipaddr",
+                                    "required": false
+                                },
+                                "authenticated": {
+                                    "type": "Boolean",
+                                    "required": true
+                                }
+                            }
+                        }
+                    },
+                    "entityTypes": {
+                        "User": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "userId": {
+                                        "type": "String"
+                                    },
+                                    "personInformation": {
+                                        "type": "PersonType"
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        },
+                        "UserGroup": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Photo": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "account": {
+                                        "type": "Entity",
+                                        "name": "Account",
+                                        "required": true
+                                    },
+                                    "private": {
+                                        "type": "Boolean",
+                                        "required": true
+                                    }
+                                }
+                            },
+                            "memberOfTypes": [
+                                "Album",
+                                "Account"
+                            ]
+                        },
+                        "Album": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        },
+                        "Account": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            }
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(result);
+    }
+
+    #[test]
+    #[should_panic]
+    fn validate_entities_invalid_json_fails() {
+        call_cedar("ValidateEntities", "{]");
+    }
+
+    #[test]
+    fn validate_entities_invalid_schema_fails() {
+        let json_data = json!(
+        {
+            "entities": [
+
+            ],
+            "schema": {
+                "PhotoApp": {
+                    "commonTypes": {},
+                    "entityTypes": {
+                        "UserGroup": {
+                            "shape44": {
+                                "type": "Record",
+                                "attributes": {}
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(result.clone());
+
+        assert!(result.contains("unknown field `shape44`, expected `memberOfTypes` or `shape`"));
+    }
+
+    #[test]
+    fn validate_entities_detect_cycle_fails() {
+        let json_data = json!(
+        {
+            "entities": [
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "ABCTeam"
+                    },
+                    "attrs": {},
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "ABCTeam"
+                        }
+                    ]
+                }
+            ],
+            "schema": {
+                "PhotoApp": {
+                    "commonTypes": {},
+                    "entityTypes": {
+                        "UserGroup": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(result.clone());
+
+        assert!(result.contains("input graph has a cycle containing vertex `PhotoApp::UserGroup"));
     }
 }
 
