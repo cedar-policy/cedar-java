@@ -187,7 +187,7 @@ tasks.register('downloadIntegrationTests', Download) {
     group 'Build'
     description 'Downloads Cedar repository with integration tests.'
 
-    src 'https://codeload.github.com/cedar-policy/cedar-integration-tests/zip/main'
+    src 'https://codeload.github.com/cedar-policy/cedar-integration-tests/zip/release%2F4.0.x'
     dest layout.buildDirectory.file('cedar-integration-tests-main.zip')
     overwrite false
 }
@@ -208,8 +208,8 @@ tasks.register('extractCorpusTests', Copy) {
 
     dependsOn('extractIntegrationTests')
     dependsOn('processTestResources')
-    from tarTree(layout.buildDirectory.file('resources/test/cedar-integration-tests-main/corpus-tests.tar.gz'))
-    into layout.buildDirectory.dir('resources/test/cedar-integration-tests-main')
+    from tarTree(layout.buildDirectory.file('resources/test/cedar-integration-tests-release-4.0.x/corpus-tests.tar.gz'))
+    into layout.buildDirectory.dir('resources/test/cedar-integration-tests-release-4.0.x')
 }
 
 tasks.named('test') {
