@@ -31,9 +31,9 @@ crate_type = ["cdylib"]
 [dependencies.cedar-policy]
 version = "4.0.0"
 git = "https://github.com/cedar-policy/cedar"
-branch = "main"
+branch = "release/4.0.x"
 
 [dependencies.cedar-policy-formatter]
 version = "4.0.0"
 git = "https://github.com/cedar-policy/cedar"
-branch = "main"
+branch = "release/4.0.x"
