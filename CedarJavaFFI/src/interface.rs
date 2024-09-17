@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
-    EntityUid, Policy, PolicySet, Schema, Template,
+    Entities, EntityUid, Policy, PolicySet, Schema, Template,
 };
 use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use jni::{
@@ -28,6 +29,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
+use serde_json::{from_str, Value};
 use std::{error::Error, str::FromStr, thread};
 
 use crate::{
@@ -43,6 +45,7 @@ const V0_AUTH_OP: &str = "AuthorizationOperation";
 #[cfg(feature = "partial-eval")]
 const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
+const V0_VALIDATE_ENTITIES: &str = "ValidateEntities";
 
 fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
     env.new_string(
@@ -115,6 +118,7 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
         #[cfg(feature = "partial-eval")]
         V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(input),
         V0_VALIDATE_OP => validate_json_str(input),
+        V0_VALIDATE_ENTITIES => json_validate_entities(&input),
         _ => {
             let ires = Answer::fail_internally(format!("unsupported operation: {}", call));
             serde_json::to_string(&ires)
@@ -123,6 +127,43 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
     result.unwrap_or_else(|err| {
         panic!("failed to handle call {call} with input {input}\nError: {err}")
     })
+}
+
+#[derive(Serialize, Deserialize)]
+struct ValidateEntityCall {
+    schema: Value,
+    entities: Value,
+}
+
+pub fn json_validate_entities(input: &str) -> serde_json::Result<String> {
+    let ans = validate_entities(input)?;
+    serde_json::to_string(&ans)
+}
+
+/// public string-based JSON interface to be invoked by FFIs. Takes in a `ValidateEntityCall` and (if successful)
+/// returns unit value () which is null value when serialized to json.
+pub fn validate_entities(input: &str) -> serde_json::Result<Answer> {
+    let validate_entity_call = from_str::<ValidateEntityCall>(&input)?;
+    match Schema::from_json_value(validate_entity_call.schema) {
+        Err(e) => Ok(Answer::fail_bad_request(vec![e.to_string()])),
+        Ok(schema) => {
+            match Entities::from_json_value(validate_entity_call.entities, Some(&schema)) {
+                Err(error) => {
+                    let err_message = match error {
+                        EntitiesError::Serialization(err) => err.to_string(),
+                        EntitiesError::Deserialization(err) => err.to_string(),
+                        EntitiesError::Duplicate(err) => err.to_string(),
+                        EntitiesError::TransitiveClosureError(err) => err.to_string(),
+                        EntitiesError::InvalidEntity(err) => err.to_string(),
+                    };
+                    Ok(Answer::fail_bad_request(vec![err_message]))
+                }
+                Ok(_entities) => Ok(Answer::Success {
+                    result: "null".to_string(),
+                }),
+            }
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
