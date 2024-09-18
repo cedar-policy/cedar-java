@@ -1,0 +1,12 @@
+{
+  "": {
+    "entityTypes": {
+      "Role": {
+        "memberOfTypes": [
+          "Role"
+        ]
+      }
+    },
+    "actions": {}
+  }
+}

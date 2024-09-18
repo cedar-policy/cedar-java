@@ -24,15 +24,20 @@ import java.io.IOException;
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.*;
 import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import java.util.List;
 import java.util.Set;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
@@ -73,6 +78,18 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         return call("ValidateOperation", ValidationResponse.class, q);
     }
 
+    @Override
+    public void validateEntities(EntityValidationRequest q) throws AuthException {
+        EntityValidationResponse entityValidationResponse = call("ValidateEntities", EntityValidationResponse.class, q);
+        if (!entityValidationResponse.success) {
+            if (entityValidationResponse.isInternal) {
+                throw new InternalException(entityValidationResponse.errors.toArray(new String[0]));
+            } else {
+                throw new BadRequestException(entityValidationResponse.errors.toArray(new String[0]));
+            }
+        }
+    }
+
     private static <REQ, RESP> RESP call(String operation, Class<RESP> responseClass, REQ request)
             throws AuthException {
         try {
@@ -97,6 +114,40 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             throw new AuthException("Authorization error caused by illegal argument exception.", e);
         } catch (IOException e) {
             throw new AuthException("JSON Deserialization Error", e);
+        }
+    }
+
+    /**
+     * The result of processing an EntityValidationRequest.
+     */
+    @JsonIgnoreProperties({"result"})  // Ignore only the 'result' field
+    private static final class EntityValidationResponse {
+
+        /** A string that indicates if the operation was successful.*/
+        private final boolean success;
+
+        /** A boolean flag that indicates whether the error is internal.*/
+        private final boolean isInternal;
+
+        /** A list of error messages encountered during the operation.*/
+        private final List<String> errors;
+
+        /**
+         * Parameterized constructor for initializing all fields of EntityValidationResponse.
+         *
+         * @param success    A boolean indicating success status.
+         * @param isInternal A boolean indicating if the error is internal.
+         * @param errors     A list of error messages.
+         */
+        @JsonCreator
+        @SuppressFBWarnings
+        EntityValidationResponse(
+                @JsonProperty("success") boolean success,
+                @JsonProperty("isInternal") boolean isInternal,
+                @JsonProperty("errors") List<String> errors) {
+            this.success = success;
+            this.isInternal = isInternal;
+            this.errors = errors;
         }
     }
 
