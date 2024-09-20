@@ -540,7 +540,7 @@ mod entity_validation_tests {
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_failure(result.clone());
 
-        assert!(result.contains("unknown field `shape44`, expected `memberOfTypes` or `shape`"));
+        assert!(result.contains("unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"));
     }
 
     #[test]
