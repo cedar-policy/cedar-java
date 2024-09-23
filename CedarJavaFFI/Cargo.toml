@@ -6,7 +6,7 @@ description = "Java FFI for Cedar (from the cedar-policy crate)."
 edition = "2021"
 
 
-version = "3.4.0"
+version = "3.4.1"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc"] }
