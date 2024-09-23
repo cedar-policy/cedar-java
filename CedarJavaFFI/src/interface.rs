@@ -30,8 +30,8 @@ use jni::{
 };
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, error::Error, str::FromStr, thread};
 use serde_json::{from_str, Value};
+use std::{collections::HashMap, error::Error, str::FromStr, thread};
 
 use crate::{
     jset::Set,
@@ -145,9 +145,7 @@ pub fn json_validate_entities(input: &str) -> InterfaceResult {
                 Ok(schema) => {
                     match Entities::from_json_value(validateEntityCall.entities, Some(&schema)) {
                         Err(e) => InterfaceResult::fail_bad_request(vec![format!("{e:}")]),
-                        Ok(entities) => {
-                            InterfaceResult::succeed(())
-                        }
+                        Ok(entities) => InterfaceResult::succeed(()),
                     }
                 }
             }
@@ -558,8 +556,8 @@ fn get_euid_repr_internal<'a>(
 
 #[cfg(test)]
 mod test {
-    use serde_json::json;
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn parse_entityuid() {
@@ -746,19 +744,13 @@ mod test {
                 }
             }
         });
-        let result = call_cedar(
-            "ValidateEntities",
-            json_data.to_string().as_str(),
-        );
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_success(result);
     }
 
     #[test]
     fn validate_entities_invalid_json_fails() {
-        let result = call_cedar(
-            "ValidateEntities",
-            "{]",
-        );
+        let result = call_cedar("ValidateEntities", "{]");
         assert_failure(result.clone());
 
         assert!(result.contains("Failed to parse JSON"));
@@ -767,32 +759,29 @@ mod test {
     #[test]
     fn validate_entities_invalid_schema_fails() {
         let json_data = json!(
-            {
-                "entities": [
+        {
+            "entities": [
 
-                ],
-                "schema": {
-                    "PhotoApp": {
-                        "commonTypes": {},
-                        "entityTypes": {
-                            "UserGroup": {
-                                "shape44": {
-                                    "type": "Record",
-                                    "attributes": {}
-                                },
-                                "memberOfTypes": [
-                                    "UserGroup"
-                                ]
-                            }
-                        },
-                        "actions": {}
-                    }
+            ],
+            "schema": {
+                "PhotoApp": {
+                    "commonTypes": {},
+                    "entityTypes": {
+                        "UserGroup": {
+                            "shape44": {
+                                "type": "Record",
+                                "attributes": {}
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        }
+                    },
+                    "actions": {}
                 }
-            });
-        let result = call_cedar(
-            "ValidateEntities",
-            json_data.to_string().as_str(),
-        );
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_failure(result.clone());
 
         assert!(result.contains("failed to parse schema"));
@@ -801,57 +790,54 @@ mod test {
     #[test]
     fn validate_entities_detect_cycle_fails() {
         let json_data = json!(
-            {
-                "entities": [
-                    {
-                        "uid": {
-                            "type": "PhotoApp::UserGroup",
-                            "id": "ABCTeam"
-                        },
-                        "attrs": {},
-                        "parents": [
-                            {
-                                "type": "PhotoApp::UserGroup",
-                                "id": "AVTeam"
-                            }
-                        ]
+        {
+            "entities": [
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "ABCTeam"
                     },
-                    {
-                        "uid": {
+                    "attrs": {},
+                    "parents": [
+                        {
                             "type": "PhotoApp::UserGroup",
                             "id": "AVTeam"
-                        },
-                        "attrs": {},
-                        "parents": [
-                            {
-                                "type": "PhotoApp::UserGroup",
-                                "id": "ABCTeam"
-                            }
-                        ]
-                    }
-                ],
-                "schema": {
-                    "PhotoApp": {
-                        "commonTypes": {},
-                        "entityTypes": {
-                            "UserGroup": {
-                                "shape": {
-                                    "type": "Record",
-                                    "attributes": {}
-                                },
-                                "memberOfTypes": [
-                                    "UserGroup"
-                                ]
-                            }
-                        },
-                        "actions": {}
-                    }
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "ABCTeam"
+                        }
+                    ]
                 }
-            });
-        let result = call_cedar(
-            "ValidateEntities",
-            json_data.to_string().as_str(),
-        );
+            ],
+            "schema": {
+                "PhotoApp": {
+                    "commonTypes": {},
+                    "entityTypes": {
+                        "UserGroup": {
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {}
+                            },
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ]
+                        }
+                    },
+                    "actions": {}
+                }
+            }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_failure(result.clone());
 
         assert!(result.contains("input graph has a cycle containing vertex"));
