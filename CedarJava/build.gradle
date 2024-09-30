@@ -111,7 +111,7 @@ tasks.register('installCargoZigbuild', Exec) {
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', 'install', 'cargo-zigbuild@0.18.4'
+    commandLine 'cargo', 'install', 'cargo-zigbuild@0.19.3'
 }
 
 tasks.register('installRustTargets') {
