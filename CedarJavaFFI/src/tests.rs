@@ -509,7 +509,7 @@ mod entity_validation_tests {
     #[test]
     #[should_panic]
     fn validate_entities_invalid_json_fails() {
-        call_cedar("ValidateEntities", "{]");
+        let result = call_cedar("ValidateEntities", "{]");
     }
 
     #[test]
@@ -540,7 +540,8 @@ mod entity_validation_tests {
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_failure(result.clone());
 
-        assert!(result.contains("unknown field `shape44`, expected `memberOfTypes` or `shape`"));
+        assert!(result
+            .contains("unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"));
     }
 
     #[test]
