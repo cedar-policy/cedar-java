@@ -85,6 +85,11 @@ public class Policy {
         return toJsonJni(policySrc);
     }
 
+    public static Policy fromJson(String policyId, String policyJson) throws InternalException, NullPointerException {
+        var policyText = fromJsonJni(policyJson);
+        return new Policy(policyText, policyId);
+    }
+
     public static Policy parseStaticPolicy(String policyStr) throws InternalException, NullPointerException {
         var policyText = parsePolicyJni(policyStr);
         return new Policy(policyText, null);
@@ -100,4 +105,5 @@ public class Policy {
             throws InternalException, NullPointerException;
 
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;
+    private static native String fromJsonJni(String policyJsonStr) throws InternalException, NullPointerException;
 }
