@@ -386,6 +386,34 @@ fn to_json_internal<'a>(env: &mut JNIEnv<'a>, policy_jstr: JString<'a>) -> Resul
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn fromJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_json_jstr: JString<'a>) -> jvalue {
+    match from_json_internal(&mut env, policy_json_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policy_text) => policy_text.as_jni(),
+    }
+}
+
+fn from_json_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_json_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_json_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_json_jstring = env.get_string(&policy_json_jstr)?;
+        let policy_json_string = String::from(policy_json_jstring);
+        let policy_json_value: Value = serde_json::from_str(&policy_json_string)?;
+        match Policy::from_json(None, policy_json_value) {
+            Err(e) => Err(Box::new(e)),
+            Ok(p) => {
+                let policy_text = format!("{}", p);
+                Ok(JValueGen::Object(env.new_string(&policy_text)?.into()))
+            }
+        }
+    }
+}
+
 #[jni_fn("com.cedarpolicy.value.EntityIdentifier")]
 pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
     match get_entity_identifier_repr_internal(&mut env, obj) {

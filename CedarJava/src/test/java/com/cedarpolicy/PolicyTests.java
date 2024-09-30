@@ -91,4 +91,22 @@ public class PolicyTests {
             assertTrue(e.getMessage().contains("expected a static policy, got a template containing the slot ?resource"));
         }
     }
+
+    @Test
+    public void policyFromJsonTest() throws InternalException {
+        assertThrows(NullPointerException.class, () -> {
+            String nullJson = null;
+            Policy.fromJson(null, nullJson);
+        });
+        assertThrows(InternalException.class, () -> {
+            String invalidJson = "effect\":\"permit\",\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"}";
+            Policy.fromJson(null, invalidJson);
+        });
+
+        String validJson = "{\"effect\":\"permit\",\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"},"
+                + "\"resource\":{\"op\":\"All\"},\"conditions\":[]}";
+        Policy p = Policy.fromJson(null, validJson);
+        String actualJson = p.toJson();
+        assertEquals(validJson, actualJson);
+    }
 }
