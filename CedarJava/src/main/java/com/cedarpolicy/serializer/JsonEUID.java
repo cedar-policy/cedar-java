@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cedarpolicy.value.EntityUID;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Optional;
 
 /** Represent JSON format of Entity Unique Identifier. */
 public class JsonEUID {
@@ -36,7 +37,7 @@ public class JsonEUID {
     @Override
     public String toString() {
         try {
-            var mapper = new ObjectMapper();
+            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Internal invariant violated, json encoding failed: " + e.toString());
@@ -55,9 +56,9 @@ public class JsonEUID {
 
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public JsonEUID(String src) throws InvalidEUIDException {
-        var o = EntityUID.parse(src);
+        Optional<EntityUID> o = EntityUID.parse(src);
         if (o.isPresent()) {
-            var x = o.get().asJson();
+            JsonEUID x = o.get().asJson();
             this.type = x.type;
             this.id = x.id;
         } else {

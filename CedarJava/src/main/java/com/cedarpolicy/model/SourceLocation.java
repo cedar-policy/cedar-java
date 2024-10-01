@@ -39,7 +39,7 @@ public final class SourceLocation {
             return false;
         }
 
-        final var sl = (SourceLocation) lhs;
+        final SourceLocation sl = (SourceLocation) lhs;
         return this.start == sl.start && this.end == sl.end;
     }
 

@@ -59,7 +59,7 @@ public final class EntityIdentifier {
             return false;
         } else {
             try {
-                var rhs = (EntityIdentifier) o;
+                EntityIdentifier rhs = (EntityIdentifier) o;
                 return this.id.equals(rhs.id);
             } catch (ClassCastException e) {
                 return false;

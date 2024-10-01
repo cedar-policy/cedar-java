@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 
 /** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
@@ -95,12 +96,12 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                                     numFields++;
                                 }
                                 if (numFields == 2) {
-                                    var id = new EntityIdentifier(val.get("id").textValue());
-                                    var type = EntityTypeName.parse(val.get("type").textValue());
+                                    EntityIdentifier id = new EntityIdentifier(val.get("id").textValue());
+                                    Optional<EntityTypeName> type = EntityTypeName.parse(val.get("type").textValue());
                                     if (type.isPresent()) {
                                         return new EntityUID(type.get(), id);
                                     } else {
-                                        var msg = "Invalid Entity Type" + val.get("type").textValue();
+                                        String msg = "Invalid Entity Type" + val.get("type").textValue();
                                         throw new InvalidValueDeserializationException(parser, msg, node.asToken(), Map.class);
                                     }
                                 }

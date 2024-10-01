@@ -86,17 +86,17 @@ public class Policy {
     }
 
     public static Policy fromJson(String policyId, String policyJson) throws InternalException, NullPointerException {
-        var policyText = fromJsonJni(policyJson);
+        String policyText = fromJsonJni(policyJson);
         return new Policy(policyText, policyId);
     }
 
     public static Policy parseStaticPolicy(String policyStr) throws InternalException, NullPointerException {
-        var policyText = parsePolicyJni(policyStr);
+        String policyText = parsePolicyJni(policyStr);
         return new Policy(policyText, null);
     }
 
     public static Policy parsePolicyTemplate(String templateStr)  throws InternalException, NullPointerException {
-        var templateText = parsePolicyTemplateJni(templateStr);
+        String templateText = parsePolicyTemplateJni(templateStr);
         return new Policy(templateText, null);
     }
 

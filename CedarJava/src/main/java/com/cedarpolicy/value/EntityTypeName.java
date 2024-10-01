@@ -114,7 +114,7 @@ public final class EntityTypeName {
             return true;
         }
         try {
-            var rhsTypename = (EntityTypeName) rhs;
+            EntityTypeName rhsTypename = (EntityTypeName) rhs;
             return basename.equals(rhsTypename.basename) && namespace.equals(rhsTypename.namespace);
         } catch (ClassCastException e) {
             return false;
