@@ -29,6 +29,7 @@ fn assert_failure(result: &str) {
     assert_matches!(result, Answer::Failure { .. });
 }
 
+#[track_caller]
 fn assert_success(result: &str) {
     let result: Answer = serde_json::from_str(result).unwrap();
     assert_matches!(result, Answer::Success { .. });
