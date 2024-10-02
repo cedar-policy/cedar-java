@@ -87,7 +87,7 @@ public final class EntityUID extends Value {
             return true;
         } else {
             try {
-                var rhs = (EntityUID) o;
+                EntityUID rhs = (EntityUID) o;
                 return this.type.equals(rhs.type) && this.id.equals(rhs.id);
             } catch (ClassCastException e) {
                 return false;
@@ -122,4 +122,3 @@ public final class EntityUID extends Value {
     private static native String getEUIDRepr(EntityTypeName type, EntityIdentifier id);
 
 }
-
