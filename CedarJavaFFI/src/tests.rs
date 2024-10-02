@@ -541,7 +541,9 @@ mod entity_validation_tests {
         assert_failure(&result);
 
         assert!(
-            result.contains("unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"),
+            result.contains(
+                "unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"
+            ),
             "result was `{result}`",
         );
     }
