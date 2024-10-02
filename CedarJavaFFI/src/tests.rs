@@ -29,8 +29,8 @@ fn assert_failure(result: &str) {
     assert_matches!(result, Answer::Failure { .. });
 }
 
-fn assert_success(result: String) {
-    let result: Answer = serde_json::from_str(result.as_str()).unwrap();
+fn assert_success(result: &str) {
+    let result: Answer = serde_json::from_str(result).unwrap();
     match result {
         Answer::Success { .. } => {}
         Answer::Failure { .. } => panic!("expected a success, not {:?}", result),
@@ -353,7 +353,7 @@ mod entity_validation_tests {
             }
         });
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
-        assert_success(result);
+        assert_success(&result);
     }
 
     #[test]
