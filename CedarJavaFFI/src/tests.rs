@@ -31,10 +31,7 @@ fn assert_failure(result: &str) {
 
 fn assert_success(result: &str) {
     let result: Answer = serde_json::from_str(result).unwrap();
-    match result {
-        Answer::Success { .. } => {}
-        Answer::Failure { .. } => panic!("expected a success, not {:?}", result),
-    };
+    assert_matches!(result, Answer::Success { .. });
 }
 
 #[track_caller]
