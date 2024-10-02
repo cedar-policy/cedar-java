@@ -24,8 +24,8 @@ use cedar_policy::ffi::{AuthorizationAnswer, ValidationAnswer};
 use cool_asserts::assert_matches;
 
 #[track_caller]
-fn assert_failure(result: String) {
-    let result: Answer = serde_json::from_str(result.as_str()).unwrap();
+fn assert_failure(result: &str) {
+    let result: Answer = serde_json::from_str(result).unwrap();
     assert_matches!(result, Answer::Failure { .. });
 }
 
@@ -65,7 +65,7 @@ fn assert_validation_success(result: String) {
 #[test]
 fn unrecognized_call_fails() {
     let result = call_cedar("BadOperation", "");
-    assert_failure(result);
+    assert_failure(&result);
 }
 
 mod authorization_tests {
@@ -503,13 +503,13 @@ mod entity_validation_tests {
             }
         });
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
-        assert_failure(result);
+        assert_failure(&result);
     }
 
     #[test]
     #[should_panic]
     fn validate_entities_invalid_json_fails() {
-        let result = call_cedar("ValidateEntities", "{]");
+        call_cedar("ValidateEntities", "{]");
     }
 
     #[test]
@@ -538,10 +538,12 @@ mod entity_validation_tests {
             }
         });
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
-        assert_failure(result.clone());
+        assert_failure(&result);
 
-        assert!(result
-            .contains("unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"));
+        assert!(
+            result.contains("unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"),
+            "result was `{result}`",
+        );
     }
 
     #[test]
@@ -595,9 +597,12 @@ mod entity_validation_tests {
             }
         });
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
-        assert_failure(result.clone());
+        assert_failure(&result);
 
-        assert!(result.contains("input graph has a cycle containing vertex `PhotoApp::UserGroup"));
+        assert!(
+            result.contains("input graph has a cycle containing vertex `PhotoApp::UserGroup"),
+            "result was `{result}`",
+        );
     }
 }
 
