@@ -2,8 +2,8 @@ package com.cedarpolicy.model.formatter;
 
 public class Config {
 
-  int lineWidth;
-  int indentWidth;
+  private final int lineWidth;
+  private final int indentWidth;
 
   public Config(int lineWidth, int indentWidth) {
     this.lineWidth = lineWidth;
