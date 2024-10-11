@@ -255,7 +255,7 @@ publishing {
             from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '3.1.2'
+            version = '4.2.1'
 
             artifacts {
                 jar
