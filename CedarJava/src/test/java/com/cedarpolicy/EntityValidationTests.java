@@ -35,7 +35,7 @@ import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.pbt.EntityGen;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.PrimBool;
-
+import com.cedarpolicy.value.PrimString;
 
 /**
  * Tests for entity validator
@@ -94,6 +94,24 @@ public class EntityValidationTests {
         String errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.matches("input graph has a cycle containing vertex `Role::\".*\"`"),
                 "Expected to match regex but was: '%s'".formatted(errMsg));
+    }
+
+    /**
+     * Test that an entity with a tag not specified in the schema throws an exception.
+     */
+    @Test
+    public void testEntityWithUnknownTag() throws AuthException {
+        Entity entity = EntityValidationTests.entityGen.arbitraryEntity();
+        entity.tags.put("test", new PrimString("value"));
+
+        EntityValidationRequest request = new EntityValidationRequest(ROLE_SCHEMA, List.of(entity));
+
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
+
+        String errMsg = exception.getErrors().get(0);
+        assertTrue(errMsg.matches("found a tag `test` on `Role::\".*\"`, "
+            + "but no tags should exist on `Role::\".*\"` according to the schema"),
+            "Expected to match regex but was: '%s'".formatted(errMsg));
     }
 
     @BeforeAll
