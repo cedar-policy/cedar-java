@@ -26,6 +26,8 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.ValidationResponse.ValidationError;
+import com.cedarpolicy.model.ValidationResponse.ValidationSuccessResponse;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
@@ -51,6 +53,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -173,6 +176,12 @@ public class SharedIntegrationTests {
                 value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
                 justification = "Initialized by Jackson.")
         public List<JsonEUID> parents;
+
+        /** Entity tags, where the value string is a Cedar literal value. */
+        @SuppressFBWarnings(
+            value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
+            justification = "Initialized by Jackson.")
+        public Map<String, Value> tags;
     }
 
     /**
@@ -296,8 +305,10 @@ public class SharedIntegrationTests {
             .map(euid -> EntityUID.parseFromJson(euid).get())
             .collect(Collectors.toSet());
 
+        // Support tags while also supporting old JsonEntity objects that don't specify tags
+        Map<String, Value> tags = je.tags != null ? je.tags : new HashMap<>();
 
-        return new Entity(EntityUID.parseFromJson(je.uid).get(), je.attrs, parents);
+        return new Entity(EntityUID.parseFromJson(je.uid).get(), je.attrs, parents, tags);
     }
 
     /**
@@ -326,7 +337,13 @@ public class SharedIntegrationTests {
             ValidationResponse result = auth.validate(validationQuery);
             assertEquals(result.type, ValidationResponse.SuccessOrFailure.Success);
             if (shouldValidate) {
-                assertTrue(result.validationPassed());
+                ValidationSuccessResponse validationSuccessResponse = result.success.get();
+
+                // Assemble the validation failure messages, if any
+                List<ValidationError> valErrList = List.copyOf(validationSuccessResponse.validationErrors);
+                String validationErrorMessages = valErrList.stream().map(e -> e.getError().message).collect(Collectors.joining(", "));
+
+                assertTrue(result.validationPassed(), validationErrorMessages);
             }
         } catch (BadRequestException e) {
             // A `BadRequestException` is the results of a parsing error.
