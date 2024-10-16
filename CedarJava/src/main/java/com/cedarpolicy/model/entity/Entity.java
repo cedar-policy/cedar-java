@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 /**
  * An entity is the kind of object about which authorization decisions are made; principals,
  * actions, and resources are all a kind of entity. Each entity is defined by its entity type, a
- * unique identifier (UID), zero or more attributes mapped to values, and zero or more parent
- * entities.
+ * unique identifier (UID), zero or more attributes mapped to values, zero or more parent
+ * entities, and zero or more tags.
  */
 public class Entity {
     private final EntityUID euid;
@@ -37,6 +37,9 @@ public class Entity {
     /** Set of entity EUIDs that are parents to this entity. */
     public final Set<EntityUID> parentsEUIDs;
 
+    /** Tags on this entity (RFC 82) */
+    public final Map<String, Value> tags;
+
     /**
      * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
      *
@@ -45,9 +48,22 @@ public class Entity {
      * @param parentsEUIDs Set of parent entities' EUIDs.
      */
     public Entity(EntityUID uid, Map<String, Value> attributes, Set<EntityUID> parentsEUIDs) {
+        this(uid, attributes, parentsEUIDs, new HashMap<>());
+    }
+
+    /**
+     * Create an entity from an EntityUIDs, a map of attributes, a set of parent EntityUIDs, and a map of tags.
+     *
+     * @param uid EUID of the Entity.
+     * @param attributes Key/Value map of attributes.
+     * @param parentsEUIDs Set of parent entities' EUIDs.
+     * @param tags Key/Value map of tags.
+     */
+    public Entity(EntityUID uid, Map<String, Value> attributes, Set<EntityUID> parentsEUIDs, Map<String, Value> tags) {
         this.attrs = new HashMap<>(attributes);
         this.euid = uid;
         this.parentsEUIDs = parentsEUIDs;
+        this.tags = new HashMap<>(tags);
     }
 
     @Override
@@ -66,7 +82,15 @@ public class Entity {
                                     .map(e -> e.getKey() + ": " + e.getValue())
                                     .collect(Collectors.joining("\n\t\t"));
         }
-        return euid.toString() + parentStr + attributeStr;
+        String tagsStr = "";
+        if (!tags.isEmpty()) {
+            tagsStr =
+                    "\n\ttags:\n\t\t"
+                            + tags.entrySet().stream()
+                                    .map(e -> e.getKey() + ": " + e.getValue())
+                                    .collect(Collectors.joining("\n\t\t"));
+        }
+        return euid.toString() + parentStr + attributeStr + tagsStr;
     }
 
 
@@ -79,10 +103,18 @@ public class Entity {
     }
 
     /**
-     * Get this Entities parents
+     * Get this Entity's parents
      * @return the set of parent EntityUIDs
      */
     public Set<EntityUID> getParents() {
         return parentsEUIDs;
+    }
+
+    /**
+     * Get this Entity's tags
+     * @return the map of tags
+     */
+    public Map<String, Value> getTags() {
+        return tags;
     }
 }

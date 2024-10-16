@@ -37,6 +37,7 @@ public class EntitySerializer extends JsonSerializer<Entity> {
         jsonGenerator.writeObjectField("attrs", entity.attrs);
         jsonGenerator.writeObjectField("parents",
                 entity.getParents().stream().map(EntityUID::asJson).collect(Collectors.toSet()));
+        jsonGenerator.writeObjectField("tags", entity.tags);
         jsonGenerator.writeEndObject();
     }
 }
