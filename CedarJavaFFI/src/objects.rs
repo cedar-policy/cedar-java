@@ -5,6 +5,7 @@ use crate::{
 use std::{marker::PhantomData, str::FromStr};
 
 use cedar_policy::{EntityId, EntityTypeName, EntityUid};
+use cedar_policy_formatter::Config;
 use jni::{
     objects::{JObject, JString, JValueGen, JValueOwned},
     sys::jvalue,
@@ -378,5 +379,38 @@ impl<'a> Object<'a> for JPolicy<'a> {
 impl<'a> AsRef<JObject<'a>> for JPolicy<'a> {
     fn as_ref(&self) -> &JObject<'a> {
         &self.obj
+    }
+}
+
+pub struct JFormatterConfig<'a> {
+    obj: JObject<'a>,
+    formatter_config: Config,
+}
+
+impl<'a> JFormatterConfig<'a> {
+    pub fn get_rust_repr(&self) -> Config {
+        self.formatter_config.clone()
+    }
+}
+
+impl<'a> AsRef<JObject<'a>> for JFormatterConfig<'a> {
+    fn as_ref(&self) -> &JObject<'a> {
+        &self.obj
+    }
+}
+
+impl<'a> Object<'a> for JFormatterConfig<'a> {
+    fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
+        assert_is_class(env, &obj, "com/cedarpolicy/model/formatter/Config")?;
+        let line_width_jint = env.call_method(&obj, "getLineWidth", "()I", &[])?.i()?;
+        let indent_width_jint = env.call_method(&obj, "getIndentWidth", "()I", &[])?.i()?;
+        let formatter_config = Config {
+            line_width: usize::try_from(line_width_jint)?,
+            indent_width: isize::try_from(indent_width_jint)?,
+        };
+        Ok(Self {
+            obj,
+            formatter_config,
+        })
     }
 }
