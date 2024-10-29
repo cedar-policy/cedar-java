@@ -92,7 +92,7 @@ def ffiDir = '../CedarJavaFFI'
 def compiledLibDir = 'resources/compiled'
 
 def rustLibraryTargets = [
-        'aarch64-apple-darwin' : 'libcedar_java_ffi.dylib',
+        //'aarch64-apple-darwin' : 'libcedar_java_ffi.dylib',
         'aarch64-unknown-linux-gnu' : 'libcedar_java_ffi.so',
         'x86_64-apple-darwin' : 'libcedar_java_ffi.dylib',
         'x86_64-pc-windows-gnu' : 'cedar_java_ffi.dll',
@@ -100,7 +100,7 @@ def rustLibraryTargets = [
 ]
 
 def rustJavaTargets = [
-        'aarch64-apple-darwin' : 'macos/aarch64',
+        //'aarch64-apple-darwin' : 'macos/aarch64',
         'aarch64-unknown-linux-gnu' : 'linux/aarch64',
         'x86_64-apple-darwin' : 'macos/x86_64',
         'x86_64-pc-windows-gnu' : 'windows/x86_64',
