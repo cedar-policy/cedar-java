@@ -107,10 +107,12 @@ def rustJavaTargets = [
         'x86_64-unknown-linux-gnu' : 'linux/x86_64'
 ]
 
+def RustVersion = '1.81'
+
 tasks.register('installRequiredRustVersion', Exec) {
-  group 'Build' 
+  group 'Build'
   description 'Install required Rust version.'
-  commandLine 'rustup', 'install', '1.81'
+  commandLine 'rustup', 'install', RustVersion
 }
 
 tasks.register('installCargoZigbuild', Exec) {
@@ -118,26 +120,26 @@ tasks.register('installCargoZigbuild', Exec) {
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', '+1.81', 'install', 'cargo-zigbuild@0.19.3'
+    commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.3'
 }
 
 tasks.register('compileFFI') {
     dependsOn('installCargoZigbuild')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
-        exec {
-            workingDir = ffiDir
-            commandLine 'rustup', 'override', 'set', '1.81'
-        }
+    exec {
+        workingDir = ffiDir
+        commandLine 'rustup', 'override', 'set', RustVersion
+    }
 
     doLast {
         rustLibraryTargets.forEach { rustTarget, libraryFile ->
             exec {
-                commandLine 'rustup', 'target', 'add', rustTarget, '--toolchain', '1.81'
+                commandLine 'rustup', 'target', 'add', rustTarget, '--toolchain', RustVersion
             }
             exec {
                 workingDir = ffiDir
-                commandLine 'cargo', '+1.81', 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
+                commandLine 'cargo', '+' + RustVersion, 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
             }
 
             def sourcePath = "${ffiDir}/target/${rustTarget}/release/${libraryFile}"
