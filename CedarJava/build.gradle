@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.0.24"
+    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:6.0.26"
     classpath "gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.9"
   }
 }
@@ -78,14 +78,14 @@ configurations {
 dependencies {
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueDeserializer
     // The upgrade should be reviewed by AppSec
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.1'
     implementation 'com.fizzed:jne:4.1.1'
     implementation 'com.google.guava:guava:33.3.1-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
     testImplementation 'net.jqwik:jqwik:1.9.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
 }
 
 def ffiDir = '../CedarJavaFFI'
@@ -107,37 +107,39 @@ def rustJavaTargets = [
         'x86_64-unknown-linux-gnu' : 'linux/x86_64'
 ]
 
+def RustVersion = '1.81'
+
+tasks.register('installRequiredRustVersion', Exec) {
+  group 'Build'
+  description 'Install required Rust version.'
+  commandLine 'rustup', 'install', RustVersion
+}
+
 tasks.register('installCargoZigbuild', Exec) {
+    dependsOn('installRequiredRustVersion')
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', 'install', 'cargo-zigbuild@0.19.3'
-}
-
-tasks.register('installRustTargets') {
-    dependsOn('installCargoZigbuild')
-    group 'Build'
-    description 'Installs Rust platform build targets.'
-
-    doLast {
-        rustLibraryTargets.keySet().forEach { rustTarget ->
-            exec {
-                commandLine 'rustup', 'target', 'add', rustTarget
-            }
-        }
-    }
+    commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.3'
 }
 
 tasks.register('compileFFI') {
-    dependsOn('installRustTargets')
+    dependsOn('installCargoZigbuild')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
+    exec {
+        workingDir = ffiDir
+        commandLine 'rustup', 'override', 'set', RustVersion
+    }
 
     doLast {
         rustLibraryTargets.forEach { rustTarget, libraryFile ->
             exec {
+                commandLine 'rustup', 'target', 'add', rustTarget, '--toolchain', RustVersion
+            }
+            exec {
                 workingDir = ffiDir
-                commandLine 'cargo', 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
+                commandLine 'cargo', '+' + RustVersion, 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
             }
 
             def sourcePath = "${ffiDir}/target/${rustTarget}/release/${libraryFile}"
