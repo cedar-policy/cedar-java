@@ -118,26 +118,26 @@ tasks.register('installCargoZigbuild', Exec) {
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', 'install', 'cargo-zigbuild@0.19.3'
+    commandLine 'cargo', '+1.81', 'install', 'cargo-zigbuild@0.19.3'
 }
 
 tasks.register('compileFFI') {
     dependsOn('installCargoZigbuild')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
-
-    doLast {
-        rustLibraryTargets.forEach { rustTarget, libraryFile ->
         exec {
             workingDir = ffiDir
             commandLine 'rustup', 'override', 'set', '1.81'
-            }
+        }
+
+    doLast {
+        rustLibraryTargets.forEach { rustTarget, libraryFile ->
             exec {
-                commandLine 'rustup', 'target', 'add', rustTarget
+                commandLine 'rustup', 'target', 'add', rustTarget, '--toolchain', '1.81'
             }
             exec {
                 workingDir = ffiDir
-                commandLine 'cargo', 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
+                commandLine 'cargo', '+1.81', 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
             }
 
             def sourcePath = "${ffiDir}/target/${rustTarget}/release/${libraryFile}"
