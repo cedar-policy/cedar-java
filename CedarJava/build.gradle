@@ -125,13 +125,13 @@ tasks.register('compileFFI') {
     dependsOn('installCargoZigbuild')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
-    exec {
-      workingDir = ffiDir
-      commandLine 'rustup', 'override', 'set', '1.81'
-    }
 
     doLast {
         rustLibraryTargets.forEach { rustTarget, libraryFile ->
+        exec {
+            workingDir = ffiDir
+            commandLine 'rustup', 'override', 'set', '1.81'
+            }
             exec {
                 commandLine 'rustup', 'target', 'add', rustTarget
             }
