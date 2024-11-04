@@ -1,0 +1,3 @@
+# zigbuild currently does not work on Rust 1.82 (rust-cross/cargo-zigbuild#289)
+[toolchain]
+channel = "1.81"
