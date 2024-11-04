@@ -79,7 +79,7 @@ dependencies {
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueDeserializer
     // The upgrade should be reviewed by AppSec
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.1'
     implementation 'com.fizzed:jne:4.1.1'
     implementation 'com.google.guava:guava:33.3.1-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
