@@ -32,6 +32,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use std::{error::Error, str::FromStr, thread};
 
+use crate::objects::JFormatterConfig;
 use crate::{
     answer::Answer,
     jset::Set,
@@ -537,7 +538,20 @@ pub fn policiesStrToPretty<'a>(
     _: JClass,
     policies_jstr: JString<'a>,
 ) -> jvalue {
-    match policies_str_to_pretty_internal(&mut env, policies_jstr) {
+    match policies_str_to_pretty_internal(&mut env, policies_jstr, None) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+#[jni_fn("com.cedarpolicy.formatter.PolicyFormatter")]
+pub fn policiesStrToPrettyWithConfig<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_jstr: JString<'a>,
+    config_obj: JObject<'a>,
+) -> jvalue {
+    match policies_str_to_pretty_internal(&mut env, policies_jstr, Some(config_obj)) {
         Ok(v) => v.as_jni(),
         Err(e) => jni_failed(&mut env, e.as_ref()),
     }
@@ -546,11 +560,16 @@ pub fn policiesStrToPretty<'a>(
 fn policies_str_to_pretty_internal<'a>(
     env: &mut JNIEnv<'a>,
     policies_jstr: JString<'a>,
+    config_obj: Option<JObject<'a>>,
 ) -> Result<JValueOwned<'a>> {
-    if policies_jstr.is_null() {
+    if policies_jstr.is_null() || config_obj.as_ref().is_some_and(|obj| obj.is_null()) {
         raise_npe(env)
     } else {
-        let config = Config::default();
+        let config = if let Some(obj) = config_obj {
+            JFormatterConfig::cast(env, obj)?.get_rust_repr()
+        } else {
+            Config::default()
+        };
         let policies_str = String::from(env.get_string(&policies_jstr)?);
         match policies_str_to_pretty(&policies_str, &config) {
             Ok(formatted_policies) => Ok(env.new_string(formatted_policies)?.into()),
