@@ -71,9 +71,9 @@ public class AuthTests {
         assumePartialEvaluation(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
-                assertEquals(Decision.Allow, response.getDecision());
-                assertEquals(response.getMustBeDetermining().iterator().next(), "p0");
-                assertTrue(response.getNontrivialResiduals().isEmpty());
+                assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
+                assertEquals(response.success.orElseThrow().getMustBeDetermining().iterator().next(), "p0");
+                assertTrue(response.success.orElseThrow().getNontrivialResiduals().isEmpty());
             } catch (Exception e) {
                 fail("error: " + e.toString());
             }
@@ -92,21 +92,21 @@ public class AuthTests {
         assumePartialEvaluation(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
-                assertTrue(response.getDecision() == null);
-                assertEquals("p0", response.getResiduals().entrySet().iterator().next().getKey());
+                assertTrue(response.success.orElseThrow().getDecision() == null);
+                assertEquals("p0", response.success.orElseThrow().getResiduals().entrySet().iterator().next().getKey());
             } catch (Exception e) {
                 fail("error: " + e.toString());
             }
         });
     }
 
-    private Executable assumePartialEvaluation(Executable executable) {
-        return () -> {
-            try {
-                executable.execute();
-            } catch (MissingExperimentalFeatureException e) {
-                System.err.println("Skipping assertions: " + e.getMessage());
-            }
-        };
+    private void assumePartialEvaluation(Executable executable) {
+        try {
+            executable.execute();
+        } catch (MissingExperimentalFeatureException e) {
+            System.err.println("Skipping assertions: " + e.getMessage());
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 }

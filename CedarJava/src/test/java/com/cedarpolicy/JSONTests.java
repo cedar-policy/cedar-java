@@ -73,7 +73,7 @@ public class JSONTests {
                 "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p2\": 3}, \"nontrivialResiduals\": [] } }";
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
-            assertTrue(r.getDecision() == Decision.Allow);
+            assertTrue(r.success.orElseThrow().getDecision() == Decision.Allow);
         } catch (JsonProcessingException e) {
             fail(e);
         }
@@ -85,7 +85,7 @@ public class JSONTests {
         final String src = "{ \"response\": { \"decision\":\"allow\", \"satisfied\": [], \"errored\": [\"p0\"], \"mayBeDetermining\": [], \"mustBeDetermining\": [\"p1\"], \"residuals\": {\"p0\": " + policy + " }, \"nontrivialResiduals\": [] } }";
         try {
             PartialAuthorizationResponse r = objectReader().forType(PartialAuthorizationResponse.class).readValue(src);
-            var residuals = r.getResiduals();
+            var residuals = r.success.orElseThrow().getResiduals();
             assertEquals(1, residuals.size());
             assertEquals("p0", residuals.entrySet().iterator().next().getKey());
             assertJSONEqual(CedarJson.objectMapper().readTree(policy),
