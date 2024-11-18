@@ -2,137 +2,71 @@ package com.cedarpolicy.model;
 
 import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
-import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Optional;
 
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 public class PartialAuthorizationResponse {
-    private final Decision decision;
-    private final ImmutableSet<String> satisfied;
-    private final ImmutableSet<String> errored;
-    private final ImmutableSet<String> mayBeDetermining;
-    private final ImmutableSet<String> mustBeDetermining;
-    private final ImmutableMap<String, JsonNode> residuals;
-    private final ImmutableSet<String> nontrivialResiduals;
-    private final ImmutableSet<String> warnings;
-
-    public PartialAuthorizationResponse(Decision decision, Set<String> satisfied, Set<String> errored,
-                                        Set<String> mayBeDetermining, Set<String> mustBeDetermining, Map<String, JsonNode> residuals,
-                                        Set<String> nontrivialResiduals, Set<String> warnings) {
-        this.decision = decision;
-        // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible
-        // see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
-        this.satisfied = ImmutableSet.copyOf(satisfied);
-        this.errored = ImmutableSet.copyOf(errored);
-        this.mayBeDetermining = ImmutableSet.copyOf(mayBeDetermining);
-        this.mustBeDetermining = ImmutableSet.copyOf(mustBeDetermining);
-        this.residuals = ImmutableMap.copyOf(residuals);
-        this.nontrivialResiduals = ImmutableSet.copyOf(nontrivialResiduals);
-        if (warnings == null) {
-            this.warnings = ImmutableSet.of(); // empty
-        } else {
-            this.warnings = ImmutableSet.copyOf(warnings);
-        }
-    }
-
     /**
-     * The optional decision returned by partial authorization
-     *
-     * @return a nullable reference to the decision (null means that no conclusive decision can be made)
+     * Is this a success or a failure response
      */
-    public Decision getDecision() {
-        return this.decision;
-    }
-
+    @JsonProperty("type")
+    public final SuccessOrFailure type;
     /**
-     * The map from policy ids to residuals
-     *
-     * @return map of residuals
+     * This will be present if and only if `type` is `Success`.
      */
-    public Map<String, JsonNode> getResiduals() {
-            return this.residuals;
-    }
-
+    @JsonProperty("response")
+    public final Optional<PartialAuthorizationSuccessResponse> success;
     /**
-     * Set of policies that are satisfied by the partial request
-     *
-     * @return set of policy ids
+     * This will be present if and only if `type` is `Failure`.
      */
-    public Set<String> getSatisfied() {
-        return this.satisfied;
-    }
-
+    @JsonProperty("errors")
+    public final Optional<ImmutableList<DetailedError>> errors;
     /**
-     * Set of policies that errored during the partial authorization
-     *
-     * @return set of policy ids
+     * Warnings can be produced regardless of whether we have a `Success` or `Failure`.
      */
-    public Set<String> getErrored() {
-        return this.errored;
-    }
+    @JsonProperty("warnings")
+    public final ImmutableList<String> warnings;
 
     /**
-     * Over approximation of policies that determine the auth decision
-     *
-     * @return set of policy ids
-     */
-    public Set<String> getMayBeDetermining() {
-        return this.mayBeDetermining;
-    }
-
-    /**
-     * Under approximation of policies that determine the auth decision
-     *
-     * @return set of policy ids
-     */
-    public Set<String> getMustBeDetermining() {
-        return this.mustBeDetermining;
-    }
-
-    /**
-     * Set of non-trivial residual policies
-     *
-     * @return set of policy ids
-     */
-    public Set<String> getNontrivialResiduals() {
-        return this.nontrivialResiduals;
-    }
-
-    /**
-     * Deserializer factory method for PartialAuthorizationResponse.
-     * @param nested Deserialized object for nested JSON object.
-     * @param decision Deserialized `decision` attribute of nested JSON object.
-     * @param satisfied Deserialized `satisfied` attribute of nested JSON object.
-     * @param errored Deserialized `errored` attribute of nested JSON object.
-     * @param mayBeDetermining Deserialized `mayBeDetermining` attribute of nested JSON object.
-     * @param mustBeDetermining Deserialized `mustBeDetermining` attribute of nested JSON object.
-     * @param residuals Deserialized `residual` attribute of nested JSON object.
-     * @param nontrivialResiduals Deserialized `nontrivialResiduals` attribute of nested JSON object.
-     * @param warnings Deserialized `warnings` attribute of nested JSON object.
-     * @return
+     * If `type` is `Success`, `success` should be present and `errors` empty.
+     * If `type` is `Failure`, `errors` should be present and `success` empty.
      */
     @JsonCreator
-    public static PartialAuthorizationResponse createPartialAuthorizationResponse(
-        @JsonProperty("response") PartialAuthorizationResponse nested,
-        @JsonProperty("decision") Decision decision,
-        @JsonProperty("satisfied") Set<String> satisfied,
-        @JsonProperty("errored") Set<String> errored,
-        @JsonProperty("mayBeDetermining") Set<String> mayBeDetermining,
-        @JsonProperty("mustBeDetermining") Set<String> mustBeDetermining,
-        @JsonProperty("residuals") Map<String, JsonNode> residuals,
-        @JsonProperty("nontrivialResiduals") Set<String> nontrivialResiduals,
-        @JsonProperty("warnings") Set<String> warnings) {
-        if (nested != null) {
-            return nested;
+    public PartialAuthorizationResponse(
+        @JsonProperty("type") SuccessOrFailure type,
+        @JsonProperty("response") Optional<PartialAuthorizationSuccessResponse> success,
+        @JsonProperty("errors") Optional<ArrayList<DetailedError>> errors,
+        @JsonProperty("warnings") ArrayList<String> warnings
+    ) {
+        this.type = type;
+        this.success = success;
+        this.errors = errors.map((list) -> ImmutableList.copyOf(list));
+        if (warnings == null) {
+            this.warnings = ImmutableList.of(); // empty
+        } else {
+            this.warnings = ImmutableList.copyOf(warnings);
         }
-        return new PartialAuthorizationResponse(decision, satisfied, errored, mayBeDetermining, mustBeDetermining,
-                residuals, nontrivialResiduals, warnings);
+    }
+
+    @Override
+    public String toString() {
+        final String warningsString = warnings.isEmpty() ? "" : "\nwith warnings: " + warnings;
+        if (type == SuccessOrFailure.Success) {
+            return "SUCCESS: " + success.get() + warningsString;
+        } else {
+            return "FAILURE: " + errors.get() + warningsString;
+        }
+    }
+
+    public enum SuccessOrFailure {
+        @JsonProperty("residuals")
+        Success,
+        @JsonProperty("failure")
+        Failure,
     }
 }
