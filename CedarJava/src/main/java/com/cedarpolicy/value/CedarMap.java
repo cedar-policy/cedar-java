@@ -141,4 +141,9 @@ public final class CedarMap extends Value implements Map<String, Value> {
     public Collection<Value> values() {
         return map.values();
     }
+
+    @Override
+    public String toString() {
+        return map.toString();
+    }
 }
