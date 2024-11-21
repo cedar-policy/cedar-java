@@ -28,6 +28,7 @@ import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
+import com.cedarpolicy.value.Unknown;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -120,11 +121,12 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                                 throw new InvalidValueDeserializationException(parser,
                                         "Not textual node: " + arg.toString(), node.asToken(), Map.class);
                             }
-
                             if (fn.textValue().equals("ip")) {
                                 return new IpAddress(arg.textValue());
                             } else if (fn.textValue().equals("decimal")) {
                                 return new Decimal(arg.textValue());
+                            } else if (fn.textValue().equals("unknown")) {
+                                return new Unknown(arg.textValue());
                             } else {
                                 throw new InvalidValueDeserializationException(parser,
                                         "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
