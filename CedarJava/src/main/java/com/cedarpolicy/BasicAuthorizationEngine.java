@@ -169,13 +169,18 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    private static final class PartialAuthorizationRequest {
+    private static final class PartialAuthorizationRequest extends com.cedarpolicy.model.PartialAuthorizationRequest {
         @JsonProperty private final PolicySet policies;
         @JsonProperty private final Set<Entity> entities;
-        @JsonProperty public final com.cedarpolicy.model.PartialAuthorizationRequest request;
 
         PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
-            this.request = request;
+            super(
+                request.principal,
+                request.action,
+                request.resource,
+                request.context,
+                request.schema,
+                request.enableRequestValidation);
             this.policies = policySet;
             this.entities = entities;
         }
