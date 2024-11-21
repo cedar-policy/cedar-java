@@ -31,6 +31,7 @@ import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
+import com.cedarpolicy.value.Unknown;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamConstraintsException;
@@ -240,6 +241,27 @@ public class JSONTests {
         listJson.add(false);
 
         assertJSONEqual(listJson, l);
+    }
+
+    @Test
+    public void testUnknown() {
+        Unknown unknown = new Unknown("test");
+        ObjectNode n = JsonNodeFactory.instance.objectNode();
+        ObjectNode inner = JsonNodeFactory.instance.objectNode();
+        inner.put("fn", "unknown");
+        inner.put("arg", "test");
+        n.replace("__extn", inner);
+        assertJSONEqual(n, unknown);
+    }
+
+    /** Tests deserialization of unknown value */
+    @Test
+    public void testDeserializationUnknown() throws JsonProcessingException {
+        String json = "{\"__extn\":{\"fn\":\"unknown\",\"arg\":\"test\"}}";
+        Value value = CedarJson.objectMapper().readValue(json, Value.class);
+        assertInstanceOf(Unknown.class, value);
+        Unknown unknown = (Unknown) value;
+        assertEquals("test", unknown.toString());
     }
 
     /** Tests deserialization of value that causes stack overflow */

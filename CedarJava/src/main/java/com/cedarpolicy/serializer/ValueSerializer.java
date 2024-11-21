@@ -25,6 +25,7 @@ import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
+import com.cedarpolicy.value.Unknown;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -87,6 +88,16 @@ public class ValueSerializer extends JsonSerializer<Value> {
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName("fn");
             jsonGenerator.writeString("decimal");
+            jsonGenerator.writeFieldName("arg");
+            jsonGenerator.writeString(value.toString());
+            jsonGenerator.writeEndObject();
+            jsonGenerator.writeEndObject();
+        } else if (value instanceof Unknown) {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName(EXTENSION_ESCAPE_SEQ);
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("fn");
+            jsonGenerator.writeString("unknown");
             jsonGenerator.writeFieldName("arg");
             jsonGenerator.writeString(value.toString());
             jsonGenerator.writeEndObject();
