@@ -30,11 +30,15 @@ import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.Unknown;
+import com.cedarpolicy.value.Value;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Map;
 import java.util.Set;
 
 public class AuthTests {
@@ -93,6 +97,27 @@ public class AuthTests {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertTrue(response.success.orElseThrow().getDecision() == null);
+                assertEquals("p0", response.success.orElseThrow().getResiduals().entrySet().iterator().next().getKey());
+            } catch (Exception e) {
+                fail("error: " + e.toString());
+            }
+        });
+    }
+
+    @Test
+    public void residualWithUnknownValue() {
+        var auth = new BasicAuthorizationEngine();
+        var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
+        var view = new EntityUID(EntityTypeName.parse("Action").get(), "view");
+        Map<String, Value> context = Map.of("authenticated", new Unknown("AuthenticatedIsUnknown"));
+        var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(context).build();
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when{context.authenticated};", "p0"));
+        var policySet = new PolicySet(policies);
+        assumePartialEvaluation(() -> {
+            try {
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
+                assertNull(response.success.orElseThrow().getDecision());
                 assertEquals("p0", response.success.orElseThrow().getResiduals().entrySet().iterator().next().getKey());
             } catch (Exception e) {
                 fail("error: " + e.toString());
