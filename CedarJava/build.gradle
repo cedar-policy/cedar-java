@@ -120,7 +120,7 @@ tasks.register('installCargoZigbuild', Exec) {
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.3'
+    commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.7'
 }
 
 tasks.register('compileFFI') {
