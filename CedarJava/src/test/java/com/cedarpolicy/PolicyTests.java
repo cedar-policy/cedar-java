@@ -109,4 +109,36 @@ public class PolicyTests {
         String actualJson = p.toJson();
         assertEquals(validJson, actualJson);
     }
+
+    @Test void policyEffectTest() throws InternalException {
+
+        assertThrows(NullPointerException.class, () -> {
+            Policy p = new Policy(null, null);
+            p.toJson();
+        });
+
+        // For effects not in {permit, forbid}
+        assertThrows(InternalException.class, () -> {
+            Policy p = new Policy("perm(principal == ?principal, action, resource in ?resource);", null);
+            p.toJson();
+        });
+
+        String actualPermitValue = "\"permit\"";
+        String actualForbidValue = "\"forbid\"";
+
+        // Tests for static policies
+        Policy permitPolicy = new Policy("permit(principal, action, resource);", null);
+        assertEquals(permitPolicy.effect(), actualPermitValue);
+
+        Policy forbidPolicy = new Policy("forbid(principal, action, resource);", null);
+        assertEquals(forbidPolicy.effect(), actualForbidValue);
+
+        // Tests for templates
+        Policy permitTemplate = new Policy("permit(principal == ?principal, action, resource == ?resource);", null);
+        assertEquals(permitTemplate.effect(), actualPermitValue);
+
+        Policy forbidTemplate = new Policy("forbid(principal == ?principal, action, resource == ?resource);", null);
+        assertEquals(forbidTemplate.effect(), actualForbidValue);
+
+    }
 }
