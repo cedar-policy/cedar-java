@@ -79,6 +79,24 @@ public class Policy {
     }
 
     /**
+     * Returns the effect of a policy. 
+     * 
+     * Determines the policy effect by attempting static policy first, then template. 
+     * In future, it will only support static policies once new class is introduced for Template.
+     * 
+     * @return The effect of the policy, either "permit" or "forbid"
+     * @throws InternalException
+     * @throws NullPointerException
+     */
+    public String effect() throws InternalException, NullPointerException {
+        try {
+            return policyEffectJni(policySrc); // Get effect for static policy
+        } catch (InternalException e) {
+            return templateEffectJni(policySrc); // Get effect for template
+        }
+    }
+
+    /**
      * Get the JSON representation of the policy. Currently only supports static policies.
      */
     public String toJson() throws InternalException, NullPointerException {
@@ -106,4 +124,6 @@ public class Policy {
 
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;
     private static native String fromJsonJni(String policyJsonStr) throws InternalException, NullPointerException;
+    private native String policyEffectJni(String policyStr) throws InternalException, NullPointerException;
+    private native String templateEffectJni(String policyStr) throws InternalException, NullPointerException;
 }
