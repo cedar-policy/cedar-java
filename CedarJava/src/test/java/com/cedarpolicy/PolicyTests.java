@@ -18,6 +18,7 @@ package com.cedarpolicy;
 
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.policy.Policy;
+import com.cedarpolicy.model.Effect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -114,31 +115,28 @@ public class PolicyTests {
 
         assertThrows(NullPointerException.class, () -> {
             Policy p = new Policy(null, null);
-            p.toJson();
+            p.effect();
         });
 
         // For effects not in {permit, forbid}
         assertThrows(InternalException.class, () -> {
             Policy p = new Policy("perm(principal == ?principal, action, resource in ?resource);", null);
-            p.toJson();
+            p.effect();
         });
-
-        String actualPermitValue = "permit";
-        String actualForbidValue = "forbid";
 
         // Tests for static policies
         Policy permitPolicy = new Policy("permit(principal, action, resource);", null);
-        assertEquals(permitPolicy.effect(), actualPermitValue);
+        assertEquals(permitPolicy.effect(), Effect.PERMIT);
 
         Policy forbidPolicy = new Policy("forbid(principal, action, resource);", null);
-        assertEquals(forbidPolicy.effect(), actualForbidValue);
+        assertEquals(forbidPolicy.effect(), Effect.FORBID);
 
         // Tests for templates
         Policy permitTemplate = new Policy("permit(principal == ?principal, action, resource == ?resource);", null);
-        assertEquals(permitTemplate.effect(), actualPermitValue);
+        assertEquals(permitTemplate.effect(), Effect.PERMIT);
 
         Policy forbidTemplate = new Policy("forbid(principal == ?principal, action, resource == ?resource);", null);
-        assertEquals(forbidTemplate.effect(), actualForbidValue);
+        assertEquals(forbidTemplate.effect(), Effect.FORBID);
 
     }
 }

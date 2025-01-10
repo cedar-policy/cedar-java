@@ -20,6 +20,7 @@ import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.cedarpolicy.model.Effect;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -79,20 +80,20 @@ public class Policy {
     }
 
     /**
-     * Returns the effect of a policy. 
-     * 
-     * Determines the policy effect by attempting static policy first, then template. 
+     * Returns the effect of a policy.
+     *
+     * Determines the policy effect by attempting static policy first, then template.
      * In future, it will only support static policies once new class is introduced for Template.
-     * 
+     *
      * @return The effect of the policy, either "permit" or "forbid"
      * @throws InternalException
      * @throws NullPointerException
      */
-    public String effect() throws InternalException, NullPointerException {
+    public Effect effect() throws InternalException, NullPointerException {
         try {
-            return policyEffectJni(policySrc); // Get effect for static policy
+            return Effect.fromString(policyEffectJni(policySrc)); // Get effect for static policy
         } catch (InternalException e) {
-            return templateEffectJni(policySrc); // Get effect for template
+            return Effect.fromString(templateEffectJni(policySrc)); // Get effect for template
         }
     }
 
