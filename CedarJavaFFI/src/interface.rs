@@ -388,6 +388,52 @@ fn to_json_internal<'a>(env: &mut JNIEnv<'a>, policy_jstr: JString<'a>) -> Resul
 }
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn policyEffectJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
+    match policy_effect_jni_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(effect) => effect.as_jni(),
+    }
+}
+
+fn policy_effect_jni_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+        let policy = Policy::from_str(&policy_string)?;
+        let policy_effect = policy.effect().to_string();
+        Ok(JValueGen::Object(env.new_string(&policy_effect)?.into()))
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn templateEffectJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
+    match template_effect_jni_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(effect) => effect.as_jni(),
+    }
+}
+
+fn template_effect_jni_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+        let policy = Template::from_str(&policy_string)?;
+        let policy_effect = policy.effect().to_string();
+        Ok(JValueGen::Object(env.new_string(&policy_effect)?.into()))
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn fromJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_json_jstr: JString<'a>) -> jvalue {
     match from_json_internal(&mut env, policy_json_jstr) {
         Err(e) => jni_failed(&mut env, e.as_ref()),
