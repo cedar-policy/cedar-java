@@ -406,7 +406,10 @@ fn policy_effect_jni_internal<'a>(
         let policy_string = String::from(policy_jstring);
         let policy = Policy::from_str(&policy_string)?;
         let policy_effect = serde_json::to_string(&policy.effect())?;
-        Ok(JValueGen::Object(env.new_string(&policy_effect)?.into()))
+        let policy_effect_unquoted: &str = serde_json::from_str(&policy_effect)?;
+        Ok(JValueGen::Object(
+            env.new_string(&policy_effect_unquoted)?.into(),
+        ))
     }
 }
 
@@ -429,7 +432,10 @@ fn template_effect_jni_internal<'a>(
         let policy_string = String::from(policy_jstring);
         let policy = Template::from_str(&policy_string)?;
         let policy_effect = serde_json::to_string(&policy.effect())?;
-        Ok(JValueGen::Object(env.new_string(&policy_effect)?.into()))
+        let policy_effect_unquoted: &str = serde_json::from_str(&policy_effect)?;
+        Ok(JValueGen::Object(
+            env.new_string(&policy_effect_unquoted)?.into(),
+        ))
     }
 }
 

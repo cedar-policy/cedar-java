@@ -123,8 +123,8 @@ public class PolicyTests {
             p.toJson();
         });
 
-        String actualPermitValue = "\"permit\"";
-        String actualForbidValue = "\"forbid\"";
+        String actualPermitValue = "permit";
+        String actualForbidValue = "forbid";
 
         // Tests for static policies
         Policy permitPolicy = new Policy("permit(principal, action, resource);", null);
