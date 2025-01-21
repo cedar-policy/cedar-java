@@ -82,4 +82,24 @@ public class PolicySetTests {
             PolicySet.parsePolicies(Path.of(TEST_RESOURCES_DIR + "malformed_policy_set.cedar"));
         });
     }
+
+    @Test
+    public void getNumTests() throws InternalException, IOException {
+
+        // Null policy set
+        PolicySet nullPolicySet = new PolicySet(null, null, null);
+        assertEquals(0, nullPolicySet.getNumPolicies());
+        assertEquals(0, nullPolicySet.getNumTemplates());
+
+        // Empty policy set
+        PolicySet emptyPolicySet = new PolicySet();
+        assertEquals(0, emptyPolicySet.getNumPolicies());
+        assertEquals(0, emptyPolicySet.getNumTemplates());
+
+        // Non-empty policy set
+        PolicySet policySet = PolicySet.parsePolicies(Path.of(TEST_RESOURCES_DIR + "template.cedar"));
+        assertEquals(2, policySet.getNumPolicies());
+        assertEquals(1, policySet.getNumTemplates());
+
+    }
 }
