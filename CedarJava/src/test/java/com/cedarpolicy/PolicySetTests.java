@@ -85,7 +85,6 @@ public class PolicySetTests {
 
     @Test
     public void getNumTests() throws InternalException, IOException {
-
         // Null policy set
         PolicySet nullPolicySet = new PolicySet(null, null, null);
         assertEquals(0, nullPolicySet.getNumPolicies());
@@ -100,6 +99,5 @@ public class PolicySetTests {
         PolicySet policySet = PolicySet.parsePolicies(Path.of(TEST_RESOURCES_DIR + "template.cedar"));
         assertEquals(2, policySet.getNumPolicies());
         assertEquals(1, policySet.getNumTemplates());
-
     }
 }

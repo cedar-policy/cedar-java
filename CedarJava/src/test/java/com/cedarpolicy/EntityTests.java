@@ -32,8 +32,6 @@ public class EntityTests {
 
     @Test
     public void getAttrTests() {
-
-
         PrimString stringAttr = new PrimString("stringAttrValue");
         HashMap<String, Value> attrs = new HashMap<>();
         attrs.put("stringAttr", stringAttr);
@@ -50,6 +48,5 @@ public class EntityTests {
 
         // Test key not found
         assertEquals(principal.getAttr("decimalAttr"), null);
-
     }
 }
