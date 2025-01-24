@@ -86,6 +86,24 @@ public class PolicySet {
     }
 
     /**
+     * Gets number of static policies in the Policy Set.
+     * 
+     * @return number of static policies, returns 0 if policies set is null
+     */
+    public int getNumPolicies() {
+        return policies != null ? policies.size() : 0;
+    } 
+
+    /**
+     * Gets number of templates in the Policy Set.
+     * 
+     * @return number of templates, returns 0 if templates set is null
+     */
+    public int getNumTemplates() {
+        return templates != null ? templates.size() : 0;
+    }
+
+    /**
      * Parse multiple policies and templates from a file into a PolicySet.
      * @param filePath the path to the file containing the policies
      * @return a PolicySet containing the parsed policies

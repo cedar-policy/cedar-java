@@ -111,7 +111,8 @@ public class PolicyTests {
         assertEquals(validJson, actualJson);
     }
 
-    @Test void policyEffectTest() throws InternalException {
+    @Test
+    public void policyEffectTest() throws InternalException {
 
         assertThrows(NullPointerException.class, () -> {
             Policy p = new Policy(null, null);
