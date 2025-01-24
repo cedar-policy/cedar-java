@@ -17,6 +17,7 @@
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
+use cedar_policy::ffi::PolicySet as PolicySetFFI;
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     Entities, EntityUid, Policy, PolicySet, Schema, Template,
@@ -262,6 +263,32 @@ fn parse_policy_internal<'a>(
                 Ok(JValueGen::Object(env.new_string(&policy_text)?.into()))
             }
         }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
+pub fn policySetToJson<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
+    match policy_set_to_json_internal(&mut env, policies_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policies_set) => policies_set.as_jni(),
+    }
+}
+
+fn policy_set_to_json_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_set_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_set_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_set_jstring = env.get_string(&policy_set_jstr)?;
+        let policy_set_string = String::from(policy_set_jstring);
+        let policy_set_ffi: PolicySetFFI = serde_json::from_str(&policy_set_string)?;
+        let policy_set = policy_set_ffi
+            .parse()
+            .map_err(|err| format!("Error parsing policy set: {:?}", err))?;
+        let policy_set_json = serde_json::to_string(&policy_set.to_json().unwrap())?;
+        Ok(JValueGen::Object(env.new_string(&policy_set_json)?.into()))
     }
 }
 

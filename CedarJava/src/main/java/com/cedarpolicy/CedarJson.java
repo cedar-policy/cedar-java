@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-final class CedarJson {
+public final class CedarJson {
     private static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
 
     private CedarJson() {
@@ -41,7 +41,7 @@ final class CedarJson {
     }
 
     public static ObjectMapper objectMapper() {
-        return OBJECT_MAPPER;
+        return OBJECT_MAPPER.copy();
     }
 
     public static ObjectWriter objectWriter() {
