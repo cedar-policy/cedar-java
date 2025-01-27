@@ -66,6 +66,20 @@ public class Entity {
         this.tags = new HashMap<>(tags);
     }
 
+    /**
+     * Get the value for the given attribute, or null if not present.
+     * 
+     * @param attribute Attribute key
+     * @return Attribute value for the given key or null if not present
+     * @throws IllegalArgumentException if attribute is null
+     */
+    public Value getAttr(String attribute) {
+        if (attribute == null) {
+            throw new IllegalArgumentException("Attribute key cannot be null");
+        }
+        return this.attrs.getOrDefault(attribute, null);
+    }
+
     @Override
     public String toString() {
         String parentStr = "";
