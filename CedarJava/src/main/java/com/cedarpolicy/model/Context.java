@@ -50,7 +50,7 @@ public class Context {
      * @throws IllegalStateException if a duplicate key is found within the iterable
      * @throws IllegalArgumentException if the contextList parameter is null
      */
-    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW") 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Context(Iterable<Map.Entry<String, Value>> contextList) {
         context = new HashMap<>();
         fromIterable(contextList);
@@ -70,7 +70,7 @@ public class Context {
 
     /**
      * Returns a defensive copy of the internal context map.
-     * 
+     *
      * @return A new HashMap containing all key-value pairs from the internal context
      */
      public Map<String, Value> getContext() {
@@ -79,7 +79,7 @@ public class Context {
 
     /**
      * Merges another Context object into the current context.
-     * 
+     *
      * @param contextToMerge The Context object to merge into this context
      * @throws IllegalStateException if a duplicate key is found while merging the context
      * @throws IllegalArgumentException if the contextToMerge parameter is null
@@ -90,7 +90,7 @@ public class Context {
 
     /**
      * Merges the provided key-value pairs into the current context.
-     * 
+     *
      * @param contextMaps An Iterable containing key-value pairs to merge into this context
      * @throws IllegalStateException if a duplicate key is found in the existing context or duplicate key found within the iterable
      * @throws IllegalArgumentException if the contextMaps parameter is null
@@ -99,11 +99,9 @@ public class Context {
         fromIterable(contextMaps);
     }
 
-
-
     /**
      * Retrieves the Value associated with the specified key from the context.
-     * 
+     *
      * @param key The key whose associated Value is to be returned
      * @return The Value associated with the specified key, or null if the key is not found replicating Cedar Rust behavior
      * @throws IllegalArgumentException if the key parameter is null
@@ -117,7 +115,7 @@ public class Context {
 
     /**
      * Processes an Iterable of Map entries and adds them to the context.
-     * 
+     *
      * @param contextIterator The Iterable containing key-value pairs to add to the context
      * @throws IllegalStateException if a duplicate key is found in the existing context or duplicate key found within the iterable
      * @throws IllegalArgumentException if the contextIterator is null
