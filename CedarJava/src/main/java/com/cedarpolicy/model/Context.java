@@ -37,6 +37,10 @@ public class Context {
         context = Collections.emptyMap();
     }
 
+    public boolean isEmpty() {
+        return context.isEmpty();
+    }
+
     /**
      * Constructs a new Context from an Iterable of key-value pairs.
      * Creates a new HashMap and populates it with the provided entries.
@@ -69,7 +73,7 @@ public class Context {
      * 
      * @return A new HashMap containing all key-value pairs from the internal context
      */
-     public Map<String, Value> getContextMap() {
+     public Map<String, Value> getContext() {
         return new HashMap<>(context);
     }
 
@@ -81,7 +85,7 @@ public class Context {
      * @throws IllegalArgumentException if the contextToMerge parameter is null
      */
     public void merge(Context contextToMerge) throws IllegalStateException, IllegalArgumentException {
-        fromIterable(contextToMerge.getContextMap().entrySet());
+        fromIterable(contextToMerge.getContext().entrySet());
     }
 
     /**
@@ -136,5 +140,11 @@ public class Context {
                 Map.Entry::getValue
             ));
         context.putAll(newEntries);
+    }
+
+    /** Readable string representation. */
+    @Override
+    public String toString() {
+        return context.toString();
     }
 }
