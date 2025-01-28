@@ -55,18 +55,6 @@ public class EntityTests {
     }
 
     @Test
-    public void getAttributesTests() {
-        PrimString stringAttr = new PrimString("stringAttrValue");
-        HashMap<String, Value> attrs = new HashMap<>();
-        attrs.put("stringAttr", stringAttr);
-        EntityTypeName principalType = EntityTypeName.parse("User").get();
-        Entity principal = new Entity(principalType.of("Alice"), attrs, new HashSet<>());
-
-        // Test getting attribute
-        assertEquals(principal.getAttributes(), attrs);
-    }
-
-    @Test
     public void toJsonTests() {
         PrimString stringAttr = new PrimString("stringAttrValue");
         HashMap<String, Value> attrs = new HashMap<>();

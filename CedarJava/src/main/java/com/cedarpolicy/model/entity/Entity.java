@@ -137,7 +137,7 @@ public class Entity {
      * Get the Entity's attributes
      * @return the map of attributes
      */
-    public Map<String, Value> getAttributes() {
+    private Map<String, Value> getAttributes() {
         return attrs;
     }
 
