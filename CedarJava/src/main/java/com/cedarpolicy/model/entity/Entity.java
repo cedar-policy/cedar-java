@@ -73,12 +73,25 @@ public class Entity {
         this.tags = new HashMap<>(tags);
     }
 
-    public String toJsonString() throws InternalException, NullPointerException {
+    /**
+     * Get the Entity's JSON string value.
+     * 
+     * @return the Entity's JSON string value
+     * @throws InternalException if the Entity is unable to be parsed
+     */
+    public String toJsonString() throws InternalException {
         String entityJsonStr = toJsonEntityJni(this);
         return entityJsonStr;
     }
 
-    public JsonNode toJsonValue() throws InternalException, NullPointerException, JsonProcessingException {
+    /**
+     * Get the Entity's JSON string value.
+     * 
+     * @return the Entity's JSON string value
+     * @throws InternalException if the Entity is unable to be parsed
+     * @throws JsonProcessingException if the Entity JSON is unable to be processed
+     */
+    public JsonNode toJsonValue() throws InternalException, JsonProcessingException {
         String entityJsonStr = this.toJsonString();
         return OBJECT_MAPPER.readTree(entityJsonStr);
     }
