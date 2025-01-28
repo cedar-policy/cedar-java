@@ -18,14 +18,14 @@ package com.cedarpolicy;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.value.*;
 import com.cedarpolicy.model.entity.Entity;
@@ -73,6 +73,122 @@ public class EntityTests {
                 "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
                         + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
                         + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}]}");
+    }
+
+    @Test
+    public void toJsonWithTagsTests() {
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        HashMap<String, Value> attrs = new HashMap<>();
+        attrs.put("stringAttr", stringAttr);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Bob"));
+
+        PrimString strTag = new PrimString("strTagValue");
+        HashMap<String, Value> tags = new HashMap<>();
+        tags.put("tag", strTag);
+
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents, tags);
+
+        JsonNode entityJson = Assertions.assertDoesNotThrow(() -> {
+            return principal.toJsonValue();
+        });
+
+        assertEquals(entityJson.toString(),
+                "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                        + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}],"
+                        + "\"tags\":{\"tag\":\"strTagValue\"}}");
+    }
+
+    public void toJsonMultipleAttributesTests() {
+        HashMap<String, Value> attrs = new HashMap<>();
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        attrs.put("stringAttr", stringAttr);
+
+        PrimString stringAttr2 = new PrimString("stringAttrValue2");
+        attrs.put("stringAttr2", stringAttr2);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Bob"));
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents);
+        JsonNode entityJson = Assertions.assertDoesNotThrow(() -> {
+            return principal.toJsonValue();
+        });
+
+        String entityJsonStr = entityJson.toString();
+        boolean entityJsonIsExpected = entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                + "\"attrs\":{\"stringAttr\":\"stringAttrValue\",\"stringAttr2\":\"stringAttrValue2\"},"
+                + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}]}")
+                || entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{\"stringAttr2\":\"stringAttrValue2\",\"stringAttr\":\"stringAttrValue\"},"
+                        + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}]}");
+
+        assertTrue(entityJsonIsExpected, entityJsonStr);
+    }
+
+    public void toJsonMultipleParentsTests() {
+        HashMap<String, Value> attrs = new HashMap<>();
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        attrs.put("stringAttr", stringAttr);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Alice"));
+        parents.add(principalType.of("Bob"));
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents);
+        JsonNode entityJson = Assertions.assertDoesNotThrow(() -> {
+            return principal.toJsonValue();
+        });
+
+        String entityJsonStr = entityJson.toString();
+        boolean entityJsonIsExpected = entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                + "\"parents\":[{\"type\":\"User\",\"id\":\"Alice\"},{\"type\":\"User\",\"id\":\"Bob\"}]}")
+                || entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                        + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\",{\"type\":\"User\",\"id\":\"Alice\"}}]}");
+
+        assertTrue(entityJsonIsExpected, entityJsonStr);
+    }
+
+    public void toJsonMultipleTagsTests() {
+        HashMap<String, Value> attrs = new HashMap<>();
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        attrs.put("stringAttr", stringAttr);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Alice"));
+
+        HashMap<String, Value> tags = new HashMap<>();
+        PrimString strTag = new PrimString("strTagValue");
+        tags.put("tag", strTag);
+        PrimBool boolTag = new PrimBool(true);
+        tags.put("tag2", boolTag);
+
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents, tags);
+        JsonNode entityJson = Assertions.assertDoesNotThrow(() -> {
+            return principal.toJsonValue();
+        });
+
+        String entityJsonStr = entityJson.toString();
+        boolean entityJsonIsExpected = entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}],"
+                + "\"tags\":{\"tag\":\"strTagValue\",\"tag2\":\"true\"}}")
+                || entityJsonStr.equals("{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                        + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}],"
+                        + "\"tags\":{\"tag2\":\"tue\",\"tag\":\"strTagValue\"}}");
+
+        assertTrue(entityJsonIsExpected, entityJsonStr);
     }
 
     @Test
@@ -185,34 +301,6 @@ public class EntityTests {
                 "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
                         + "\"attrs\":{\"mapAttr\":{\"boolAttr\":false}},"
                         + "\"parents\":[]}");
-    }
-
-    @Test
-    public void toJsonWithTagsTests() {
-        PrimString stringAttr = new PrimString("stringAttrValue");
-        HashMap<String, Value> attrs = new HashMap<>();
-        attrs.put("stringAttr", stringAttr);
-
-        EntityTypeName principalType = EntityTypeName.parse("User").get();
-
-        HashSet<EntityUID> parents = new HashSet<EntityUID>();
-        parents.add(principalType.of("Bob"));
-
-        PrimString longTag = new PrimString("longTagValue");
-        HashMap<String, Value> tags = new HashMap<>();
-        tags.put("tag", longTag);
-
-        Entity principal = new Entity(principalType.of("Alice"), attrs, parents, tags);
-
-        JsonNode entityJson = Assertions.assertDoesNotThrow(() -> {
-            return principal.toJsonValue();
-        });
-
-        assertEquals(entityJson.toString(),
-                "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
-                        + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
-                        + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}],"
-                        + "\"tags\":{\"tag\":\"longTagValue\"}}");
     }
 
     @Test
