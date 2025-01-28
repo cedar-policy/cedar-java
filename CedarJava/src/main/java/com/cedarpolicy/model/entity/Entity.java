@@ -18,6 +18,11 @@ package com.cedarpolicy.model.entity;
 
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
+import com.cedarpolicy.model.exception.InternalException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +34,8 @@ import java.util.stream.Collectors;
  * entities, and zero or more tags.
  */
 public class Entity {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final EntityUID euid;
 
     /** Key/Value attribute map. */
@@ -64,6 +71,16 @@ public class Entity {
         this.euid = uid;
         this.parentsEUIDs = parentsEUIDs;
         this.tags = new HashMap<>(tags);
+    }
+
+    public String toJsonString() throws InternalException, NullPointerException {
+        String entityJsonStr = toJsonEntityJni(this);
+        return entityJsonStr;
+    }
+
+    public JsonNode toJsonValue() throws InternalException, NullPointerException, JsonProcessingException {
+        String entityJsonStr = this.toJsonString();
+        return OBJECT_MAPPER.readTree(entityJsonStr);
     }
 
     /**
@@ -117,6 +134,14 @@ public class Entity {
     }
 
     /**
+     * Get the Entity's attributes
+     * @return the map of attributes
+     */
+    public Map<String, Value> getAttributes() {
+        return attrs;
+    }
+
+    /**
      * Get this Entity's parents
      * @return the set of parent EntityUIDs
      */
@@ -131,4 +156,6 @@ public class Entity {
     public Map<String, Value> getTags() {
         return tags;
     }
+
+    private static native String toJsonEntityJni(Entity entity) throws InternalException, NullPointerException;
 }

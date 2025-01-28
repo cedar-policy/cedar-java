@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use std::{error::Error, str::FromStr, thread};
 
-use crate::objects::JFormatterConfig;
+use crate::objects::{JEntity, JFormatterConfig};
 use crate::{
     answer::Answer,
     jset::Set,
@@ -460,6 +460,33 @@ fn from_json_internal<'a>(
         }
     }
 }
+
+#[jni_fn("com.cedarpolicy.model.entity.Entity")]
+pub fn toJsonEntityJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    obj: JObject<'a>
+) -> jvalue {
+    let entity = match JEntity::cast(&mut env, obj) {
+        Ok(v) => v,
+        Err(e) => return jni_failed(&mut env, e.as_ref()),
+    };
+
+    match to_json_entity_internal(&mut env, entity) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn to_json_entity_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    java_entity: JEntity<'a>,
+) -> Result<JValueOwned<'a>> {
+    let entity = java_entity.to_entity(env)?;
+    let entity_json = serde_json::to_string(&entity.to_json_value().unwrap())?;
+    Ok(JValueGen::Object(env.new_string(&entity_json)?.into()))
+}
+
 
 #[jni_fn("com.cedarpolicy.value.EntityIdentifier")]
 pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {

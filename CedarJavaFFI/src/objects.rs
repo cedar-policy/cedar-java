@@ -18,12 +18,12 @@ use crate::{
     jlist::{jstr_list_to_rust_vec, List},
     utils::{assert_is_class, get_object_ref, Result},
 };
-use std::{marker::PhantomData, str::FromStr};
+use std::{collections::{HashMap, HashSet}, marker::PhantomData, str::FromStr};
 
-use cedar_policy::{EntityId, EntityTypeName, EntityUid};
+use cedar_policy::{Entity, EntityId, EntityTypeName, EntityUid, RestrictedExpression};
 use cedar_policy_formatter::Config;
 use jni::{
-    objects::{JObject, JString, JValueGen, JValueOwned},
+    objects::{JObject, JObjectArray, JString, JValueGen, JValueOwned},
     sys::jvalue,
     JNIEnv,
 };
@@ -39,6 +39,121 @@ impl<'a> Object<'a> for JString<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
         assert_is_class(env, &obj, "java/lang/String")?;
         Ok(obj.into())
+    }
+}
+
+/// Typed wrapper for Entity objects
+/// (com.cedarpolicy.model.entity.Entity)
+pub struct JEntity<'a> {
+    obj: JObject<'a>,
+}
+
+impl<'a> JEntity<'a> {
+    pub fn to_entity(&self, env: &mut JNIEnv<'a>) -> Result<Entity> {
+        let euid = self.entity_uid(env)?;
+        let parents = self.parents(env)?;
+        let attrs = self.restricted_expr_map(env, "getAttributes")?;
+        let tags = self.restricted_expr_map(env, "getTags")?;
+
+        Ok(Entity::new_with_tags(euid, attrs, parents, tags)?)
+    }
+
+    fn entity_uid(&self, env: &mut JNIEnv<'a>) -> Result<EntityUid> {
+        let java_euid: JObject<'a> = env
+            .call_method(
+                &self.obj,
+                "getEUID",
+                "()Lcom/cedarpolicy/value/EntityUID;",
+                &[],
+            )?
+            .l()?;
+        let euid_java = JEntityUID::cast(env, java_euid)?;
+        euid_java.to_entity_uid(env)
+    }
+
+    fn parents(&self, env: &mut JNIEnv<'a>) -> Result<HashSet<EntityUid>> {
+        let java_parents: JObject<'a> = env
+            .call_method(&self.obj, "getParents", "()Ljava/util/Set;", &[])?
+            .l()?;
+
+        let mut parents = HashSet::new();
+
+        let java_parents_array: JObjectArray = env
+            .call_method(java_parents, "toArray", "()[Ljava/lang/Object;", &[])?
+            .l()?
+            .into();
+
+        let length = env.get_array_length(&java_parents_array)?;
+        for i in 0..length {
+            let java_parent = env.get_object_array_element(&java_parents_array, i)?;
+            let parent_euid = JEntityUID::cast(env, java_parent)?;
+            parents.insert(parent_euid.to_entity_uid(env)?);
+        }
+        Ok(parents)
+    }
+
+    fn restricted_expr_map(
+        &self,
+        env: &mut JNIEnv<'a>,
+        method_name: &str,
+    ) -> Result<HashMap<String, RestrictedExpression>> {
+        let java_obj_map: JObject<'a> = env
+            .call_method(&self.obj, method_name, "()Ljava/util/Map;", &[])?
+            .l()?;
+
+        let mut map = HashMap::new();
+
+        let java_entry_set: JObjectArray = env
+            .call_method(&java_obj_map, "entrySet", "()Ljava/util/Set;", &[])?
+            .l()?
+            .into();
+
+        let java_entry_array: JObjectArray = env
+            .call_method(java_entry_set, "toArray", "()[Ljava/lang/Object;", &[])?
+            .l()?
+            .into();
+
+        let length = env.get_array_length(&java_entry_array)?;
+
+        for i in 0..length {
+            let java_map_entry = env.get_object_array_element(&java_entry_array, i)?;
+
+            let java_key: JObject = env
+                .call_method(&java_map_entry, "getKey", "()Ljava/lang/Object;", &[])?
+                .l()?;
+
+            let java_value: JObject = env
+                .call_method(&java_map_entry, "getValue", "()Ljava/lang/Object;", &[])?
+                .l()?;
+
+            let cedar_expr: JObject = env
+                .call_method(java_value, "toCedarExpr", "()Ljava/lang/String;", &[])?
+                .l()?;
+
+            let cedar_expr_jstr = JString::cast(env, cedar_expr)?;
+            let cedar_expr_str: String = env.get_string(&cedar_expr_jstr)?.into();
+            let restircted_expr = RestrictedExpression::from_str(cedar_expr_str.as_str())?;
+
+            let key_jobject = JString::cast(env, java_key)?;
+            let key: String = env.get_string(&key_jobject)?.into();
+
+            map.insert(key, restircted_expr);
+        }
+
+        Ok(map)
+    }
+}
+
+impl<'a> Object<'a> for JEntity<'a> {
+    fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
+        assert_is_class(env, &obj, "com/cedarpolicy/model/entity/Entity")?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> AsRef<JObject<'a>> for JEntity<'a> {
+    fn as_ref(&self) -> &JObject<'a> {
+        &self.obj
     }
 }
 
@@ -313,6 +428,43 @@ impl<'a> JEntityUID<'a> {
             }
             Err(_) => JOptional::empty(env),
         }
+    }
+
+    pub fn to_entity_uid(&self, env: &mut JNIEnv<'a>) -> Result<EntityUid> {
+        let java_eid = env
+            .call_method(
+                &self.obj,
+                "getId",
+                "()Lcom/cedarpolicy/value/EntityIdentifier;",
+                &[],
+            )?
+            .l()?;
+
+        let eid_id_jstr = env
+            .call_method(java_eid, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let eid_id_str: String = env.get_string(&JString::from(eid_id_jstr)).unwrap().into();
+        let entity_id = EntityId::new(eid_id_str);
+
+        let java_entity_type_name = env
+            .call_method(
+                &self.obj,
+                "getType",
+                "()Lcom/cedarpolicy/value/EntityTypeName;",
+                &[],
+            )?
+            .l()?;
+
+        let entity_type_name_jstr = env
+            .call_method(java_entity_type_name, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let entity_type_name_str: String = env.get_string(&JString::from(entity_type_name_jstr))?.into();
+        let entity_type_name = EntityTypeName::from_str(entity_type_name_str.as_str())?;
+
+        let entity_uid = EntityUid::from_type_name_and_id(entity_type_name, entity_id);
+        Ok(entity_uid)
     }
 }
 
