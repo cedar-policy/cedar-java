@@ -623,3 +623,33 @@ fn policies_str_to_pretty_internal<'a>(
         }
     }
 }
+
+#[cfg(test)]
+mod interface_tests {
+    use super::*;
+    use crate::jvm_test_utils::*;
+    use jni::JavaVM;
+    use std::sync::LazyLock;
+
+    // Static JVM to be used by all the tests. LazyLock for lazy thread-safe lazy initialization
+    static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
+
+    mod policy_tests {
+        use super::*;
+
+        fn policy_effect_test_util(env: &mut JNIEnv, policy: &str, expected_effect: &str) {
+            let policy_string = env.new_string(policy).unwrap();
+            let effect_result = policy_effect_jni_internal(env, policy_string).unwrap();
+            let effect_jstr = JString::cast(env, effect_result.l().unwrap()).unwrap();
+            let effect = String::from(env.get_string(&effect_jstr).unwrap());
+            assert_eq!(effect, expected_effect);
+        }
+
+        #[test]
+        fn policy_effect_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            policy_effect_test_util(&mut env, "permit(principal,action,resource);", "permit");
+            policy_effect_test_util(&mut env, "forbid(principal,action,resource);", "forbid");
+        }
+    }
+}
