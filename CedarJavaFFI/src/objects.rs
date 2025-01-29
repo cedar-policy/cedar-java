@@ -255,6 +255,20 @@ impl<'a> JEntityTypeName<'a> {
             Err(_) => JOptional::empty(env),
         }
     }
+
+    /// Decode the underlying EntityTypeName Java object into the Rust EntityTypeName struct
+    pub fn to_entity_type_name(&self, env: &mut JNIEnv<'a>) -> Result<EntityTypeName> {
+        let entity_type_name_jstr = env
+            .call_method(&self.obj, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let entity_type_name_str: String = env
+            .get_string(&JString::from(entity_type_name_jstr))?
+            .into();
+        let entity_type_name = EntityTypeName::from_str(entity_type_name_str.as_str())?;
+
+        Ok(entity_type_name)
+    }
 }
 
 impl<'a> Object<'a> for JEntityTypeName<'a> {
@@ -382,6 +396,18 @@ impl<'a> JEntityId<'a> {
         self.id.clone()
     }
 
+    /// Decode the underlying EntityId Java object into the Rust EntityId struct
+    pub fn to_entity_id(&self, env: &mut JNIEnv<'a>) -> Result<EntityId> {
+        let eid_id_jstr = env
+            .call_method(&self.obj, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let eid_id_str: String = env.get_string(&JString::from(eid_id_jstr)).unwrap().into();
+        let entity_id = EntityId::new(eid_id_str);
+
+        Ok(entity_id)
+    }
+
     /// Decode the object into its string representation
     pub fn get_string_repr(&self) -> String {
         self.id.escaped().to_string()
@@ -459,12 +485,8 @@ impl<'a> JEntityUID<'a> {
             )?
             .l()?;
 
-        let eid_id_jstr = env
-            .call_method(eid_jobj, "toString", "()Ljava/lang/String;", &[])?
-            .l()?;
-
-        let eid_id_str: String = env.get_string(&JString::from(eid_id_jstr)).unwrap().into();
-        let entity_id = EntityId::new(eid_id_str);
+        let java_eid = JEntityId::cast(env, eid_jobj)?;
+        let entity_id = java_eid.to_entity_id(env)?;
 
         // get the entity type name from the JEntityUID
         let entity_type_name_jobj = env
@@ -476,19 +498,8 @@ impl<'a> JEntityUID<'a> {
             )?
             .l()?;
 
-        let entity_type_name_jstr = env
-            .call_method(
-                entity_type_name_jobj,
-                "toString",
-                "()Ljava/lang/String;",
-                &[],
-            )?
-            .l()?;
-
-        let entity_type_name_str: String = env
-            .get_string(&JString::from(entity_type_name_jstr))?
-            .into();
-        let entity_type_name = EntityTypeName::from_str(entity_type_name_str.as_str())?;
+        let java_entity_type_name = JEntityTypeName::cast(env, entity_type_name_jobj)?;
+        let entity_type_name = java_entity_type_name.to_entity_type_name(env)?;
 
         // create the entity uid
         let entity_uid = EntityUid::from_type_name_and_id(entity_type_name, entity_id);
