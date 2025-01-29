@@ -98,7 +98,7 @@ public class AuthorizationRequest {
     /**
      * Create an authorization request from the EUIDs and Context.
      * Constructor overloading to support Context object while preserving backward compatability.
-     * checked
+     *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
@@ -144,7 +144,7 @@ public class AuthorizationRequest {
     /**
      * Create a request without a schema.
      * Constructor overloading to support Context object while preserving backward compatability.
-     * Checked
+     *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
@@ -179,7 +179,7 @@ public class AuthorizationRequest {
     /**
      * Create a request without a schema, using Entity objects for principal/action/resource.
      * Constructor overloading to support Context object while preserving backward compatability.
-     * checked
+     *
      * @param principalEUID Principal's EUID.
      * @param actionEUID Action's EUID.
      * @param resourceEUID Resource's EUID.
@@ -222,7 +222,7 @@ public class AuthorizationRequest {
     /**
      * Create a request from Entity objects and Context.
      * Constructor overloading to support Context object while preserving backward compatability.
-     * checked
+     *
      * @param principal
      * @param action
      * @param resource
