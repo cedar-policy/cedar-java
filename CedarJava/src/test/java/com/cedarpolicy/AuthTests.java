@@ -148,6 +148,53 @@ public class AuthTests {
     }
 
     @Test
+    public void partialAuthConcreteWithBackwardCompatibleContext() {
+        var auth = new BasicAuthorizationEngine();
+        var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
+        var view = new EntityUID(EntityTypeName.parse("Action").get(), "view");
+        Map<String, Value> context = new HashMap<>();
+        context.put("authenticated", new PrimBool(true));
+        var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(context).build();
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
+        var policySet = new PolicySet(policies);
+        assumePartialEvaluation(() -> {
+            try {
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
+                assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
+                assertEquals(response.success.orElseThrow().getMustBeDetermining().iterator().next(), "p0");
+                assertTrue(response.success.orElseThrow().getNontrivialResiduals().isEmpty());
+            } catch (Exception e) {
+                fail("error: " + e.toString());
+            }
+        });
+    }
+
+    @Test
+    public void partialAuthConcreteWithContextObject() {
+        var auth = new BasicAuthorizationEngine();
+        var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
+        var view = new EntityUID(EntityTypeName.parse("Action").get(), "view");
+        Map<String, Value> contextMap = new HashMap<>();
+        contextMap.put("authenticated", new PrimBool(true));
+        Context context = new Context(contextMap); 
+        var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(context).build();
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
+        var policySet = new PolicySet(policies);
+        assumePartialEvaluation(() -> {
+            try {
+                final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
+                assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
+                assertEquals(response.success.orElseThrow().getMustBeDetermining().iterator().next(), "p0");
+                assertTrue(response.success.orElseThrow().getNontrivialResiduals().isEmpty());
+            } catch (Exception e) {
+                fail("error: " + e.toString());
+            }
+        });
+    }
+
+    @Test
     public void residual() {
         var auth = new BasicAuthorizationEngine();
         var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
