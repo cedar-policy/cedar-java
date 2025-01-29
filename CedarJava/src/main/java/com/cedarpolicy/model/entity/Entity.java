@@ -77,21 +77,22 @@ public class Entity {
      * Get the Entity's JSON string value.
      * 
      * @return the Entity's JSON string value
+     * @throws NullPointerException if the Entity is null
      * @throws InternalException if the Entity is unable to be parsed
      */
-    public String toJsonString() throws InternalException {
-        String entityJsonStr = toJsonEntityJni(this);
-        return entityJsonStr;
+    public String toJsonString() throws NullPointerException, InternalException {
+        return toJsonEntityJni(this);
     }
 
     /**
-     * Get the Entity's JSON string value.
+     * Get the Entity's JSON value.
      * 
-     * @return the Entity's JSON string value
+     * @return the Entity's JSON value
+     * @throws NullPointerException if the Entity is null
      * @throws InternalException if the Entity is unable to be parsed
      * @throws JsonProcessingException if the Entity JSON is unable to be processed
      */
-    public JsonNode toJsonValue() throws InternalException, JsonProcessingException {
+    public JsonNode toJsonValue() throws NullPointerException, InternalException, JsonProcessingException {
         String entityJsonStr = this.toJsonString();
         return OBJECT_MAPPER.readTree(entityJsonStr);
     }
@@ -148,7 +149,7 @@ public class Entity {
 
     /**
      * Get the Entity's attributes
-     * @return the map of attributes
+     * @return the attribute map
      */
     private Map<String, Value> getAttributes() {
         return attrs;
@@ -170,5 +171,5 @@ public class Entity {
         return tags;
     }
 
-    private static native String toJsonEntityJni(Entity entity) throws InternalException, NullPointerException;
+    private static native String toJsonEntityJni(Entity entity) throws NullPointerException, InternalException;
 }

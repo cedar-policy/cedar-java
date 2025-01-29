@@ -35,7 +35,7 @@ pub struct Map<'a, T, U> {
 }
 
 impl<'a, T: Object<'a>, U: Object<'a>> Map<'a, T, U> {
-    /// Construct an empty hash map, which will serve as a semap
+    /// Construct an empty hash map, which will serve as a map
     pub fn new(env: &mut JNIEnv<'a>) -> Result<Self> {
         let obj = env.new_object("java/util/HashMap", "()V", &[])?;
 
@@ -49,7 +49,7 @@ impl<'a, T: Object<'a>, U: Object<'a>> Map<'a, T, U> {
     /// Get a value mapped to a key
     pub fn get(&mut self, env: &mut JNIEnv<'a>, k: T) -> Result<JObject<'a>> {
         let key = JValueGen::Object(k.as_ref());
-        let key = env
+        let value = env
             .call_method(
                 &self.obj,
                 "get",
@@ -57,10 +57,10 @@ impl<'a, T: Object<'a>, U: Object<'a>> Map<'a, T, U> {
                 &[key],
             )?
             .l()?;
-        Ok(key)
+        Ok(value)
     }
 
-    /// Put a key-value pair to the map
+    /// Put a key-value pair into the map
     pub fn put(&mut self, env: &mut JNIEnv<'a>, k: T, v: U) -> Result<JObject<'a>> {
         let key = JValueGen::Object(k.as_ref());
         let value = JValueGen::Object(v.as_ref());
