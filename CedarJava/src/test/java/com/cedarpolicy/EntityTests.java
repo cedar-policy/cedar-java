@@ -73,6 +73,27 @@ public class EntityTests {
                 "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
                         + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
                         + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}]}");
+
+        Entity parentlessPrincipal = new Entity(principalType.of("Alice"), attrs, new HashSet<>());
+        JsonNode parentlessEntityJson = Assertions.assertDoesNotThrow(() -> {
+            return parentlessPrincipal.toJsonValue();
+        });
+
+        assertEquals(parentlessEntityJson.toString(),
+                "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
+                        + "\"parents\":[]}");
+
+        Entity principalWithEuid = new Entity(principalType.of("Alice"), new HashMap<>(), new HashSet<>());
+        JsonNode entityWithEuidJson = Assertions.assertDoesNotThrow(() -> {
+            return principalWithEuid.toJsonValue();
+        });
+
+        assertEquals(entityWithEuidJson.toString(),
+                "{\"uid\":{\"type\":\"User\",\"id\":\"Alice\"},"
+                        + "\"attrs\":{},"
+                        + "\"parents\":[]}");
+
     }
 
     @Test
