@@ -59,6 +59,9 @@ public class EntityTests {
 
         // Test that a key is not found
         assertEquals(principal.getAttr("stringAttr"), null);
+
+        // Test the Entity's parents
+        assertEquals(principal.getParents().size(), 0);
     }
 
     @Test
