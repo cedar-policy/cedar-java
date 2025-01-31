@@ -22,8 +22,11 @@ import com.cedarpolicy.model.exception.InternalException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,6 +99,21 @@ public class Entity {
         String entityJsonStr = this.toJsonString();
         return OBJECT_MAPPER.readTree(entityJsonStr);
     }
+
+    /**
+     * Dump the Entity into an entity JSON file.
+     * 
+     * @param file the file to dump the Entity into
+     * @throws NullPointerException if the Entity is null
+     * @throws InternalException if the Entity is unable to be parsed
+     * @throws JsonProcessingException if the Entity JSON is unable to be processed
+     * @throws IOException if the Entity is unable to be written to the file
+     */
+        public void writeToJson(File file) throws NullPointerException, InternalException, JsonProcessingException, IOException {
+            ObjectWriter writer = OBJECT_MAPPER.writer();
+            JsonNode entityJson = this.toJsonValue();
+            writer.writeValue(file, entityJson);
+        }
 
     /**
      * Get the value for the given attribute, or null if not present.

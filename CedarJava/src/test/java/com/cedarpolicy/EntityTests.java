@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import com.cedarpolicy.value.*;
 import com.cedarpolicy.model.entity.Entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EntityTests {
 
@@ -350,5 +352,35 @@ public class EntityTests {
                         + "\"attrs\":{\"stringAttr\":\"stringAttrValue\"},"
                         + "\"parents\":[{\"type\":\"User\",\"id\":\"Bob\"}],"
                         + "\"tags\":{\"tag\":\"longTagValue\"}}");
+    }
+
+    @Test
+    public void writeToFileTests() {
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        HashMap<String, Value> attrs = new HashMap<>();
+        attrs.put("stringAttr", stringAttr);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Bob"));
+
+        PrimString longTag = new PrimString("longTagValue");
+        HashMap<String, Value> tags = new HashMap<>();
+        tags.put("tag", longTag);
+
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents, tags);
+
+        Assertions.assertDoesNotThrow(() -> {
+            File writeFile = File.createTempFile("testEntity", "json");
+            writeFile.deleteOnExit();
+            principal.writeToJson(writeFile);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode writeFileJson = mapper.readTree(writeFile);
+
+            // Test the file is written correctly
+            assertEquals(principal.toJsonValue(), writeFileJson);
+        });
     }
 }
