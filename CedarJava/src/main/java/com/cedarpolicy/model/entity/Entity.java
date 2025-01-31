@@ -67,6 +67,37 @@ public class Entity {
     }
 
     /**
+     * An InnerEntity is a data wrapper for an Entity that holds its entity uid, attributes, and ancestors
+     */
+    public static class InnerEntity {
+        public final EntityUID euid;
+        public final Map<String, Value> attrs;
+        public final Set<EntityUID> ancestors;
+
+        protected InnerEntity(Entity entity) {
+            this.euid = entity.getEUID();
+            this.attrs = entity.attrs;
+            this.ancestors = entity.getParents();
+        }
+
+        public EntityUID getEntityUid() {
+            return this.euid;
+        }
+
+        public Map<String, Value> getAttributes() {
+            return attrs;
+        }
+
+        public Set<EntityUID> getAncestors() {
+            return ancestors;
+        }
+    }
+
+    public InnerEntity intoInner() {
+        return new InnerEntity(this);
+    }
+
+    /**
      * Get the value for the given attribute, or null if not present.
      * 
      * @param attribute Attribute key

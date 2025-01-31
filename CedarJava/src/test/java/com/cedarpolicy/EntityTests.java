@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- package com.cedarpolicy;
+package com.cedarpolicy;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.value.*;
 import com.cedarpolicy.model.entity.Entity;
-
+import com.cedarpolicy.model.entity.Entity.InnerEntity;
 
 public class EntityTests {
 
@@ -48,5 +48,28 @@ public class EntityTests {
 
         // Test key not found
         assertEquals(principal.getAttr("decimalAttr"), null);
+    }
+
+    @Test
+    public void intoInnerTests() {
+        PrimString stringAttr = new PrimString("stringAttrValue");
+        HashMap<String, Value> attrs = new HashMap<>();
+        attrs.put("stringAttr", stringAttr);
+
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Bob"));
+
+        PrimString longTag = new PrimString("longTagValue");
+        HashMap<String, Value> tags = new HashMap<>();
+        tags.put("tag", longTag);
+
+        Entity principal = new Entity(principalType.of("Alice"), attrs, parents, tags);
+        InnerEntity innerPrincipal = principal.intoInner();
+
+        assertEquals(innerPrincipal.getEntityUid(), principalType.of("Alice"));
+        assertEquals(innerPrincipal.getAttributes(), attrs);
+        assertEquals(innerPrincipal.getAncestors(), parents);
     }
 }
