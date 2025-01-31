@@ -109,11 +109,11 @@ public class Entity {
      * @throws JsonProcessingException if the Entity JSON is unable to be processed
      * @throws IOException if the Entity is unable to be written to the file
      */
-        public void writeToJson(File file) throws NullPointerException, InternalException, JsonProcessingException, IOException {
-            ObjectWriter writer = OBJECT_MAPPER.writer();
-            JsonNode entityJson = this.toJsonValue();
-            writer.writeValue(file, entityJson);
-        }
+    public void writeToJson(File file) throws NullPointerException, InternalException, JsonProcessingException, IOException {
+        ObjectWriter writer = OBJECT_MAPPER.writer();
+        JsonNode entityJson = this.toJsonValue();
+        writer.writeValue(file, entityJson);
+    }
 
     /**
      * Get the value for the given attribute, or null if not present.
