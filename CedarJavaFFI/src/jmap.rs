@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
 use crate::{objects::Object, utils::Result};
 use jni::{
