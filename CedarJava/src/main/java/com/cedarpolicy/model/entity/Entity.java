@@ -50,7 +50,7 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUID and a set of parent EntityUIDs.
+     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will have no attributes or tags.
      *
      * @param uid EUID of the Entity.
      * @param parentsEUIDs Set of parent entities' EUIDs.
