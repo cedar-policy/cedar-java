@@ -18,7 +18,15 @@ package com.cedarpolicy.model.entity;
 
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
+import com.cedarpolicy.model.exception.InternalException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +37,8 @@ import java.util.stream.Collectors;
  * entities, and zero or more tags.
  */
 public class Entity {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final EntityUID euid;
 
     /** Key/Value attribute map. */
@@ -64,6 +74,45 @@ public class Entity {
         this.euid = uid;
         this.parentsEUIDs = parentsEUIDs;
         this.tags = new HashMap<>(tags);
+    }
+
+    /**
+     * Get the Entity's JSON string value.
+     * 
+     * @return the Entity's JSON string value
+     * @throws NullPointerException if the Entity is null
+     * @throws InternalException if the Entity is unable to be parsed
+     */
+    public String toJsonString() throws NullPointerException, InternalException {
+        return toJsonEntityJni(this);
+    }
+
+    /**
+     * Get the Entity's JSON value.
+     * 
+     * @return the Entity's JSON value
+     * @throws NullPointerException if the Entity is null
+     * @throws InternalException if the Entity is unable to be parsed
+     * @throws JsonProcessingException if the Entity JSON is unable to be processed
+     */
+    public JsonNode toJsonValue() throws NullPointerException, InternalException, JsonProcessingException {
+        String entityJsonStr = this.toJsonString();
+        return OBJECT_MAPPER.readTree(entityJsonStr);
+    }
+
+    /**
+     * Dump the Entity into an entity JSON file.
+     * 
+     * @param file the file to dump the Entity into
+     * @throws NullPointerException if the Entity is null
+     * @throws InternalException if the Entity is unable to be parsed
+     * @throws JsonProcessingException if the Entity JSON is unable to be processed
+     * @throws IOException if the Entity is unable to be written to the file
+     */
+    public void writeToJson(File file) throws NullPointerException, InternalException, JsonProcessingException, IOException {
+        ObjectWriter writer = OBJECT_MAPPER.writer();
+        JsonNode entityJson = this.toJsonValue();
+        writer.writeValue(file, entityJson);
     }
 
     /**
@@ -117,6 +166,14 @@ public class Entity {
     }
 
     /**
+     * Get the Entity's attributes
+     * @return the attribute map
+     */
+    private Map<String, Value> getAttributes() {
+        return attrs;
+    }
+
+    /**
      * Get this Entity's parents
      * @return the set of parent EntityUIDs
      */
@@ -131,4 +188,6 @@ public class Entity {
     public Map<String, Value> getTags() {
         return tags;
     }
+
+    private static native String toJsonEntityJni(Entity entity) throws NullPointerException, InternalException;
 }

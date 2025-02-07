@@ -18,12 +18,16 @@ use crate::{
     jlist::{jstr_list_to_rust_vec, List},
     utils::{assert_is_class, get_object_ref, Result},
 };
-use std::{marker::PhantomData, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+    str::FromStr,
+};
 
-use cedar_policy::{EntityId, EntityTypeName, EntityUid};
+use cedar_policy::{Entity, EntityId, EntityTypeName, EntityUid, RestrictedExpression};
 use cedar_policy_formatter::Config;
 use jni::{
-    objects::{JObject, JString, JValueGen, JValueOwned},
+    objects::{JObject, JObjectArray, JString, JValueGen, JValueOwned},
     sys::jvalue,
     JNIEnv,
 };
@@ -39,6 +43,134 @@ impl<'a> Object<'a> for JString<'a> {
     fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
         assert_is_class(env, &obj, "java/lang/String")?;
         Ok(obj.into())
+    }
+}
+
+/// Typed wrapper for Entity objects
+/// (com.cedarpolicy.model.entity.Entity)
+pub struct JEntity<'a> {
+    obj: JObject<'a>,
+}
+
+impl<'a> JEntity<'a> {
+    /// Converts the Java Entity into a Rust Entity
+    pub fn to_entity(&self, env: &mut JNIEnv<'a>) -> Result<Entity> {
+        let euid = self.entity_uid(env)?;
+        let parents = self.parents(env)?;
+        let attrs = self.restricted_expr_map(env, JEntityMapType::Attributes)?;
+        let tags = self.restricted_expr_map(env, JEntityMapType::Tags)?;
+
+        Ok(Entity::new_with_tags(euid, attrs, parents, tags)?)
+    }
+
+    /// Get the Entity's uid
+    fn entity_uid(&self, env: &mut JNIEnv<'a>) -> Result<EntityUid> {
+        let euid_jobj: JObject<'a> = env
+            .call_method(
+                &self.obj,
+                "getEUID",
+                "()Lcom/cedarpolicy/value/EntityUID;",
+                &[],
+            )?
+            .l()?;
+        let java_euid = JEntityUID::cast(env, euid_jobj)?;
+        java_euid.to_entity_uid(env)
+    }
+
+    /// Get the Entity's parents
+    fn parents(&self, env: &mut JNIEnv<'a>) -> Result<HashSet<EntityUid>> {
+        let parents_jobj: JObject<'a> = env
+            .call_method(&self.obj, "getParents", "()Ljava/util/Set;", &[])?
+            .l()?;
+
+        let mut parents = HashSet::new();
+
+        let java_parents_array: JObjectArray = env
+            .call_method(parents_jobj, "toArray", "()[Ljava/lang/Object;", &[])?
+            .l()?
+            .into();
+
+        let length = env.get_array_length(&java_parents_array)?;
+        for i in 0..length {
+            let parent_jobj = env.get_object_array_element(&java_parents_array, i)?;
+            let java_parent_euid = JEntityUID::cast(env, parent_jobj)?;
+            parents.insert(java_parent_euid.to_entity_uid(env)?);
+        }
+        Ok(parents)
+    }
+
+    // Get a map value from the Entity (attributes or tags)
+    fn restricted_expr_map(
+        &self,
+        env: &mut JNIEnv<'a>,
+        map_type: JEntityMapType,
+    ) -> Result<HashMap<String, RestrictedExpression>> {
+        let method_name = match map_type {
+            JEntityMapType::Attributes => "getAttributes",
+            JEntityMapType::Tags => "getTags",
+        };
+
+        let jobj_map: JObject<'a> = env
+            .call_method(&self.obj, method_name, "()Ljava/util/Map;", &[])?
+            .l()?;
+
+        let mut map = HashMap::new();
+
+        let jobj_entry_set: JObject<'a> = env
+            .call_method(&jobj_map, "entrySet", "()Ljava/util/Set;", &[])?
+            .l()?;
+
+        let java_entry_array: JObjectArray = env
+            .call_method(jobj_entry_set, "toArray", "()[Ljava/lang/Object;", &[])?
+            .l()?
+            .into();
+
+        let length = env.get_array_length(&java_entry_array)?;
+
+        for i in 0..length {
+            let java_map_entry = env.get_object_array_element(&java_entry_array, i)?;
+
+            let java_key: JObject = env
+                .call_method(&java_map_entry, "getKey", "()Ljava/lang/Object;", &[])?
+                .l()?;
+
+            let java_value: JObject = env
+                .call_method(&java_map_entry, "getValue", "()Ljava/lang/Object;", &[])?
+                .l()?;
+
+            let cedar_expr_jobj: JObject = env
+                .call_method(java_value, "toCedarExpr", "()Ljava/lang/String;", &[])?
+                .l()?;
+
+            let cedar_expr_jstr = JString::cast(env, cedar_expr_jobj)?;
+            let cedar_expr_str: String = env.get_string(&cedar_expr_jstr)?.into();
+            let restircted_expr = RestrictedExpression::from_str(cedar_expr_str.as_str())?;
+
+            let key_jobj = JString::cast(env, java_key)?;
+            let key: String = env.get_string(&key_jobj)?.into();
+
+            map.insert(key, restircted_expr);
+        }
+
+        Ok(map)
+    }
+}
+
+enum JEntityMapType {
+    Attributes,
+    Tags,
+}
+
+impl<'a> Object<'a> for JEntity<'a> {
+    fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
+        assert_is_class(env, &obj, "com/cedarpolicy/model/entity/Entity")?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> AsRef<JObject<'a>> for JEntity<'a> {
+    fn as_ref(&self) -> &JObject<'a> {
+        &self.obj
     }
 }
 
@@ -122,6 +254,20 @@ impl<'a> JEntityTypeName<'a> {
             }
             Err(_) => JOptional::empty(env),
         }
+    }
+
+    /// Decode the underlying EntityTypeName Java object into the Rust EntityTypeName struct
+    pub fn to_entity_type_name(&self, env: &mut JNIEnv<'a>) -> Result<EntityTypeName> {
+        let entity_type_name_jstr = env
+            .call_method(&self.obj, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let entity_type_name_str: String = env
+            .get_string(&JString::from(entity_type_name_jstr))?
+            .into();
+        let entity_type_name = EntityTypeName::from_str(entity_type_name_str.as_str())?;
+
+        Ok(entity_type_name)
     }
 }
 
@@ -250,6 +396,18 @@ impl<'a> JEntityId<'a> {
         self.id.clone()
     }
 
+    /// Decode the underlying EntityId Java object into the Rust EntityId struct
+    pub fn to_entity_id(&self, env: &mut JNIEnv<'a>) -> Result<EntityId> {
+        let eid_id_jstr = env
+            .call_method(&self.obj, "toString", "()Ljava/lang/String;", &[])?
+            .l()?;
+
+        let eid_id_str: String = env.get_string(&JString::from(eid_id_jstr)).unwrap().into();
+        let entity_id = EntityId::new(eid_id_str);
+
+        Ok(entity_id)
+    }
+
     /// Decode the object into its string representation
     pub fn get_string_repr(&self) -> String {
         self.id.escaped().to_string()
@@ -313,6 +471,39 @@ impl<'a> JEntityUID<'a> {
             }
             Err(_) => JOptional::empty(env),
         }
+    }
+
+    /// Convert the Java EntityUID into a rust EntityUid
+    pub fn to_entity_uid(&self, env: &mut JNIEnv<'a>) -> Result<EntityUid> {
+        // get the entity id from the JEntityUID
+        let eid_jobj = env
+            .call_method(
+                &self.obj,
+                "getId",
+                "()Lcom/cedarpolicy/value/EntityIdentifier;",
+                &[],
+            )?
+            .l()?;
+
+        let java_eid = JEntityId::cast(env, eid_jobj)?;
+        let entity_id = java_eid.to_entity_id(env)?;
+
+        // get the entity type name from the JEntityUID
+        let entity_type_name_jobj = env
+            .call_method(
+                &self.obj,
+                "getType",
+                "()Lcom/cedarpolicy/value/EntityTypeName;",
+                &[],
+            )?
+            .l()?;
+
+        let java_entity_type_name = JEntityTypeName::cast(env, entity_type_name_jobj)?;
+        let entity_type_name = java_entity_type_name.to_entity_type_name(env)?;
+
+        // create the entity uid
+        let entity_uid = EntityUid::from_type_name_and_id(entity_type_name, entity_id);
+        Ok(entity_uid)
     }
 }
 

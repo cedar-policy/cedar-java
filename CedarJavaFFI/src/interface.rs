@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use std::{error::Error, str::FromStr, thread};
 
-use crate::objects::JFormatterConfig;
+use crate::objects::{JEntity, JFormatterConfig};
 use crate::{
     answer::Answer,
     jset::Set,
@@ -458,6 +458,25 @@ fn from_json_internal<'a>(
                 Ok(JValueGen::Object(env.new_string(&policy_text)?.into()))
             }
         }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.entity.Entity")]
+pub fn toJsonEntityJni<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<'a>) -> jvalue {
+    match to_json_entity_internal(&mut env, obj) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn to_json_entity_internal<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<JValueOwned<'a>> {
+    if obj.is_null() {
+        raise_npe(env)
+    } else {
+        let java_entity = JEntity::cast(env, obj)?;
+        let entity = java_entity.to_entity(env)?;
+        let entity_json = &entity.to_json_string()?;
+        Ok(JValueGen::Object(env.new_string(entity_json)?.into()))
     }
 }
 
