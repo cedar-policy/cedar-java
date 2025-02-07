@@ -19,6 +19,7 @@ mod answer;
 mod interface;
 mod jlist;
 mod jset;
+mod jvm_test_utils;
 mod objects;
 mod tests;
 mod utils;

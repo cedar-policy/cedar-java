@@ -22,6 +22,8 @@ You can test the code with
 cargo test
 ```
 
+To test methods in `interface.rs`, the code creates a JVM instance. If you encounter errors indicating that Java cannot be found, verify that the `JAVA_HOME` environment variable is properly set on your system. For more details about JVM initialization from Rust, see the [jni crate documentation](https://docs.rs/jni/latest/jni/struct.JavaVM.html#launching-jvm-from-rust).
+
 Typically you will want to use `../CedarJava` in your project and won't care about `CedarJavaFFI`.
 
 ## Security
