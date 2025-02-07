@@ -41,7 +41,7 @@ public class Entity {
     public final Map<String, Value> tags;
 
     /**
-     * Create an entity from an EntityUID.
+     * Create an entity from an EntityUID. It will have no attributes, parents, or tags.
      *
      * @param uid EUID of the Entity.
      */
