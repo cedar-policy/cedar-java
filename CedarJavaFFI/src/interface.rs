@@ -637,6 +637,7 @@ mod interface_tests {
     mod policy_tests {
         use super::*;
 
+        #[track_caller]
         fn policy_effect_test_util(env: &mut JNIEnv, policy: &str, expected_effect: &str) {
             let policy_string = env.new_string(policy).unwrap();
             let effect_result = policy_effect_jni_internal(env, policy_string).unwrap();
