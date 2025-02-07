@@ -631,7 +631,7 @@ mod interface_tests {
     use jni::JavaVM;
     use std::sync::LazyLock;
 
-    // Static JVM to be used by all the tests. LazyLock for lazy thread-safe lazy initialization
+    // Static JVM to be used by all the tests. LazyLock for thread-safe lazy initialization
     static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
 
     mod policy_tests {
