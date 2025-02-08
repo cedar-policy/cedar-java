@@ -19,7 +19,6 @@ package com.cedarpolicy.model;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Objects;
@@ -39,38 +38,36 @@ public final class ValidationResponse {
      * reported in `success`), but rather higher-level errors, like
      * a failure to parse or to call the validator.
      */
-    public final Optional<ImmutableList<DetailedError>> errors;
+    public final Optional<List<DetailedError>> errors;
     /**
      * Other warnings not associated with particular policies.
      * For instance, warnings about your schema itself.
      * These warnings can be produced regardless of whether `type` is
      * `Success` or `Failure`.
     */
-    public final ImmutableList<DetailedError> warnings;
+    public final List<DetailedError> warnings;
 
     public static final class ValidationSuccessResponse {
         /** Validation errors associated with particular policies. */
         @JsonProperty("validationErrors")
-        public final ImmutableList<ValidationError> validationErrors;
+        public final List<ValidationError> validationErrors;
         /** Validation warnings associated with particular policies. */
         @JsonProperty("validationWarnings")
-        public final ImmutableList<ValidationError> validationWarnings;
+        public final List<ValidationError> validationWarnings;
 
         @JsonCreator
         public ValidationSuccessResponse(
             @JsonProperty("validationErrors") Optional<List<ValidationError>> validationErrors,
             @JsonProperty("validationWarnings") Optional<List<ValidationError>> validationWarnings) {
-            // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible
-            // see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
             if (validationErrors.isPresent()) {
-                this.validationErrors = ImmutableList.copyOf(validationErrors.get());
+                this.validationErrors = List.copyOf(validationErrors.get());
             } else {
-                this.validationErrors = ImmutableList.of(); // empty
+                this.validationErrors = List.of(); // empty
             }
             if (validationWarnings.isPresent()) {
-                this.validationWarnings = ImmutableList.copyOf(validationWarnings.get());
+                this.validationWarnings = List.copyOf(validationWarnings.get());
             } else {
-                this.validationWarnings = ImmutableList.of(); // empty
+                this.validationWarnings = List.of(); // empty
             }
         }
     }
@@ -91,16 +88,16 @@ public final class ValidationResponse {
         @JsonProperty("errors") Optional<List<DetailedError>> errors,
         @JsonProperty("warnings") @JsonAlias("otherWarnings") Optional<List<DetailedError>> warnings) {
         this.type = type;
-        this.errors = errors.map((list) -> ImmutableList.copyOf(list));
+        this.errors = errors.map((list) -> List.copyOf(list));
         if (type == SuccessOrFailure.Success) {
             this.success = Optional.of(new ValidationSuccessResponse(validationErrors, validationWarnings));
         } else {
             this.success = Optional.empty();
         }
         if (warnings.isPresent()) {
-            this.warnings = ImmutableList.copyOf(warnings.get());
+            this.warnings = List.copyOf(warnings.get());
         } else {
-            this.warnings = ImmutableList.of(); // empty
+            this.warnings = List.of(); // empty
         }
     }
 
