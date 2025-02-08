@@ -17,10 +17,10 @@
 package com.cedarpolicy.value;
 
 import com.cedarpolicy.loader.LibraryLoader;
-import com.google.common.base.Suppliers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,7 +50,15 @@ public final class EntityTypeName {
     protected EntityTypeName(List<String> namespace, String  basename) {
         this.namespace = namespace;
         this.basename = basename;
-        this.entityTypeNameRepr = Suppliers.memoize(() -> getEntityTypeNameRepr(this));
+        this.entityTypeNameRepr = new Supplier<String>() {
+
+            private ConcurrentHashMap<String, String> localMap = new ConcurrentHashMap<>();
+
+            @Override
+            public String get() {
+                return localMap.computeIfAbsent("entityTypeNameRepr", k -> EntityTypeName.getEntityTypeNameRepr(EntityTypeName.this));
+            }
+        };
     }
 
     /**

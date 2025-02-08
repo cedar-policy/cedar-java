@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
 
 /** Template-linked policy. */
 public class TemplateLink {
@@ -42,7 +41,7 @@ public class TemplateLink {
     public TemplateLink(String templateId, String resultPolicyId, List<LinkValue> linkValues) {
         this.templateId = templateId;
         this.resultPolicyId = resultPolicyId;
-        this.linkValues = ImmutableList.copyOf(linkValues);
+        this.linkValues = List.copyOf(linkValues);
     }
 
     /** Get the template ID. */
