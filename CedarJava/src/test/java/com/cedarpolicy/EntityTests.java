@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- package com.cedarpolicy;
+package com.cedarpolicy;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.value.*;
 import com.cedarpolicy.model.entity.Entity;
-
 
 public class EntityTests {
 
@@ -48,5 +47,38 @@ public class EntityTests {
 
         // Test key not found
         assertEquals(principal.getAttr("decimalAttr"), null);
+    }
+
+    @Test
+    public void newWithEntityUIDTests() {
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+        Entity principal = new Entity(principalType.of("Alice"));
+
+        // Test the Entity's uid
+        assertEquals(principal.getEUID(), principalType.of("Alice"));
+
+        // Test that a key is not found
+        assertEquals(principal.getAttr("stringAttr"), null);
+
+        // Test the Entity's parents
+        assertEquals(principal.getParents().size(), 0);
+    }
+
+    @Test
+    public void newWithoutAttributesTests() {
+        EntityTypeName principalType = EntityTypeName.parse("User").get();
+        HashSet<EntityUID> parents = new HashSet<EntityUID>();
+        parents.add(principalType.of("Bob"));
+
+        Entity principal = new Entity(principalType.of("Alice"), parents);
+
+        // Test the Entity's uid
+        assertEquals(principal.getEUID(), principalType.of("Alice"));
+
+        // Test that a key is not found
+        assertEquals(principal.getAttr("stringAttr"), null);
+
+        // Test the Entity's parents
+        assertEquals(principal.getParents(), parents);
     }
 }

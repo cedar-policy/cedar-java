@@ -41,6 +41,25 @@ public class Entity {
     public final Map<String, Value> tags;
 
     /**
+     * Create an entity from an EntityUID. It will have no attributes, parents, or tags.
+     *
+     * @param uid EUID of the Entity.
+     */
+    public Entity(EntityUID uid) {
+        this(uid, new HashMap<>(), new HashSet<>(), new HashMap<>());
+    }
+
+    /**
+     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will have no attributes or tags.
+     *
+     * @param uid EUID of the Entity.
+     * @param parentsEUIDs Set of parent entities' EUIDs.
+     */
+    public Entity(EntityUID uid, Set<EntityUID> parentsEUIDs) {
+        this(uid, new HashMap<>(), parentsEUIDs, new HashMap<>());
+    }
+
+    /**
      * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
      *
      * @param uid EUID of the Entity.
