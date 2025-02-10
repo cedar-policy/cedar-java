@@ -26,6 +26,7 @@ import com.cedarpolicy.serializer.TemplateLinkSerializer;
 import com.cedarpolicy.serializer.SchemaSerializer;
 import com.cedarpolicy.serializer.ValueDeserializer;
 import com.cedarpolicy.serializer.ValueSerializer;
+import com.cedarpolicy.serializer.EntityDeserializer;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -33,7 +34,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
-final class CedarJson {
+public final class CedarJson {
     private static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
 
     private CedarJson() {
@@ -41,7 +42,7 @@ final class CedarJson {
     }
 
     public static ObjectMapper objectMapper() {
-        return OBJECT_MAPPER;
+        return OBJECT_MAPPER.copy();
     }
 
     public static ObjectWriter objectWriter() {
@@ -62,6 +63,7 @@ final class CedarJson {
         module.addSerializer(PolicySet.class, new PolicySetSerializer());
         module.addSerializer(Value.class, new ValueSerializer());
         module.addDeserializer(Value.class, new ValueDeserializer());
+        module.addDeserializer(Entity.class, new EntityDeserializer());
         mapper.registerModule(module);
         mapper.registerModule(new Jdk8Module());
 
