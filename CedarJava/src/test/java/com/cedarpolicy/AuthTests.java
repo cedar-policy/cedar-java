@@ -121,7 +121,7 @@ public class AuthTests {
         contextMap.put("authenticated", new PrimBool(true));
         Context context = new Context(contextMap);
         AuthorizationRequest r = new AuthorizationRequest(principal, action, resource, context);
-        
+
         assertAllowed(r, policySet, entities);
     }
 
@@ -156,7 +156,7 @@ public class AuthTests {
         context.put("authenticated", new PrimBool(true));
 
         var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(context).build();
-        
+
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
         var policySet = new PolicySet(policies);
@@ -180,7 +180,7 @@ public class AuthTests {
         var view = new EntityUID(EntityTypeName.parse("Action").get(), "view");
         Map<String, Value> contextMap = new HashMap<>();
         contextMap.put("authenticated", new PrimBool(true));
-        Context context = new Context(contextMap); 
+        Context context = new Context(contextMap);
         var q = PartialAuthorizationRequest.builder().principal(alice).action(view).resource(alice).context(context).build();
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
