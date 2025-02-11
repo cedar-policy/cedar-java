@@ -122,7 +122,7 @@ public class Context {
      *                                  within the iterable
      * @throws IllegalArgumentException if the contextIterator is null
      */
-    private void mergeContextfromIterable(Iterable<Map.Entry<String, Value>> contextIterator)
+    private void mergeContextFromIterable(Iterable<Map.Entry<String, Value>> contextIterator)
             throws IllegalStateException, IllegalArgumentException {
         if (contextIterator == null) {
             throw new IllegalArgumentException("Context iterator cannot be null");
