@@ -51,7 +51,7 @@ public class Context {
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public Context(Iterable<Map.Entry<String, Value>> contextList) {
         context = new HashMap<>();
-        mergeContextfromIterable(contextList);
+        mergeContextFromIterable(contextList);
     }
 
     /**
@@ -83,7 +83,7 @@ public class Context {
      * @throws IllegalArgumentException if the contextToMerge parameter is null
      */
     public void merge(Context contextToMerge) throws IllegalStateException, IllegalArgumentException {
-        mergeContextfromIterable(contextToMerge.getContext().entrySet());
+        mergeContextFromIterable(contextToMerge.getContext().entrySet());
     }
 
     /**
@@ -96,7 +96,7 @@ public class Context {
      */
     public void merge(Iterable<Map.Entry<String, Value>> contextMaps)
             throws IllegalStateException, IllegalArgumentException {
-        mergeContextfromIterable(contextMaps);
+        mergeContextFromIterable(contextMaps);
     }
 
     /**
