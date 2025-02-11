@@ -18,14 +18,24 @@ package com.cedarpolicy.model.entity;
 
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
+import com.cedarpolicy.CedarJson;
 
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.nio.file.Path;
 
 /**
- * An entity is the kind of object about which authorization decisions are made; principals,
- * actions, and resources are all a kind of entity. Each entity is defined by its entity type, a
- * unique identifier (UID), zero or more attributes mapped to values, zero or more parent
+ * An entity is the kind of object about which authorization decisions are made;
+ * principals,
+ * actions, and resources are all a kind of entity. Each entity is defined by
+ * its entity type, a
+ * unique identifier (UID), zero or more attributes mapped to values, zero or
+ * more parent
  * entities, and zero or more tags.
  */
 public class Entity {
@@ -41,10 +51,11 @@ public class Entity {
     public final Map<String, Value> tags;
 
     /**
-     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
+     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent
+     * EntityUIDs.
      *
-     * @param uid EUID of the Entity.
-     * @param attributes Key/Value map of attributes.
+     * @param uid          EUID of the Entity.
+     * @param attributes   Key/Value map of attributes.
      * @param parentsEUIDs Set of parent entities' EUIDs.
      */
     public Entity(EntityUID uid, Map<String, Value> attributes, Set<EntityUID> parentsEUIDs) {
@@ -52,12 +63,13 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUIDs, a map of attributes, a set of parent EntityUIDs, and a map of tags.
+     * Create an entity from an EntityUIDs, a map of attributes, a set of parent
+     * EntityUIDs, and a map of tags.
      *
-     * @param uid EUID of the Entity.
-     * @param attributes Key/Value map of attributes.
+     * @param uid          EUID of the Entity.
+     * @param attributes   Key/Value map of attributes.
      * @param parentsEUIDs Set of parent entities' EUIDs.
-     * @param tags Key/Value map of tags.
+     * @param tags         Key/Value map of tags.
      */
     public Entity(EntityUID uid, Map<String, Value> attributes, Set<EntityUID> parentsEUIDs, Map<String, Value> tags) {
         this.attrs = new HashMap<>(attributes);
@@ -68,7 +80,7 @@ public class Entity {
 
     /**
      * Get the value for the given attribute, or null if not present.
-     * 
+     *
      * @param attribute Attribute key
      * @return Attribute value for the given key or null if not present
      * @throws IllegalArgumentException if attribute is null
@@ -90,26 +102,24 @@ public class Entity {
         }
         String attributeStr = "";
         if (!attrs.isEmpty()) {
-            attributeStr =
-                    "\n\tattrs:\n\t\t"
-                            + attrs.entrySet().stream()
-                                    .map(e -> e.getKey() + ": " + e.getValue())
-                                    .collect(Collectors.joining("\n\t\t"));
+            attributeStr = "\n\tattrs:\n\t\t"
+                    + attrs.entrySet().stream()
+                            .map(e -> e.getKey() + ": " + e.getValue())
+                            .collect(Collectors.joining("\n\t\t"));
         }
         String tagsStr = "";
         if (!tags.isEmpty()) {
-            tagsStr =
-                    "\n\ttags:\n\t\t"
-                            + tags.entrySet().stream()
-                                    .map(e -> e.getKey() + ": " + e.getValue())
-                                    .collect(Collectors.joining("\n\t\t"));
+            tagsStr = "\n\ttags:\n\t\t"
+                    + tags.entrySet().stream()
+                            .map(e -> e.getKey() + ": " + e.getValue())
+                            .collect(Collectors.joining("\n\t\t"));
         }
         return euid.toString() + parentStr + attributeStr + tagsStr;
     }
 
-
     /**
      * Get the entity uid
+     *
      * @return Entity UID
      */
     public EntityUID getEUID() {
@@ -118,6 +128,7 @@ public class Entity {
 
     /**
      * Get this Entity's parents
+     *
      * @return the set of parent EntityUIDs
      */
     public Set<EntityUID> getParents() {
@@ -126,9 +137,39 @@ public class Entity {
 
     /**
      * Get this Entity's tags
+     *
      * @return the map of tags
      */
     public Map<String, Value> getTags() {
         return tags;
+    }
+
+    /**
+     * Parse Entity from a JSON string
+     *
+     * @param jsonString The JSON string representation of an Entity
+     *
+     * @return Entity object parsed from the JSON string
+     * @throws JsonProcessingException if the JSON string cannot be parsed into an
+     *                                 Entity
+     */
+    public static Entity parse(String jsonString) throws JsonProcessingException {
+        ObjectReader reader = CedarJson.objectReader();
+        return reader.forType(Entity.class).readValue(jsonString);
+    }
+
+    /**
+     * Parse Entity from a file containing JSON representation of an Entity
+     *
+     * @param filePath Path to the file containing Entity JSON
+     *
+     * @return Entity object parsed from the file contents
+     * @throws IOException             if there is an error reading the file
+     * @throws JsonProcessingException if the file contents cannot be parsed into an
+     *                                 Entity
+     */
+    public static Entity parse(Path filePath) throws IOException, JsonProcessingException {
+        String jsonString = Files.readString(filePath);
+        return parse(jsonString);
     }
 }
