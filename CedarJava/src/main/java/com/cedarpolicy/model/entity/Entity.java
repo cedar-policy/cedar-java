@@ -18,9 +18,8 @@ package com.cedarpolicy.model.entity;
 
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
-import com.cedarpolicy.CedarJson;
+import static com.cedarpolicy.CedarJson.objectReader;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.IOException;
@@ -154,8 +153,7 @@ public class Entity {
      *                                 Entity
      */
     public static Entity parse(String jsonString) throws JsonProcessingException {
-        ObjectReader reader = CedarJson.objectReader();
-        return reader.forType(Entity.class).readValue(jsonString);
+        return objectReader().forType(Entity.class).readValue(jsonString);
     }
 
     /**
