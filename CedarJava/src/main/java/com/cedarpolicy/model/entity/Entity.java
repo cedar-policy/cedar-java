@@ -50,7 +50,8 @@ public class Entity {
     public final Map<String, Value> tags;
 
     /**
-     * Create an entity from an EntityUID. It will have no attributes, parents, or tags.
+     * Create an entity from an EntityUID. It will have no attributes, parents, or
+     * tags.
      *
      * @param uid EUID of the Entity.
      */
@@ -59,9 +60,10 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will have no attributes or tags.
+     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will
+     * have no attributes or tags.
      *
-     * @param uid EUID of the Entity.
+     * @param uid          EUID of the Entity.
      * @param parentsEUIDs Set of parent entities' EUIDs.
      */
     public Entity(EntityUID uid, Set<EntityUID> parentsEUIDs) {
@@ -69,7 +71,8 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
+     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent
+     * EntityUIDs.
      *
      * @param uid          EUID of the Entity.
      * @param attributes   Key/Value map of attributes.

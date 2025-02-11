@@ -86,7 +86,7 @@ public class EntityTests {
         // Test the Entity's parents
         assertEquals(principal.getParents(), parents);
     }
-    
+
     public void givenValidJSONStringParseReturns() throws JsonProcessingException {
         String validEntityJson = """
                 {"uid":{"type":"Photo","id":"pic01"},
