@@ -48,10 +48,8 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
      * @param context The deserialization context
      *
      * @return An Entity object constructed from the JSON input
-     * @throws IOException                          If there is an error reading
-     *                                              from the JsonParser
-     * @throws InvalidValueDeserializationException If the JSON input is invalid or
-     *                                              missing required fields
+     * @throws IOException                          If there is an error reading from the JsonParser
+     * @throws InvalidValueDeserializationException If the JSON input is invalid or missing required fields
      */
     @Override
     public Entity deserialize(JsonParser parser, DeserializationContext context)
@@ -86,15 +84,13 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
         if (node.has("parents")) {
             JsonNode parentsNode = node.get("parents");
             if (parentsNode.isArray()) {
-                parentEUIDs = StreamSupport.stream(parentsNode.spliterator(), false)
-                        .map(parentNode -> {
-                            try {
-                                return parseEntityUID(parser, parentNode);
-                            } catch (InvalidValueDeserializationException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .collect(Collectors.toSet());
+                parentEUIDs = StreamSupport.stream(parentsNode.spliterator(), false).map(parentNode -> {
+                    try {
+                        return parseEntityUID(parser, parentNode);
+                    } catch (InvalidValueDeserializationException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toSet());
             } else {
                 String msg = "\"parents\" field must be a JSON array";
                 throw new InvalidValueDeserializationException(parser, msg, parentsNode.asToken(), Entity.class);
@@ -121,12 +117,10 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
      * Parses a JSON node into an EntityUID object.
      *
      * @param parser        The JsonParser used for error reporting
-     * @param entityUIDJson The JsonNode containing the entity UID data to parse.
-     *                      Must have "type" and "id" fields.
+     * @param entityUIDJson The JsonNode containing the entity UID data to parse. Must have "type" and "id" fields.
      *
      * @return An EntityUID object constructed from the JSON data
-     * @throws InvalidValueDeserializationException if the required fields are
-     *                                              missing or invalid
+     * @throws InvalidValueDeserializationException if the required fields are missing or invalid
      */
     private EntityUID parseEntityUID(JsonParser parser, JsonNode entityUIDJson)
             throws InvalidValueDeserializationException {
@@ -140,29 +134,24 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
     }
 
     /**
-     * Parses a JSON node containing key-value pairs into a Map of String to Value
-     * objects.
+     * Parses a JSON node containing key-value pairs into a Map of String to Value objects.
      *
-     * @param mapper       The ObjectMapper used to convert JSON nodes to Value
-     *                     objects
+     * @param mapper       The ObjectMapper used to convert JSON nodes to Value objects
      * @param valueMapJson The JsonNode containing the key-value pairs to parse
      *
      * @return A Map where keys are Strings and values are Value objects
-     * @throws RuntimeException if there is an error converting a JSON node to a
-     *                          Value
+     * @throws RuntimeException if there is an error converting a JSON node to a Value
      */
     private Map<String, Value> parseValueMap(ObjectMapper mapper, JsonNode valueMapJson) {
         Map<String, Value> valueMap = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(valueMapJson.fields(), Spliterator.ORDERED), false)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            try {
-                                return mapper.treeToValue(entry.getValue(), Value.class);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    try {
+                        return mapper.treeToValue(entry.getValue(), Value.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
         return valueMap;
     }
 }

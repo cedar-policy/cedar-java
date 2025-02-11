@@ -29,13 +29,9 @@ import java.util.stream.Collectors;
 import java.nio.file.Path;
 
 /**
- * An entity is the kind of object about which authorization decisions are made;
- * principals,
- * actions, and resources are all a kind of entity. Each entity is defined by
- * its entity type, a
- * unique identifier (UID), zero or more attributes mapped to values, zero or
- * more parent
- * entities, and zero or more tags.
+ * An entity is the kind of object about which authorization decisions are made; principals, actions, and resources are
+ * all a kind of entity. Each entity is defined by its entity type, a unique identifier (UID), zero or more attributes
+ * mapped to values, zero or more parent entities, and zero or more tags.
  */
 public class Entity {
     private final EntityUID euid;
@@ -50,8 +46,7 @@ public class Entity {
     public final Map<String, Value> tags;
 
     /**
-     * Create an entity from an EntityUID. It will have no attributes, parents, or
-     * tags.
+     * Create an entity from an EntityUID. It will have no attributes, parents, or tags.
      *
      * @param uid EUID of the Entity.
      */
@@ -60,8 +55,7 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will
-     * have no attributes or tags.
+     * Create an entity from an EntityUID and a set of parent EntityUIDs. It will have no attributes or tags.
      *
      * @param uid          EUID of the Entity.
      * @param parentsEUIDs Set of parent entities' EUIDs.
@@ -71,8 +65,7 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent
-     * EntityUIDs.
+     * Create an entity from an EntityUIDs, a map of attributes, and a set of parent EntityUIDs.
      *
      * @param uid          EUID of the Entity.
      * @param attributes   Key/Value map of attributes.
@@ -83,8 +76,7 @@ public class Entity {
     }
 
     /**
-     * Create an entity from an EntityUIDs, a map of attributes, a set of parent
-     * EntityUIDs, and a map of tags.
+     * Create an entity from an EntityUIDs, a map of attributes, a set of parent EntityUIDs, and a map of tags.
      *
      * @param uid          EUID of the Entity.
      * @param attributes   Key/Value map of attributes.
@@ -102,6 +94,7 @@ public class Entity {
      * Get the value for the given attribute, or null if not present.
      *
      * @param attribute Attribute key
+     * 
      * @return Attribute value for the given key or null if not present
      * @throws IllegalArgumentException if attribute is null
      */
@@ -116,23 +109,19 @@ public class Entity {
     public String toString() {
         String parentStr = "";
         if (!parentsEUIDs.isEmpty()) {
-            List<String> parentStrs = new ArrayList<String>(parentsEUIDs.stream()
-                    .map(euid -> euid.toString()).collect(Collectors.toList()));
+            List<String> parentStrs = new ArrayList<String>(
+                    parentsEUIDs.stream().map(euid -> euid.toString()).collect(Collectors.toList()));
             parentStr = "\n\tparents:\n\t\t" + String.join("\n\t\t", parentStrs);
         }
         String attributeStr = "";
         if (!attrs.isEmpty()) {
-            attributeStr = "\n\tattrs:\n\t\t"
-                    + attrs.entrySet().stream()
-                            .map(e -> e.getKey() + ": " + e.getValue())
-                            .collect(Collectors.joining("\n\t\t"));
+            attributeStr = "\n\tattrs:\n\t\t" + attrs.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue())
+                    .collect(Collectors.joining("\n\t\t"));
         }
         String tagsStr = "";
         if (!tags.isEmpty()) {
-            tagsStr = "\n\ttags:\n\t\t"
-                    + tags.entrySet().stream()
-                            .map(e -> e.getKey() + ": " + e.getValue())
-                            .collect(Collectors.joining("\n\t\t"));
+            tagsStr = "\n\ttags:\n\t\t" + tags.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue())
+                    .collect(Collectors.joining("\n\t\t"));
         }
         return euid.toString() + parentStr + attributeStr + tagsStr;
     }
@@ -170,8 +159,7 @@ public class Entity {
      * @param jsonString The JSON string representation of an Entity
      *
      * @return Entity object parsed from the JSON string
-     * @throws JsonProcessingException if the JSON string cannot be parsed into an
-     *                                 Entity
+     * @throws JsonProcessingException if the JSON string cannot be parsed into an Entity
      */
     public static Entity parse(String jsonString) throws JsonProcessingException {
         return objectReader().forType(Entity.class).readValue(jsonString);
@@ -184,8 +172,7 @@ public class Entity {
      *
      * @return Entity object parsed from the file contents
      * @throws IOException             if there is an error reading the file
-     * @throws JsonProcessingException if the file contents cannot be parsed into an
-     *                                 Entity
+     * @throws JsonProcessingException if the file contents cannot be parsed into an Entity
      */
     public static Entity parse(Path filePath) throws IOException, JsonProcessingException {
         String jsonString = Files.readString(filePath);
