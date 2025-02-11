@@ -178,7 +178,6 @@ public class EntityTests {
     }
 
     public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException {
-
         Entity entity = Entity.parse(Path.of(TEST_RESOURCES_DIR + "valid_entity.json"));
         String jsonRepresentation = objectWriter().writeValueAsString(entity);
         String expectedRepresentation = "{\"uid\":{\"type\":\"Photo\",\"id\":\"pic01\"},"
