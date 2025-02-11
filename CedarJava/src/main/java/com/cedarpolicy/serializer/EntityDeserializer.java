@@ -41,7 +41,6 @@ import java.util.stream.StreamSupport;
  */
 public class EntityDeserializer extends JsonDeserializer<Entity> {
 
-    @Override
     /**
      * Deserializes a JSON input into an Entity object.
      *
@@ -54,6 +53,7 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
      * @throws InvalidValueDeserializationException If the JSON input is invalid or
      *                                              missing required fields
      */
+    @Override
     public Entity deserialize(JsonParser parser, DeserializationContext context)
             throws IOException, InvalidValueDeserializationException {
         final JsonNode node = parser.getCodec().readTree(parser);
