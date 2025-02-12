@@ -1,0 +1,25 @@
+{"uid":{"type":"Photo","id":"pic01"},
+"attrs":{
+    "dummyIP": {"__extn":{"fn":"ip","arg":"192.168.1.100"}},
+    "dummyUser": {"__entity":{"type":"User","id":"Alice"}},
+    "nestedAttr":{
+            "managerName": "Someone",
+            "skip":{
+                "name": "something",
+                "who": {"__entity":{"type":"User","id":"Alice"}}
+            }
+        }
+    },
+"parents":[{"type":"Photo","id":"pic01"}],
+"tags": {
+        "dummyTagIP": {"__extn":{"fn":"ip","arg":"192.168.1.100"}},
+        "dummyTagUser": {"__entity":{"type":"User::Tag","id":"Alice"}},
+        "nestedTagAttr":{
+            "managerTagName": "Someone",
+            "skipTag":{
+                "name": "somethingTag",
+                "who": {"__entity":{"type":"UserFromStringTag","id":"AliceTag"}}
+            }
+        }
+    }
+}
