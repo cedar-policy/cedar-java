@@ -21,6 +21,7 @@ import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.model.entity.Entities;
 
 import java.util.Set;
 
@@ -53,6 +54,21 @@ public interface AuthorizationEngine {
 
     /**
      * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
+     * <code>entities</code> hierarchy given. Overloaded method to accept Entities object.
+     *
+     * @param request The request to evaluate
+     * @param policySet The policy set to evaluate against
+     * @param entities The entities to evaluate against
+     * @return The result of the request evaluation
+     * @throws BadRequestException if any errors were found in the syntax of the policies.
+     * @throws AuthException On failure to make the authorization request. Note that errors inside the
+     *     authorization engine are included in the <code>errors</code> field on the
+     *     AuthorizationResponse.
+     */
+    AuthorizationResponse isAuthorized(AuthorizationRequest request, PolicySet policySet, Entities entities) throws AuthException;
+
+    /**
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
      * <code>entities</code> given. If information required to answer is missing, residual policies are returned.
      *
      * @param request The request to evaluate
@@ -67,6 +83,24 @@ public interface AuthorizationEngine {
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request,
                                                      PolicySet policySet, Set<Entity> entities) throws AuthException;
+    
+    /**
+     * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
+     * <code>entities</code> given. If information required to answer is missing, residual policies are returned.
+     * Overloaded method to accept Entities object.
+     *
+     * @param request The request to evaluate
+     * @param policySet The policy set to evaluate against
+     * @param entities The entities to evaluate against
+     * @return The result of the request evaluation
+     * @throws BadRequestException if any errors were found in the syntax of the policies.
+     * @throws AuthException On failure to make the authorization request. Note that errors inside the
+     *     authorization engine are included in the <code>errors</code> field on the
+     *     AuthorizationResponse.
+     */
+    @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
+    PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request,
+                                                     PolicySet policySet, Entities entities) throws AuthException;
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct

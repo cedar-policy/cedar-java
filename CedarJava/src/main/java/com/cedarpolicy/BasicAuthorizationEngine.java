@@ -27,6 +27,7 @@ import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
+import com.cedarpolicy.model.entity.Entities;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -57,6 +58,15 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
 
+    /**
+     * Overloaded method to accept Entities object
+     */
+    @Override
+    public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
+                                              PolicySet policySet, Entities entities) throws AuthException {
+        return isAuthorized(q, policySet, entities.getEntities());
+    }
+
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
@@ -71,6 +81,16 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                 throw e;
             }
         }
+    }
+
+    /**
+     * Overoaded method to accept Entities object
+     */
+    @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
+    @Override
+    public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
+                                                            PolicySet policySet, Entities entities) throws AuthException {
+        return isAuthorizedPartial(q, policySet, entities.getEntities());
     }
 
     @Override
