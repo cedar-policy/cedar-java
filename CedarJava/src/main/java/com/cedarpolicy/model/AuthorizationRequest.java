@@ -96,6 +96,34 @@ public class AuthorizationRequest {
     }
 
     /**
+     * Create an authorization request from the EUIDs and Context.
+     * Constructor overloading to support Context object while preserving backward compatability.
+     *
+     * @param principalEUID Principal's EUID.
+     * @param actionEUID Action's EUID.
+     * @param resourceEUID Resource's EUID.
+     * @param context Context object.
+     * @param schema Schema (optional).
+     * @param enableRequestValidation Whether to use the schema for just
+     * schema-based parsing of `context` (false) or also for request validation
+     * (true). No effect if `schema` is not provided.
+     */
+    public AuthorizationRequest(
+        EntityUID principalEUID,
+        EntityUID actionEUID,
+        EntityUID resourceEUID,
+        Context context,
+        Optional<Schema> schema,
+        boolean enableRequestValidation) {
+    this.principalEUID = principalEUID;
+    this.actionEUID = actionEUID;
+    this.resourceEUID = resourceEUID;
+    this.context = Optional.of(context.getContext());
+    this.schema = schema;
+    this.enableRequestValidation = enableRequestValidation;
+}
+
+    /**
      * Create a request without a schema.
      *
      * @param principalEUID Principal's EUID.
@@ -109,6 +137,25 @@ public class AuthorizationRequest {
                 actionEUID,
                 resourceEUID,
                 Optional.of(context),
+                Optional.empty(),
+                false);
+    }
+
+    /**
+     * Create a request without a schema.
+     * Constructor overloading to support Context object while preserving backward compatability.
+     *
+     * @param principalEUID Principal's EUID.
+     * @param actionEUID Action's EUID.
+     * @param resourceEUID Resource's EUID.
+     * @param context Key/Value context.
+     */
+    public AuthorizationRequest(EntityUID principalEUID, EntityUID actionEUID, EntityUID resourceEUID, Context context) {
+        this(
+                principalEUID,
+                actionEUID,
+                resourceEUID,
+                context,
                 Optional.empty(),
                 false);
     }
@@ -128,6 +175,24 @@ public class AuthorizationRequest {
                 resourceEUID.getEUID(),
                 context);
     }
+
+    /**
+     * Create a request without a schema, using Entity objects for principal/action/resource.
+     * Constructor overloading to support Context object while preserving backward compatability.
+     *
+     * @param principalEUID Principal's EUID.
+     * @param actionEUID Action's EUID.
+     * @param resourceEUID Resource's EUID.
+     * @param context Key/Value context.
+     */
+    public AuthorizationRequest(Entity principalEUID, Entity actionEUID, Entity resourceEUID, Context context) {
+        this(
+                principalEUID.getEUID(),
+                actionEUID.getEUID(),
+                resourceEUID.getEUID(),
+                context);
+    }
+
 
     /**
      * Create a request from Entity objects and Context.
@@ -154,6 +219,31 @@ public class AuthorizationRequest {
         );
     }
 
+    /**
+     * Create a request from Entity objects and Context.
+     * Constructor overloading to support Context object while preserving backward compatability.
+     *
+     * @param principal
+     * @param action
+     * @param resource
+     * @param context
+     * @param schema
+     * @param enableRequestValidation Whether to use the schema for just
+     * schema-based parsing of `context` (false) or also for request validation
+     * (true). No effect if `schema` is not provided.
+     */
+
+    public AuthorizationRequest(Entity principal, Entity action, Entity resource,
+                                Context context, Optional<Schema> schema, boolean enableRequestValidation) {
+        this(
+            principal.getEUID(),
+            action.getEUID(),
+            resource.getEUID(),
+            context,
+            schema,
+            enableRequestValidation
+        );
+    }
 
     /** Readable string representation. */
     @Override
