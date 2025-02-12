@@ -40,7 +40,6 @@ public class EntitiesTests {
 
     @Test
     public void givenValidEntitySetConstructorConstructs() {
-
         Entity alice = new Entity(EntityUID.parse("User::\"Alice\"").get());
         Set<EntityUID> parentAlice = new HashSet<>();
         parentAlice.add(alice.getEUID());
