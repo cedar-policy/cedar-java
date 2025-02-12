@@ -19,7 +19,6 @@ package com.cedarpolicy;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.cedarpolicy.value.*;
 import com.cedarpolicy.model.entity.Entity;
@@ -29,8 +28,6 @@ import static com.cedarpolicy.CedarJson.objectWriter;
 import org.skyscreamer.jsonassert.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -81,7 +78,7 @@ public class EntitiesTests {
 
         Entities entities = Entities.parse(validEntitiesJson);
         String actualRepresentation = objectWriter().writeValueAsString(entities);
-        
+
         JSONAssert.assertEquals(expectedRepresentation, actualRepresentation, JSONCompareMode.NON_EXTENSIBLE);
 
         validEntitiesJson = """
@@ -120,7 +117,25 @@ public class EntitiesTests {
         assertThrows(JsonProcessingException.class, () -> {
             Entities.parse(invalidEntityJson2);
         });
-
     }
 
+    @Test
+    public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException {
+        Entities entities = Entities.parse(Path.of(TEST_RESOURCES_DIR + "valid_entities.json"));
+        String actualRepresentation = objectWriter().writeValueAsString(entities);
+        String expectedRepresentation = "{\"entities\":[" + "{\"uid\":{\"type\":\"Photo\",\"id\":\"pic02\"},"
+                + "\"attrs\":{\"dummyIP\":{\"__extn\":{\"fn\":\"ip\",\"arg\":\"199.168.1.130\"}}},"
+                + "\"parents\":[{\"type\":\"PhotoParent\",\"id\":\"picParent\"}]," + "\"tags\":{}},"
+                + "{\"uid\":{\"type\":\"Photo\",\"id\":\"pic01\"}," + "\"attrs\":{},"
+                + "\"parents\":[{\"type\":\"Photo\",\"id\":\"pic02\"}]," + "\"tags\":{}}]}";
+
+        JSONAssert.assertEquals(expectedRepresentation, actualRepresentation, JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void givenInvalidJSONFileParseThrows() throws JsonProcessingException, IOException {
+        assertThrows(JsonProcessingException.class, () -> {
+            Entities.parse(Path.of(TEST_RESOURCES_DIR + "invalid_entities.json"));
+        });
+    }
 }
