@@ -33,8 +33,7 @@ public class Entities {
     private Set<Entity> entities;
 
     /**
-     * Constructs a new empty Entities collection.
-     * Creates a new HashSet to store Entity objects.
+     * Constructs a new empty Entities collection. Creates a new HashSet to store Entity objects.
      */
     public Entities() {
         this.entities = new HashSet<>();
@@ -64,8 +63,7 @@ public class Entities {
      * @param jsonString The JSON string containing entity data to parse
      * 
      * @return A new Entities instance containing the parsed entities
-     * @throws JsonProcessingException If the JSON string cannot be parsed into
-     *                                 valid entities
+     * @throws JsonProcessingException If the JSON string cannot be parsed into valid entities
      */
     public static Entities parse(String jsonString) throws JsonProcessingException {
         return new Entities(objectReader().forType(new TypeReference<Set<Entity>>() {
@@ -79,8 +77,7 @@ public class Entities {
      * 
      * @return A new Entities instance containing the parsed entities
      * @throws IOException             If there is an error reading the file
-     * @throws JsonProcessingException If the JSON content cannot be parsed into
-     *                                 valid entities
+     * @throws JsonProcessingException If the JSON content cannot be parsed into valid entities
      */
     public static Entities parse(Path filePath) throws IOException, JsonProcessingException {
         String jsonString = Files.readString(filePath);
