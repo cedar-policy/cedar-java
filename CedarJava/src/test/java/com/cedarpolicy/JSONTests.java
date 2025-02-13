@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
@@ -256,9 +257,9 @@ public class JSONTests {
 
     /** Tests deserialization of unknown value */
     @Test
-    public void testDeserializationUnknown() throws JsonProcessingException {
+    public void testDeserializationUnknown() throws JsonProcessingException, IOException {
         String json = "{\"__extn\":{\"fn\":\"unknown\",\"arg\":\"test\"}}";
-        Value value = CedarJson.objectMapper().readValue(json, Value.class);
+        Value value = CedarJson.objectReader().readValue(json, Value.class);
         assertInstanceOf(Unknown.class, value);
         Unknown unknown = (Unknown) value;
         assertEquals("test", unknown.toString());
@@ -266,10 +267,10 @@ public class JSONTests {
 
     /** Tests deserialization of value that causes stack overflow */
     @Test
-    public void testDeserializationStackOverflow() {
+    public void testDeserializationStackOverflow() throws IOException {
         String json = "{\"\":" + "[".repeat(1024) + "]".repeat(1024) + "}";
         try {
-            CedarJson.objectMapper().readValue(json, Value.class);
+            CedarJson.objectReader().readValue(json, Value.class);
         } catch (JsonProcessingException e) {
             System.out.println("class: " + e.getClass());
             assertTrue(e instanceof StreamConstraintsException);
