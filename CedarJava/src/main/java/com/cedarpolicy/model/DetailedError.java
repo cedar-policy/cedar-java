@@ -105,5 +105,18 @@ public class DetailedError {
             this.start = start;
             this.end = end;
         }
+
+        @Override
+        public String toString() {
+            return String.format("SourceLabel{label=\"%s\", start=%s, end=%s}", label.orElse(""), start, end);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "DetailedError{message=\"%s\", help=\"%s\", code=\"%s\", url=\"%s\", severity=%s, sourcelocations=%s, related=%s}",
+                message, help.orElse(""), code.orElse(""), url.orElse(""), severity.map(Severity::toString).orElse(""),
+                sourceLocations, related);
     }
 }

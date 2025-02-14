@@ -116,6 +116,19 @@ public final class AuthorizationSuccessResponse {
             this.policyId = policyId;
             this.error = error;
         }
+
+        public String getPolicyId() {
+            return this.policyId;
+        }
+
+        public DetailedError getError() {
+            return this.error;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("AuthorizationError{policyId=%s, error=%s}", policyId, error);   
+        }
     }
 
     /** Result of request evaluation. */
