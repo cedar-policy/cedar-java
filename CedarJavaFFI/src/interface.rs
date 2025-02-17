@@ -35,6 +35,7 @@ use std::{error::Error, str::FromStr, thread};
 use crate::objects::JFormatterConfig;
 use crate::{
     answer::Answer,
+    jmap::Map,
     jset::Set,
     objects::{JEntityId, JEntityTypeName, JEntityUID, JPolicy, Object},
     utils::raise_npe,
@@ -334,6 +335,58 @@ fn create_java_policy_set<'a>(
         ],
     )
     .expect("Failed to create new PolicySet object")
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn getPolicyAnnotationsJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policy_jstr: JString<'a>,
+) -> jvalue {
+    match get_policy_annotations_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(annotations) => annotations.as_jni(),
+    }
+}
+
+pub fn get_policy_annotations_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+
+        match Policy::from_str(&policy_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(policy) => {
+                let java_map = create_java_map_from_annotations(env, policy.annotations());
+                Ok(JValueGen::Object(java_map))
+            }
+        }
+    }
+}
+
+fn create_java_map_from_annotations<'a, 'b>(
+    env: &mut JNIEnv<'a>,
+    annotations: impl Iterator<Item = (&'b str, &'b str)>,
+) -> JObject<'a> {
+    let mut map = Map::new(env).unwrap();
+
+    for (annotation_key, annotation_value) in annotations {
+        let key: JString = env.new_string(annotation_key).unwrap().into();
+        let value: JString = env.new_string(annotation_value).unwrap().into();
+        map.put(env, key, value).unwrap();
+    }
+
+    env.new_object(
+        "java/util/HashMap",
+        "(Ljava/util/Map;)V",
+        &[JValueGen::Object(map.as_ref())],
+    )
+    .expect("Failed to create annotation HashMap Object")
 }
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
