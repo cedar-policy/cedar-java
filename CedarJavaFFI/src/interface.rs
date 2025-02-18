@@ -733,6 +733,7 @@ mod jvm_based_tests {
             policy_effect_test_util(&mut env, "forbid(principal,action,resource);", "forbid");
         }
 
+        #[track_caller]
         fn assert_id_annotation_eq(
             env: &mut JNIEnv,
             annotations: &JObject,
