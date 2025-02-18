@@ -74,6 +74,7 @@ impl<'a, T: Object<'a>, U: Object<'a>> Map<'a, T, U> {
             .l()?;
         Ok(value)
     }
+
     /// Consumes the Map and returns the underlying JObject
     pub fn into_inner(self) -> JObject<'a> {
         self.obj
