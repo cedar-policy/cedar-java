@@ -23,7 +23,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.cedarpolicy.model.Effect;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
+import java.util.HashMap;
+import java.util.Map;
 
 /** Policies in the Cedar language. */
 public class Policy {
@@ -36,6 +37,8 @@ public class Policy {
     public final String policySrc;
     /** Policy ID. */
     public final String policyID;
+    /** Annotations */
+    private Map<String, String> annotations;
 
     /**
      * Creates a Cedar policy object.
@@ -119,6 +122,17 @@ public class Policy {
         return new Policy(templateText, null);
     }
 
+    public Map<String, String> getAnnotations() throws InternalException {
+        ensureAnnotationsLoaded();
+        return new HashMap<>(this.annotations);
+    }
+
+    private void ensureAnnotationsLoaded() throws InternalException {
+        if (annotations == null) {
+            this.annotations = getPolicyAnnotationsJni(this.policySrc);
+        }
+    }
+
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
     private static native String parsePolicyTemplateJni(String policyTemplateStr)
             throws InternalException, NullPointerException;
@@ -127,4 +141,5 @@ public class Policy {
     private static native String fromJsonJni(String policyJsonStr) throws InternalException, NullPointerException;
     private native String policyEffectJni(String policyStr) throws InternalException, NullPointerException;
     private native String templateEffectJni(String policyStr) throws InternalException, NullPointerException;
+    private static native Map<String, String> getPolicyAnnotationsJni(String policyStr) throws InternalException;
 }
