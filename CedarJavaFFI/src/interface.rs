@@ -369,6 +369,38 @@ pub fn get_policy_annotations_internal<'a>(
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn getTemplateAnnotationsJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    template_jstr: JString<'a>,
+) -> jvalue {
+    match get_template_annotations_internal(&mut env, template_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(annotations) => annotations.as_jni(),
+    }
+}
+
+pub fn get_template_annotations_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    template_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if template_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let template_jstring = env.get_string(&template_jstr)?;
+        let template_string = String::from(template_jstring);
+
+        match Template::from_str(&template_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(template) => {
+                let java_map = create_java_map_from_annotations(env, template.annotations());
+                Ok(JValueGen::Object(java_map))
+            }
+        }
+    }
+}
+
 fn create_java_map_from_annotations<'a, 'b>(
     env: &mut JNIEnv<'a>,
     annotations: impl Iterator<Item = (&'b str, &'b str)>,

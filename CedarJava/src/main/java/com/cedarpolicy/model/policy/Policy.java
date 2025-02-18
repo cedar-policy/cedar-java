@@ -129,17 +129,26 @@ public class Policy {
 
     private void ensureAnnotationsLoaded() throws InternalException {
         if (annotations == null) {
-            this.annotations = getPolicyAnnotationsJni(this.policySrc);
+            try{
+                this.annotations = getPolicyAnnotationsJni(this.policySrc);
+            } catch (InternalException e) {
+                if (e.getMessage().contains("expected a static policy")) {
+                    this.annotations = getTemplateAnnotationsJni(this.policySrc);
+                }
+                else {
+                    throw e;
+                }
+            }
+            
         }
     }
 
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
-    private static native String parsePolicyTemplateJni(String policyTemplateStr)
-            throws InternalException, NullPointerException;
-
+    private static native String parsePolicyTemplateJni(String policyTemplateStr) throws InternalException, NullPointerException;
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;
     private static native String fromJsonJni(String policyJsonStr) throws InternalException, NullPointerException;
     private native String policyEffectJni(String policyStr) throws InternalException, NullPointerException;
     private native String templateEffectJni(String policyStr) throws InternalException, NullPointerException;
     private static native Map<String, String> getPolicyAnnotationsJni(String policyStr) throws InternalException;
+    private static native Map<String, String> getTemplateAnnotationsJni(String policyStr) throws InternalException;
 }
