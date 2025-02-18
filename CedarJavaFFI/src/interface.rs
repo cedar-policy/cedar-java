@@ -381,12 +381,7 @@ fn create_java_map_from_annotations<'a, 'b>(
         map.put(env, key, value).unwrap();
     }
 
-    env.new_object(
-        "java/util/HashMap",
-        "(Ljava/util/Map;)V",
-        &[JValueGen::Object(map.as_ref())],
-    )
-    .expect("Failed to create annotation HashMap Object")
+    map.into_inner()
 }
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
