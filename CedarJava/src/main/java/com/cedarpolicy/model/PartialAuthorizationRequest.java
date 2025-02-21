@@ -160,7 +160,7 @@ public class PartialAuthorizationRequest {
         }
 
         public Builder context(Context context) {
-            this.context = Optional.of(ImmutableMap.copyOf(context.getContext()));
+            this.context = Optional.of(Map.copyOf(context.getContext()));
             return this;
         }
 
