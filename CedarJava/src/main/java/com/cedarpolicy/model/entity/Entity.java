@@ -94,7 +94,7 @@ public class Entity {
      * Get the value for the given attribute, or null if not present.
      *
      * @param attribute Attribute key
-     * 
+     *
      * @return Attribute value for the given key or null if not present
      * @throws IllegalArgumentException if attribute is null
      */

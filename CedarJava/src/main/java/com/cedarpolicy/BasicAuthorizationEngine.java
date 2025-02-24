@@ -84,7 +84,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     }
 
     /**
-     * Overoaded method to accept Entities object
+     * Overloaded method to accept Entities object
      */
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override

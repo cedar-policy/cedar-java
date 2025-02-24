@@ -24,7 +24,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * A class representing a collection of Cedar policy entities.
@@ -50,7 +51,7 @@ public class Entities {
 
     /**
      * Returns a copy of the set of entities in this collection.
-     * 
+     *
      * @return A new HashSet containing all Entity objects in this collection
      */
     public Set<Entity> getEntities() {
@@ -61,7 +62,7 @@ public class Entities {
      * Parses a JSON string representation into an Entities collection.
      *
      * @param jsonString The JSON string containing entity data to parse
-     * 
+     *
      * @return A new Entities instance containing the parsed entities
      * @throws JsonProcessingException If the JSON string cannot be parsed into valid entities
      */
@@ -74,7 +75,7 @@ public class Entities {
      * Parses a JSON file at the specified path into an Entities collection.
      *
      * @param filePath The path to the JSON file containing entity data to parse
-     * 
+     *
      * @return A new Entities instance containing the parsed entities
      * @throws IOException             If there is an error reading the file
      * @throws JsonProcessingException If the JSON content cannot be parsed into valid entities
