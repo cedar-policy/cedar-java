@@ -20,15 +20,21 @@ import static com.cedarpolicy.CedarJson.objectReader;
 import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 import com.cedarpolicy.loader.LibraryLoader;
-import com.cedarpolicy.model.*;
+import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.EntityValidationRequest;
+import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.entity.Entities;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
-import com.cedarpolicy.model.entity.Entities;
-import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -36,10 +42,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import java.util.List;
-import java.util.Set;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** An authorization engine that is compiled in process. Communicated with via JNI. */
 public final class BasicAuthorizationEngine implements AuthorizationEngine {

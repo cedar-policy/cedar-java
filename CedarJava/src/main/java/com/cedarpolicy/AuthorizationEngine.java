@@ -16,14 +16,20 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.*;
+import java.util.Set;
+
+import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.EntityValidationRequest;
+import com.cedarpolicy.model.PartialAuthorizationRequest;
+import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.ValidationRequest;
+import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.entity.Entities;
+import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
-import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.PolicySet;
-import com.cedarpolicy.model.entity.Entities;
-
-import java.util.Set;
 
 /**
  * Implementations of the AuthorizationEngine interface invoke Cedar to respond to an authorization
@@ -83,7 +89,7 @@ public interface AuthorizationEngine {
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request,
                                                      PolicySet policySet, Set<Entity> entities) throws AuthException;
-    
+
     /**
      * Asks whether the given AuthorizationRequest <code>q</code> is approved by the <code>policySet</code> and
      * <code>entities</code> given. If information required to answer is missing, residual policies are returned.
