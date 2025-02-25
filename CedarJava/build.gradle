@@ -84,7 +84,7 @@ dependencies {
     implementation 'com.google.guava:guava:33.4.0-jre'
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
     testImplementation 'net.jqwik:jqwik:1.9.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.0'
     testImplementation 'org.skyscreamer:jsonassert:2.0-rc1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
 }
