@@ -23,7 +23,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.cedarpolicy.model.Effect;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
+import java.util.HashMap;
+import java.util.Map;
 
 /** Policies in the Cedar language. */
 public class Policy {
@@ -36,18 +37,18 @@ public class Policy {
     public final String policySrc;
     /** Policy ID. */
     public final String policyID;
+    /** Annotations */
+    private Map<String, String> annotations;
 
     /**
      * Creates a Cedar policy object.
      *
-     * @param policy String containing the source code of a Cedar policy in the Cedar policy
-     *     language.
-     * @param policyID The id of this policy. Must be unique. Note: We may flip the order of the
-     *     arguments here for idiomatic reasons.
+     * @param policy   String containing the source code of a Cedar policy in the Cedar policy language.
+     * @param policyID The id of this policy. Must be unique. Note: We may flip the order of the arguments here for
+     *                 idiomatic reasons.
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
-    public Policy(
-            @JsonProperty("policySrc") String policy, @JsonProperty("policyID") String policyID)
+    public Policy(@JsonProperty("policySrc") String policy, @JsonProperty("policyID") String policyID)
             throws NullPointerException {
 
         if (policy == null) {
@@ -82,8 +83,8 @@ public class Policy {
     /**
      * Returns the effect of a policy.
      *
-     * Determines the policy effect by attempting static policy first, then template.
-     * In future, it will only support static policies once new class is introduced for Template.
+     * Determines the policy effect by attempting static policy first, then template. In future, it will only support
+     * static policies once new class is introduced for Template.
      *
      * @return The effect of the policy, either "permit" or "forbid"
      * @throws InternalException
@@ -114,17 +115,69 @@ public class Policy {
         return new Policy(policyText, null);
     }
 
-    public static Policy parsePolicyTemplate(String templateStr)  throws InternalException, NullPointerException {
+    public static Policy parsePolicyTemplate(String templateStr) throws InternalException, NullPointerException {
         String templateText = parsePolicyTemplateJni(templateStr);
         return new Policy(templateText, null);
     }
 
+    /**
+     * Gets a copy of the policy annotations map. Annotations are loaded lazily when this method is first called. Works
+     * for both static policies and templates.
+     *
+     * @return A new HashMap containing the policy's annotations. For annotations without explicit values, an empty
+     *         string ("") is used as the value
+     */
+    public Map<String, String> getAnnotations() throws InternalException {
+        ensureAnnotationsLoaded();
+        return new HashMap<>(this.annotations);
+    }
+
+    /**
+     * Gets the value of a specific annotation by its key.
+     *
+     * @param key The annotation key to look up
+     * @return The value associated with the annotation key, or null if the key doesn't exist
+     * @throws InternalException if there is an error loading or parsing the annotations
+     */
+    public String getAnnotation(String key) throws InternalException {
+        ensureAnnotationsLoaded();
+        return this.annotations.getOrDefault(key, null);
+    }
+
+    /**
+     * Ensures that the annotations map is loaded for this policy. If annotations haven't been loaded yet, attempts to
+     * load them first from static policy, then falls back to template if needed.
+     *
+     * @throws InternalException if there is an error loading or parsing the annotations
+     */
+    private void ensureAnnotationsLoaded() throws InternalException {
+        if (annotations == null) {
+            try {
+                this.annotations = getPolicyAnnotationsJni(this.policySrc);
+            } catch (InternalException e) {
+                if (e.getMessage().contains("expected a static policy")) {
+                    this.annotations = getTemplateAnnotationsJni(this.policySrc);
+                } else {
+                    throw e;
+                }
+            }
+        }
+    }
+
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
+
     private static native String parsePolicyTemplateJni(String policyTemplateStr)
             throws InternalException, NullPointerException;
 
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;
+
     private static native String fromJsonJni(String policyJsonStr) throws InternalException, NullPointerException;
+
     private native String policyEffectJni(String policyStr) throws InternalException, NullPointerException;
+
     private native String templateEffectJni(String policyStr) throws InternalException, NullPointerException;
+
+    private static native Map<String, String> getPolicyAnnotationsJni(String policyStr) throws InternalException;
+
+    private static native Map<String, String> getTemplateAnnotationsJni(String policyStr) throws InternalException;
 }

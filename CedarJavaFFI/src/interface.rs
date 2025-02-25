@@ -35,6 +35,7 @@ use std::{error::Error, str::FromStr, thread};
 use crate::objects::JFormatterConfig;
 use crate::{
     answer::Answer,
+    jmap::Map,
     jset::Set,
     objects::{JEntityId, JEntityTypeName, JEntityUID, JPolicy, Object},
     utils::raise_npe,
@@ -337,6 +338,85 @@ fn create_java_policy_set<'a>(
 }
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn getPolicyAnnotationsJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policy_jstr: JString<'a>,
+) -> jvalue {
+    match get_policy_annotations_internal(&mut env, policy_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(annotations) => annotations.as_jni(),
+    }
+}
+
+pub fn get_policy_annotations_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_jstring = env.get_string(&policy_jstr)?;
+        let policy_string = String::from(policy_jstring);
+
+        match Policy::from_str(&policy_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(policy) => {
+                let java_map = create_java_map_from_annotations(env, policy.annotations());
+                Ok(JValueGen::Object(java_map))
+            }
+        }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn getTemplateAnnotationsJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    template_jstr: JString<'a>,
+) -> jvalue {
+    match get_template_annotations_internal(&mut env, template_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(annotations) => annotations.as_jni(),
+    }
+}
+
+pub fn get_template_annotations_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    template_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if template_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let template_jstring = env.get_string(&template_jstr)?;
+        let template_string = String::from(template_jstring);
+
+        match Template::from_str(&template_string) {
+            Err(e) => Err(Box::new(e)),
+            Ok(template) => {
+                let java_map = create_java_map_from_annotations(env, template.annotations());
+                Ok(JValueGen::Object(java_map))
+            }
+        }
+    }
+}
+
+fn create_java_map_from_annotations<'a, 'b>(
+    env: &mut JNIEnv<'a>,
+    annotations: impl Iterator<Item = (&'b str, &'b str)>,
+) -> JObject<'a> {
+    let mut map = Map::new(env).unwrap();
+
+    for (annotation_key, annotation_value) in annotations {
+        let key: JString = env.new_string(annotation_key).unwrap().into();
+        let value: JString = env.new_string(annotation_value).unwrap().into();
+        map.put(env, key, value).unwrap();
+    }
+
+    map.into_inner()
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn parsePolicyTemplateJni<'a>(
     mut env: JNIEnv<'a>,
     _: JClass,
@@ -625,7 +705,7 @@ fn policies_str_to_pretty_internal<'a>(
 }
 
 #[cfg(test)]
-mod interface_tests {
+mod jvm_based_tests {
     use super::*;
     use crate::jvm_test_utils::*;
     use jni::JavaVM;
@@ -651,6 +731,144 @@ mod interface_tests {
             let mut env = JVM.attach_current_thread().unwrap();
             policy_effect_test_util(&mut env, "permit(principal,action,resource);", "permit");
             policy_effect_test_util(&mut env, "forbid(principal,action,resource);", "forbid");
+        }
+
+        #[track_caller]
+        fn assert_id_annotation_eq(
+            env: &mut JNIEnv,
+            annotations: &JObject,
+            annotation_key: &str,
+            expected_annotation_value: &str,
+        ) {
+            let annotation_key_jstr = env.new_string(annotation_key).unwrap();
+            let actual_annotation_value_obj = env
+                .call_method(
+                    annotations,
+                    "get",
+                    "(Ljava/lang/Object;)Ljava/lang/Object;",
+                    &[JValueGen::Object(annotation_key_jstr.as_ref())],
+                )
+                .unwrap()
+                .l()
+                .unwrap();
+
+            let actual_annotation_value_jstr =
+                JString::cast(env, actual_annotation_value_obj).unwrap();
+            let actual_annotation_value_str =
+                String::from(env.get_string(&actual_annotation_value_jstr).unwrap());
+
+            assert_eq!(
+                actual_annotation_value_str, expected_annotation_value,
+                "Returned annotation value should match the annotation in the policy."
+            )
+        }
+
+        #[test]
+        fn static_policy_annotations_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let policy_string = env
+                .new_string("@id(\"policyID1\") @myAnnotationKey(\"myAnnotatedValue\") permit(principal,action,resource);")
+                .unwrap();
+            let annotations = get_policy_annotations_internal(&mut env, policy_string)
+                .unwrap()
+                .l()
+                .unwrap();
+
+            assert_id_annotation_eq(&mut env, &annotations, "id", "policyID1");
+            assert_id_annotation_eq(
+                &mut env,
+                &annotations,
+                "myAnnotationKey",
+                "myAnnotatedValue",
+            );
+        }
+
+        #[test]
+        fn template_policy_annotations_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let policy_string = env
+                .new_string("@id(\"policyID1\") @myAnnotationKey(\"myAnnotatedValue\") permit(principal==?principal,action,resource);")
+                .unwrap();
+            let annotations = get_template_annotations_internal(&mut env, policy_string)
+                .unwrap()
+                .l()
+                .unwrap();
+
+            assert_id_annotation_eq(&mut env, &annotations, "id", "policyID1");
+            assert_id_annotation_eq(
+                &mut env,
+                &annotations,
+                "myAnnotationKey",
+                "myAnnotatedValue",
+            );
+        }
+    }
+
+    mod map_tests {
+        use super::*;
+
+        #[test]
+        fn map_new_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let java_hash_map = Map::<JString, JString>::new(&mut env);
+
+            assert!(java_hash_map.is_ok(), "Map creation should succeed");
+
+            assert!(
+                env.is_instance_of(java_hash_map.unwrap().into_inner(), "java/util/HashMap")
+                    .unwrap(),
+                "Object should be a HashMap instance."
+            );
+        }
+
+        #[test]
+        fn map_put_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let mut java_hash_map = Map::<JString, JString>::new(&mut env).unwrap();
+
+            let key = env.new_string("test_key").unwrap();
+            let value = env.new_string("test_value").unwrap();
+
+            let result = java_hash_map.put(&mut env, key, value);
+
+            assert!(result.is_ok(), "Map put should succeed.");
+
+            let new_key = env.new_string("test_key").unwrap();
+            let new_value = env.new_string("updated_value").unwrap();
+
+            let update_result = java_hash_map.put(&mut env, new_key, new_value);
+
+            assert!(result.is_ok(), "Map put should succeed.");
+
+            let update_result_jstr = JString::cast(&mut env, update_result.unwrap()).unwrap();
+            let update_result_str = String::from(env.get_string(&update_result_jstr).unwrap());
+
+            assert_eq!(
+                update_result_str, "test_value",
+                "Value returned from map update should match the original value of test_key."
+            )
+        }
+
+        #[test]
+        fn map_get_tests() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let mut java_hash_map = Map::<JString, JString>::new(&mut env).unwrap();
+
+            let key = env.new_string("test_key").unwrap();
+            let value = env.new_string("test_value").unwrap();
+
+            let _ = java_hash_map.put(&mut env, key, value);
+
+            let retrieval_key = env.new_string("test_key").unwrap();
+            let retrieved_value = java_hash_map.get(&mut env, retrieval_key).unwrap();
+
+            let retrieved_value_jstr = JString::cast(&mut env, retrieved_value).unwrap();
+            let retrieved_value_str = String::from(env.get_string(&retrieved_value_jstr).unwrap());
+
+            assert_eq!(
+                retrieved_value_str, "test_value",
+                "Retrieved value should be equal to the inserted value."
+            )
         }
     }
 }

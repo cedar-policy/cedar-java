@@ -19,14 +19,17 @@ package com.cedarpolicy;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.Effect;
-import org.junit.jupiter.api.Test;
 
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.Map;
+import java.util.HashMap;
 
 public class PolicyTests {
     @Test
@@ -139,5 +142,89 @@ public class PolicyTests {
         Policy forbidTemplate = new Policy("forbid(principal == ?principal, action, resource == ?resource);", null);
         assertEquals(forbidTemplate.effect(), Effect.FORBID);
 
+    }
+
+    @Test
+    public void givenStaticPolicyGetAnnotationsReturns() throws InternalException {
+        Policy staticPolicy = Policy.parseStaticPolicy("""
+            @id("policyID1")
+            @annotation("myAnnotation")
+            @emptyAnnotation
+            permit(principal, action, resource);
+            """);
+
+        Map<String, String> expectedMap = new HashMap<>();
+        expectedMap.put("id", "policyID1");
+        expectedMap.put("annotation", "myAnnotation");
+        expectedMap.put("emptyAnnotation", "");
+
+        assertEquals(staticPolicy.getAnnotations(), expectedMap);
+
+        Policy staticPolicyNoAnnotations = Policy.parseStaticPolicy("""
+            permit(principal, action, resource);
+            """);
+
+        assertEquals(staticPolicyNoAnnotations.getAnnotations(), new HashMap<>());
+    }
+
+    @Test
+    public void givenStaticPolicyGetAnnotationReturns() throws InternalException {
+        Policy staticPolicy = Policy.parseStaticPolicy("""
+            @id("policyID1")
+            @annotation("myAnnotation")
+            @emptyAnnotation
+            permit(principal, action, resource);
+            """);
+
+        assertEquals(staticPolicy.getAnnotation("annotation"), "myAnnotation");
+        assertEquals(staticPolicy.getAnnotation("emptyAnnotation"), "");
+
+        Policy staticPolicyNoAnnotations = Policy.parseStaticPolicy("""
+            permit(principal, action, resource);
+            """);
+
+        assertEquals(staticPolicyNoAnnotations.getAnnotation("invalidAnnotation"), null);
+    }
+
+    @Test
+    public void givenTemplatePolicyGetAnnotationsReturns() throws InternalException {
+        Policy templatePolicy = Policy.parsePolicyTemplate("""
+            @id("policyID1")
+            @annotation("myAnnotation")
+            @emptyAnnotation
+            permit(principal == ?principal, action, resource);
+            """);
+
+        Map<String, String> expectedMap = new HashMap<>();
+        expectedMap.put("id", "policyID1");
+        expectedMap.put("annotation", "myAnnotation");
+        expectedMap.put("emptyAnnotation", "");
+
+        assertEquals(templatePolicy.getAnnotations(), expectedMap);
+
+        Policy templatePolicyNoAnnotations = Policy.parsePolicyTemplate("""
+            permit(principal == ?principal, action, resource);
+            """);
+
+        assertEquals(templatePolicyNoAnnotations.getAnnotations(), new HashMap<>());
+    }
+
+    @Test
+    public void givenTemplatePolicyGetAnnotationReturns() throws InternalException {
+        Policy templatePolicy = Policy.parsePolicyTemplate("""
+            @id("policyID1")
+            @annotation("myAnnotation")
+            @emptyAnnotation
+            permit(principal == ?principal, action, resource);
+            """);
+
+        assertEquals(templatePolicy.getAnnotation("annotation"), "myAnnotation");
+        assertEquals(templatePolicy.getAnnotation("emptyAnnotation"), "");
+
+        Policy templatePolicyNoAnnotations = Policy.parsePolicyTemplate("""
+            permit(principal == ?principal, action, resource);
+            """);
+
+        assertEquals(templatePolicyNoAnnotations.getAnnotation("invalidAnnotation"), null);
     }
 }
