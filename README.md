@@ -88,7 +88,7 @@ Explore our sample applications in [cedar-examples](https://github.com/cedar-pol
 * [**cedar-java-partial-evaluation**](https://github.com/cedar-policy/cedar-examples/tree/main/cedar-java-partial-evaluation): Illustrates partial evaluation capabilities in Cedar-Java
 
 ## Changelog
-For a list of changes and version updates, see [CHANGELOG.md](https://github.com/cedar-policy/cedar-java/tree/main/CedarJava).
+For a list of changes and version updates, see [CHANGELOG.md](CedarJava/CHANGELOG.md).
 
 ## Notes
 
