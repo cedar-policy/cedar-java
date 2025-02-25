@@ -1,0 +1,5 @@
+[
+    {"uid":{"type":"Photo","id":"pic02"},"parents":[{"type":"PhotoParent","id":"picParent"}],
+    "attrs":{"dummyIP": {"__extn":{"fn":"ip","arg":"199.168.1.130"}}}},
+    {"uid":{"type":"Photo","id":"pic01"},"parents":[{"type":"Photo","id":"pic02"}],"attrs":{}}
+]
