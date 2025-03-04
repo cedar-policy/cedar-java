@@ -38,20 +38,19 @@ Here is a small snippet on how to perform `isAuthorized()` call using `CedarJava
 ```java
 package com.mypackage;
 
-import com.cedarpolicy.model.policy.PolicySet;
-import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.AuthorizationEngine;
 import com.cedarpolicy.BasicAuthorizationEngine;
-import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.AuthorizationRequest;
+import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.Context;
 import com.cedarpolicy.model.entity.Entities;
-import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.value.EntityUID;
 
 public class SimpleAuthorization {
     public static void main(String[] args) throws Exception {
 
-        System.out.println("HelloWorld");
         // Build entities
         Entity principal = new Entity(EntityUID.parse("User::\"Alice\"").get());
         Entity action = new Entity(EntityUID.parse("Action::\"view\"").get());
@@ -77,7 +76,7 @@ public class SimpleAuthorization {
         Entities entities = new Entities();
         Context context = new Context();
         AuthorizationRequest request  = new AuthorizationRequest(principal, action, resource, context);
-        AuthorizationResponse authorizationResponse = ae.isAuthorized(request,policySet,entities);
+        AuthorizationResponse authorizationResponse = ae.isAuthorized(request, policySet, entities);
     }
 }
 ```
