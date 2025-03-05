@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.3.0
 ### Added
 * Introduced new model classes for improved type safety and functionality:
   * `com.cedarpolicy.model.Context` - Policy context representation (will replace `Map<String,Value>`) [#286](https://github.com/cedar-policy/cedar-java/pull/286)
