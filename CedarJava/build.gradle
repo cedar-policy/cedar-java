@@ -145,7 +145,7 @@ tasks.register('validateZigVersion') {
 }
 
 tasks.register('compileFFI') {
-    dependsOn('installCargoZigbuild', 'validateZigVersion')
+    dependsOn('installCargoZigbuild')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
     exec {
@@ -272,6 +272,7 @@ java {
 /*
  Configures Maven publishing
  */
+publish.dependsOn('validateZigVersion')
 publishing {
     publications {
         mavenJava(MavenPublication) {
