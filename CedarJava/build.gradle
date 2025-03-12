@@ -124,8 +124,28 @@ tasks.register('installCargoZigbuild', Exec) {
     commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.7'
 }
 
+def ZigVersion = '0.11'
+tasks.register('validateZigVersion') {
+    group = 'Build'
+    description = 'Validates that the correct zig version is installed'
+    
+    doLast {
+        def output = new ByteArrayOutputStream()
+        exec {
+            commandLine 'zig', 'version'
+            standardOutput = output
+        }
+        def version = output.toString().trim()
+        println "Detected Zig version: ${version}"
+        if (!version.startsWith(ZigVersion)) {
+            throw new GradleException("Zig version must be ${ZigVersion} but found: ${version}")        
+        }
+        println "Zig version validation successful"
+    }
+}
+
 tasks.register('compileFFI') {
-    dependsOn('installCargoZigbuild')
+    dependsOn('installCargoZigbuild', 'validateZigVersion')
     group 'Build'
     description 'Compiles Foreign Function Interface libraries.'
     exec {
