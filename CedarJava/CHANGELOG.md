@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.3.0
+## 4.3.1
 ### Added
 * Added Zig version validation for publishing artifacts [#306](https://github.com/cedar-policy/cedar-java/pull/306)
 

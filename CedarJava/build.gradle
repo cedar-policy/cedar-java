@@ -279,7 +279,7 @@ publishing {
             from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '4.3.0'
+            version = '4.3.1'
 
             artifacts {
                 jar
