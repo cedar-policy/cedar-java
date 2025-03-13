@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.1
+### Added
+* Added Zig version validation for publishing artifacts [#306](https://github.com/cedar-policy/cedar-java/pull/306)
+
 ## 4.3.0
 ### Added
 * Introduced new model classes for improved type safety and functionality:
