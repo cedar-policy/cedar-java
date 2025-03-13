@@ -2,6 +2,10 @@
 
 ## 4.3.0
 ### Added
+* Added Zig version validation for publishing artifacts [#306](https://github.com/cedar-policy/cedar-java/pull/306)
+
+## 4.3.0
+### Added
 * Introduced new model classes for improved type safety and functionality:
   * `com.cedarpolicy.model.Context` - Policy context representation (will replace `Map<String,Value>`) [#286](https://github.com/cedar-policy/cedar-java/pull/286)
   * `com.cedarpolicy.model.entity.Entities` - Entity collection management (will replace `Set<Entity>`) [#293](https://github.com/cedar-policy/cedar-java/pull/293)
