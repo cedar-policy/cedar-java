@@ -16,6 +16,7 @@
 
 package com.cedarpolicy;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,7 +61,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenValidJSONStringParseReturns() throws JsonProcessingException {
+    public void givenValidJSONStringParseReturns() throws JsonProcessingException, JSONException {
         String validEntitiesJson = """
                 [
                     {"uid":{"type":"Photo","id":"pic02"},"parents":[{"type":"PhotoParent","id":"picParent"}],
@@ -98,7 +99,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenInvalidJSONStringParseThrows() throws JsonProcessingException {
+    public void givenInvalidJSONStringParseThrows() throws JsonProcessingException, JSONException {
         String invalidEntityJson = """
                 [{"uid":{"type":"Photo","id":"pic01"}},
                 {"uid":{"type":"Photo","id":"pic02"},"parents":[],"attrs":{}}]
@@ -119,7 +120,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException {
+    public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException, JSONException {
         Entities entities = Entities.parse(Path.of(TEST_RESOURCES_DIR + "valid_entities.json"));
         String actualRepresentation = objectWriter().writeValueAsString(entities);
         String expectedRepresentation = "{\"entities\":[" + "{\"uid\":{\"type\":\"Photo\",\"id\":\"pic02\"},"
