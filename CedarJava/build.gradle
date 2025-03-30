@@ -82,7 +82,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2'
     implementation 'com.fizzed:jne:4.3.0'
     implementation 'com.google.guava:guava:33.4.0-jre'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.3'
     testImplementation 'net.jqwik:jqwik:1.9.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
     testImplementation 'org.skyscreamer:jsonassert:2.0-rc1'
