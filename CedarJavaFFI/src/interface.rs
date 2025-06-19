@@ -807,24 +807,23 @@ mod jvm_based_tests {
             );
         }
         #[test]
-        fn test_parse_policy_internal_valid(){
+        fn test_parse_policy_internal_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input = r#"permit(principal,action,resource);"#;
-           let policy_jstr = env.new_string(input).unwrap();
-           let result = parse_policy_internal(&mut env, policy_jstr);
-           assert!(result.is_ok(),"Expected parse_policy_internal succeeded");
+            let policy_jstr = env.new_string(input).unwrap();
+            let result = parse_policy_internal(&mut env, policy_jstr);
+            assert!(result.is_ok(), "Expected parse_policy_internal succeeded");
 
-           let jvalue = result.unwrap();
-           let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
-           let parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
+            let jvalue = result.unwrap();
+            let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
 
-           assert!(parsed_string.contains("permit"));
-           assert!(parsed_string.contains("principal"))
+            assert!(parsed_string.contains("permit"));
+            assert!(parsed_string.contains("principal"))
         }
-        
+
         #[test]
-        fn parse_policy_internal_invalid()
-        {
+        fn parse_policy_internal_invalid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input_invalid = r#"permit(Principal Action Resource);"#;
             let jstr = env.new_string(input_invalid).unwrap();
@@ -835,46 +834,44 @@ mod jvm_based_tests {
             assert!(result.is_err());
         }
 
-       
         #[test]
-        fn test_parse_policies_internal_invalid(){
+        fn test_parse_policies_internal_invalid() {
             let mut env = JVM.attach_current_thread().unwrap();
 
-            let invalid_input= "not a valid input";
+            let invalid_input = "not a valid input";
             let policy_jstr = env.new_string(invalid_input).unwrap();
 
             let result = parse_policies_internal(&mut env, policy_jstr);
-            assert!(result.is_err(),"Expected to fail or invalid input");
+            assert!(result.is_err(), "Expected to fail or invalid input");
         }
-         #[test]
-         fn parse_policy_template_valid_test()
-         {
-             let mut env = JVM.attach_current_thread().unwrap();
-             let policy_template =  r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
-             let jstr = env.new_string(policy_template).unwrap();
-            let result =parse_policy_template_internal (&mut env, jstr);
-            assert!(result.is_ok());
-         }
-
-         #[test]
-         fn parse_policy_template_invalid_test(){
+        #[test]
+        fn parse_policy_template_valid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
-            let invalid_input =  r#"permit(Principa,Action,Resource );"#; 
+            let policy_template = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
+            let jstr = env.new_string(policy_template).unwrap();
+            let result = parse_policy_template_internal(&mut env, jstr);
+            assert!(result.is_ok());
+        }
+
+        #[test]
+        fn parse_policy_template_invalid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"permit(Principa,Action,Resource );"#;
             let jstr = env.new_string(invalid_input).unwrap();
             let result = parse_policy_template_internal(&mut env, jstr);
 
-            if let Err(_e) = &result{
-                println!("expected failure{}",_e);
+            if let Err(_e) = &result {
+                println!("expected failure{}", _e);
             }
 
             assert!(result.is_err())
-         }
+        }
 
-         #[test]
+        #[test]
         fn from_json_test_valid() {
-        let mut env = JVM.attach_current_thread().unwrap();
+            let mut env = JVM.attach_current_thread().unwrap();
 
-        let policy_json = r#"
+            let policy_json = r#"
         {
             "effect": "permit",
             "principal": {
@@ -912,28 +909,27 @@ mod jvm_based_tests {
         }
             "#;
 
-    let jstr = env.new_string(policy_json).unwrap();
-    let result = from_json_internal(&mut env, jstr);
+            let jstr = env.new_string(policy_json).unwrap();
+            let result = from_json_internal(&mut env, jstr);
 
-    assert!(result.is_ok(), "Parsing failed: {:?}", result);
+            assert!(result.is_ok(), "Parsing failed: {:?}", result);
 
-    let jval = result.unwrap();
-    let obj = jval.l().unwrap();
-    let str_val: String = env.get_string(&obj.into()).unwrap().into();
+            let jval = result.unwrap();
+            let obj = jval.l().unwrap();
+            let str_val: String = env.get_string(&obj.into()).unwrap().into();
 
-    println!("Returned policy string: '{}'", str_val);
+            println!("Returned policy string: '{}'", str_val);
 
-    assert!(
-        str_val.to_lowercase().contains("permit"),
-        "Expected 'permit' in the policy string, got: '{}'",
-        str_val
-    );
-}
- #[test]
-    fn from_json_invalid()
-    {
-        let mut env = JVM.attach_current_thread().unwrap();
-        let invalid_input = r#"
+            assert!(
+                str_val.to_lowercase().contains("permit"),
+                "Expected 'permit' in the policy string, got: '{}'",
+                str_val
+            );
+        }
+        #[test]
+        fn from_json_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"
         {
             "Effect": "permit",
             "Principal": {
@@ -971,36 +967,30 @@ mod jvm_based_tests {
         }
         "#;
 
-        let jstr = env.new_string(invalid_input).unwrap();
-        let result = from_json_internal(&mut env, jstr);
-        assert!(result.is_err(),"Not valid jason ");
-    }
+            let jstr = env.new_string(invalid_input).unwrap();
+            let result = from_json_internal(&mut env, jstr);
+            assert!(result.is_err(), "Not valid jason ");
+        }
 
-   
+        #[test]
+        fn to_json_internal_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"permit(principal, action, resource);"#;
+            let jstr = env.new_string(input).unwrap();
+            let result = to_json_internal(&mut env, jstr);
 
-    #[test]
-    fn to_json_internal_test()
-    {
-     let mut env = JVM.attach_current_thread().unwrap();
-     let input = r#"permit(principal, action, resource);"#;
-     let jstr = env.new_string(input).unwrap();
-     let result = to_json_internal(&mut env, jstr);
+            assert!(result.is_ok(), "Valid json");
+        }
 
-     assert!(result.is_ok(),"Valid json");
+        #[test]
+        fn to_json_internal_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"Permit(Principal, Resource, Action);"#;
+            let jstr = env.new_string(invalid_input).unwrap();
 
-    }
-
-    #[test]
-    fn to_json_internal_invalid()
-    {
-        let mut env = JVM.attach_current_thread().unwrap();
-        let invalid_input = r#"Permit(Principal, Resource, Action);"#;
-        let jstr = env.new_string(invalid_input).unwrap();
-
-        let result = from_json_internal(&mut env, jstr);
-        assert!(result.is_err(),"invalid input");
-    }
-        
+            let result = from_json_internal(&mut env, jstr);
+            assert!(result.is_err(), "invalid input");
+        }
     }
     mod map_tests {
         use super::*;
@@ -1018,7 +1008,6 @@ mod jvm_based_tests {
                 "Object should be a HashMap instance."
             );
         }
-        
 
         #[test]
         fn map_put_tests() {
@@ -1069,16 +1058,14 @@ mod jvm_based_tests {
                 "Retrieved value should be equal to the inserted value."
             )
         }
-
-       
     }
-    mod schema_test{
-        use cedar_policy::Schema;
+    mod schema_test {
         use super::*;
+        use cedar_policy::Schema;
 
         #[test]
-    fn test_parse_json_str_valid() {
-        let json = r#"
+        fn test_parse_json_str_valid() {
+            let json = r#"
         {
         "schema": {
             "entityTypes": {
@@ -1099,21 +1086,20 @@ mod jvm_based_tests {
         }
         }"#;
 
-        let result = Schema::from_json_str(json);
-        assert!(result.is_ok(), "Expected schema parsing to succeed");
-    }
+            let result = Schema::from_json_str(json);
+            assert!(result.is_ok(), "Expected schema parsing to succeed");
+        }
 
-    #[test]
-    fn test_parse_json_str_invalid() {
-        let invalid_json = "this is not valid JSON";
-        let result = Schema::from_json_str(invalid_json);
-        assert!(result.is_err(), "Expected schema parsing to fail");
-    }
-     #[test]
-     fn parse_json_schema_internal_valid_test()
-     {
-        let mut env = JVM.attach_current_thread().unwrap();
-        let input = r#" {
+        #[test]
+        fn test_parse_json_str_invalid() {
+            let invalid_json = "this is not valid JSON";
+            let result = Schema::from_json_str(invalid_json);
+            assert!(result.is_err(), "Expected schema parsing to fail");
+        }
+        #[test]
+        fn parse_json_schema_internal_valid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#" {
         "schema": {
             "entityTypes": {
             "User": {
@@ -1132,23 +1118,21 @@ mod jvm_based_tests {
             }
         }
         }"#;
-        let jstr = env.new_string(input).unwrap();
-        let result = parse_json_schema_internal(&mut env, jstr);
-        assert!(result.is_ok(), "successfully parsed schema");
+            let jstr = env.new_string(input).unwrap();
+            let result = parse_json_schema_internal(&mut env, jstr);
+            assert!(result.is_ok(), "successfully parsed schema");
 
-        let output = result.unwrap();
-        let jstring_obj = output.l().unwrap();
-        let jstring : jni::objects::JString = JString:: from(jstring_obj);
-        let rust_output: String = env.get_string(&jstring).unwrap().into();
-        assert_eq!(rust_output,"success");
+            let output = result.unwrap();
+            let jstring_obj = output.l().unwrap();
+            let jstring: jni::objects::JString = JString::from(jstring_obj);
+            let rust_output: String = env.get_string(&jstring).unwrap().into();
+            assert_eq!(rust_output, "success");
+        }
 
-     }
-
-     #[test]
-     fn parse_json_schema_internal_invalid_test()
-     {
-        let mut env = JVM.attach_current_thread().unwrap();
-        let invalid_input = r#" {
+        #[test]
+        fn parse_json_schema_internal_invalid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#" {
         "Schema": {
             "entityTypes": {
             "User": {
@@ -1168,24 +1152,27 @@ mod jvm_based_tests {
         }
         }"#;
 
-        let jstr = env.new_string(invalid_input).unwrap();
-        let result = parse_json_schema_internal(&mut env, jstr);
-        assert!(result.is_err(), " Expected parsing has failed");
-     }
-     #[test]
-        fn test_parse_cedar_schema_internal_invalid(){
+            let jstr = env.new_string(invalid_input).unwrap();
+            let result = parse_json_schema_internal(&mut env, jstr);
+            assert!(result.is_err(), " Expected parsing has failed");
+        }
+        #[test]
+        fn test_parse_cedar_schema_internal_invalid() {
             let mut env = JVM.attach_current_thread().unwrap();
 
             let invalid_input = "Not a valid input";
             let schema_jstr = env.new_string(invalid_input).unwrap();
             let result = parse_cedar_schema_internal(&mut env, schema_jstr);
-            assert!(result.is_err(), "Expected parse_cedar_schema_internal to fail");
+            assert!(
+                result.is_err(),
+                "Expected parse_cedar_schema_internal to fail"
+            );
         }
         #[test]
-fn test_parse_cedar_schema_internal_valid() {
-    let mut env = JVM.attach_current_thread().unwrap();
+        fn test_parse_cedar_schema_internal_valid() {
+            let mut env = JVM.attach_current_thread().unwrap();
 
-    let input = r#"
+            let input = r#"
         entity User = {
             name: String,
             age?: Long,
@@ -1200,98 +1187,99 @@ fn test_parse_cedar_schema_internal_valid() {
         }; 
     "#;
 
-    let schema_jstr = env.new_string(input).unwrap();
-    let result = parse_cedar_schema_internal(&mut env, schema_jstr);
+            let schema_jstr = env.new_string(input).unwrap();
+            let result = parse_cedar_schema_internal(&mut env, schema_jstr);
 
-    assert!(result.is_ok(), "Expected parse_cedar_schema_internal to succeed");
+            assert!(
+                result.is_ok(),
+                "Expected parse_cedar_schema_internal to succeed"
+            );
 
-    let jvalue = result.unwrap();
-    let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
-    let parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
+            let jvalue = result.unwrap();
+            let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
 
-    println!("Parsed schema output: {}", parsed_string);
-    assert_eq!(parsed_string, "success");
-}
-#[test]
-    fn test_parse_policy_set_valid() {
-        let input = r#"
+            println!("Parsed schema output: {}", parsed_string);
+            assert_eq!(parsed_string, "success");
+        }
+        #[test]
+        fn test_parse_policy_set_valid() {
+            let input = r#"
             permit(principal, action , resource);
             permit(principal,action,resource) when {principal has x && principal.x == 5};
         "#;
 
-        let result = PolicySet::from_str(input);
-        assert!(result.is_ok(), "Expected parsing to succeed");
+            let result = PolicySet::from_str(input);
+            assert!(result.is_ok(), "Expected parsing to succeed");
 
-        let policy_set = result.unwrap();
+            let policy_set = result.unwrap();
 
-        assert_eq!(policy_set.policies().count(), 2);
-        assert_eq!(policy_set.templates().count(), 0);
-    }
+            assert_eq!(policy_set.policies().count(), 2);
+            assert_eq!(policy_set.templates().count(), 0);
+        }
 
-    #[test]
-    fn test_parse_policy_set_invalid() {
-        let input = r#"
+        #[test]
+        fn test_parse_policy_set_invalid() {
+            let input = r#"
             permit();
         "#;
 
-        let result = PolicySet::from_str(input);
-        assert!(result.is_err(), "Expected parsing to fail on invalid policy");
-    }
+            let result = PolicySet::from_str(input);
+            assert!(
+                result.is_err(),
+                "Expected parsing to fail on invalid policy"
+            );
+        }
 
-    #[test]
-    fn test_parse_policy_set_with_template() {
-        let input = r#"
+        #[test]
+        fn test_parse_policy_set_with_template() {
+            let input = r#"
             permit(principal == ?principal, action, resource == ?resource);
         "#;
 
-        let result = PolicySet::from_str(input);
-        assert!(result.is_ok(), "Expected template policy parsing to succeed");
+            let result = PolicySet::from_str(input);
+            assert!(
+                result.is_ok(),
+                "Expected template policy parsing to succeed"
+            );
 
-        let policy_set = result.unwrap();
-        assert_eq!(policy_set.policies().count(), 0);
-        assert_eq!(policy_set.templates().count(), 1);
-    }
-    #[test]
-        fn template_effect_jni_internal_permit_test(){
-            let mut env = JVM.attach_current_thread().unwrap();
-            let template_policy = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#; 
-        
-        let jstr = env.new_string(template_policy).unwrap();
-        let result = template_effect_jni_internal(&mut env, jstr);
-        assert!(result.is_ok());
-
-        let jvalue = result.unwrap();
-        let jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
-        let effect =  String::from(env.get_string(&jstring).unwrap());
-        assert_eq!(effect, "permit");
+            let policy_set = result.unwrap();
+            assert_eq!(policy_set.policies().count(), 0);
+            assert_eq!(policy_set.templates().count(), 1);
         }
-        
         #[test]
-        fn template_effect_jni_internal_forbid_test()
-        {
+        fn template_effect_jni_internal_permit_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let template_policy = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
+
+            let jstr = env.new_string(template_policy).unwrap();
+            let result = template_effect_jni_internal(&mut env, jstr);
+            assert!(result.is_ok());
+
+            let jvalue = result.unwrap();
+            let jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let effect = String::from(env.get_string(&jstring).unwrap());
+            assert_eq!(effect, "permit");
+        }
+
+        #[test]
+        fn template_effect_jni_internal_forbid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
             let cedar_policy = r#"forbid(principal==?principal,action == Action::"readfile",resource==?resource );"#;
             let jstr = env.new_string(cedar_policy).unwrap();
-            
+
             let result = template_effect_jni_internal(&mut env, jstr);
-            if let Err(_e) = &result{
+            if let Err(_e) = &result {
                 println!("failed to parse template");
             }
 
             assert!(result.is_ok());
-            
+
             let jvalue = result.unwrap();
             let jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
             let effect = String::from(env.get_string(&jstring).unwrap());
 
-            assert_eq!(effect,"forbid");
-
+            assert_eq!(effect, "forbid");
         }
+    }
 }
-
-}
-
-
-
-
-    
