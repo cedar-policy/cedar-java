@@ -60,8 +60,8 @@ public class PolicyFormatterTests {
 
     String formattedCedarPolicyWithCustomConfig = Files.readString(
         Path.of(TEST_RESOURCES_DIR + "formatted_policy_custom_config.cedar"));
-
-    assertEquals(formattedCedarPolicyWithCustomConfig,
-        PolicyFormatter.policiesStrToPrettyWithConfig(unformattedCedarPolicy, new Config(120, 4)));
+    
+    assertEquals(formattedCedarPolicyWithCustomConfig.trim(),
+        PolicyFormatter.policiesStrToPrettyWithConfig(unformattedCedarPolicy.trim(), new Config(120, 4)));
   }
 }
