@@ -3,4 +3,4 @@ permit (
   action == Action::"update",
   resource
 )
-when { resource.owner == princ };
+when { resource.owner == principal };
