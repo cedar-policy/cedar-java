@@ -85,6 +85,7 @@ dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
     testImplementation 'net.jqwik:jqwik:1.9.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+    testImplementation 'org.skyscreamer:jsonassert:2.0-rc1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
 }
 
@@ -121,6 +122,26 @@ tasks.register('installCargoZigbuild', Exec) {
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
     commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.19.7'
+}
+
+def ZigVersion = '0.11'
+tasks.register('validateZigVersion') {
+    group = 'Build'
+    description = 'Validates that the correct zig version is installed'
+    
+    doLast {
+        def output = new ByteArrayOutputStream()
+        exec {
+            commandLine 'zig', 'version'
+            standardOutput = output
+        }
+        def version = output.toString().trim()
+        println "Detected Zig version: ${version}"
+        if (!version.startsWith(ZigVersion)) {
+            throw new GradleException("Zig version must be ${ZigVersion} but found: ${version}")        
+        }
+        println "Zig version validation successful"
+    }
 }
 
 tasks.register('compileFFI') {
@@ -251,6 +272,7 @@ java {
 /*
  Configures Maven publishing
  */
+publish.dependsOn('validateZigVersion')
 publishing {
     publications {
         mavenJava(MavenPublication) {

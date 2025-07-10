@@ -16,13 +16,15 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 
 public class SchemaTests {
     @Test
@@ -107,4 +109,87 @@ public class SchemaTests {
             Schema.parse(JsonOrCedar.Cedar, "namspace Foo::Bar;");
         });
     }
+
+    // write cedar java conversion tests here ...
+    static class SchemaConversionTests {
+        @Test
+        public void toCedarFormatValid() throws InternalException {
+            String schemaJson = """
+                    {
+                        "schema": {
+                            "entityTypes": {
+                                "User": {
+                                    "memberOfTypes": ["Group"]
+                                },
+                                "Group": {},
+                                "File": {}
+                            },
+                            "actions": {
+                                "read": {
+                                    "appliesTo": {
+                                        "principalTypes": ["User"],
+                                        "resourceTypes": ["File"]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    """;
+            Schema schema = Schema.parse(JsonOrCedar.Json, schemaJson);
+            String cedarSchema = schema.toCedarFormat();
+            assertNotNull(schema);
+            assertTrue(cedarSchema.contains("entity User"), "Expected Cedar to contain 'entity User'");
+        }
+
+        @Test
+        public void toJsonFormatValidCedar() throws InternalException {
+            String cedarSchema = """
+                    entity User {
+                        name: String,
+                        age?: Long
+                    };
+                    entity Photo in [Album];
+                    entity Album;
+                    action view appliesTo {
+                        principal: [User],
+                        resource: [Album, Photo]
+                    };
+                    """;
+            Schema schema = Schema.parse(JsonOrCedar.Cedar, cedarSchema);
+            String jsonSchema = schema.toJsonFormat();
+            assertNotNull(schema);
+            assertTrue(jsonSchema.contains("User"), "Expected Json to contain 'User'");
+        }
+
+        @Test
+        public void toCedarFormatThrowsIfNotJson() {
+            String cedarSchema = """
+                    entity Foo;
+                    """;
+
+            assertThrows(InternalException.class, () -> {
+                Schema schema = Schema.parse(JsonOrCedar.Cedar, cedarSchema);
+                schema.toCedarFormat(); // should throw
+            });
+        }
+
+        @Test
+        public void toJsonFormatThrowsIfNotCedar() {
+            String jsonSchema = """
+                    {
+                        "schema": {
+                            "entityTypes": {
+                                "User": {}
+                            }
+                        }
+                    }
+                    """;
+
+            assertThrows(InternalException.class, () -> {
+                Schema schema = Schema.parse(JsonOrCedar.Json, jsonSchema);
+                schema.toJsonFormat(); // should throw
+            });
+        }
+    }
+
 }

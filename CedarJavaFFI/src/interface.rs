@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-use cedar_policy::entities_errors::EntitiesError;
+
+use anyhow::anyhow;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
+use cedar_policy::ffi::Schema as FFISchema;
+use cedar_policy::ffi::SchemaToJsonAnswer;
+use cedar_policy::{
+    entities_errors::EntitiesError,
+    ffi::{schema_to_json, schema_to_text, SchemaToTextAnswer},
+};
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     Entities, EntityUid, Policy, PolicySet, Schema, Template,
@@ -703,6 +710,82 @@ fn policies_str_to_pretty_internal<'a>(
         }
     }
 }
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn jsonToCedarJni<'a>(mut env: JNIEnv<'a>, _: JClass, json_schema: JString<'a>) -> jvalue {
+    match get_cedar_schema_internal(&mut env, json_schema) {
+        Ok(text) => match env.new_string(&text) {
+            Ok(jstr) => JValueGen::Object(JObject::from(jstr)).as_jni(),
+            Err(e) => jni_failed(&mut env, &e),
+        },
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+pub fn get_cedar_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    schema_json_jstr: JString<'a>,
+) -> Result<String> {
+    let rust_str = env.get_string(&schema_json_jstr)?;
+    let schema_str = rust_str.to_str()?;
+
+    let schema: FFISchema = serde_json::from_str(schema_str)?; 
+    let cedar_format = schema_to_text(schema);
+
+    match cedar_format {
+        SchemaToTextAnswer::Success { text, warnings } => Ok(text),
+        SchemaToTextAnswer::Failure { errors } => {
+              let joined_errors = errors
+                  .iter()
+                  .map(|e| e.message.clone())
+                  .collect::<Vec<_>>()
+                  .join("; ");
+              Err(joined_errors.into())
+          
+      }
+ }
+}
+
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn cedarToJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, cedar_schema: JString<'a>) -> jvalue {
+    match get_json_schema_internal(&mut env, cedar_schema) {
+        Ok(text) => match env.new_string(&text) {
+            Ok(jstr) => JValueGen::Object(JObject::from(jstr)).as_jni(), // debug needed
+            Err(e) => {
+                println!("Possible error");
+                jni_failed(&mut env, &e)
+            }
+        },
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+pub fn get_json_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    cedar_schema_jstr: JString<'a>,
+) -> Result<String> {
+    let schema_jstr = env.get_string(&cedar_schema_jstr)?;
+    let schema_str = schema_jstr.to_str()?;
+    let cedar_schema_str = FFISchema::Cedar(schema_str.into());
+    let json_format = schema_to_json(cedar_schema_str);
+  
+    match json_format {
+        SchemaToJsonAnswer::Success { json, warnings: _ } => Ok(serde_json::to_string_pretty(&json)?),
+        SchemaToJsonAnswer::Failure { errors } => {
+            let errmsg = serde_json::to_string(&errors);
+         let joined_errors = errors
+                  .iter()
+                //   .enumerate() 
+                //   .map(|(i,e)| format!("Error(s) {}: {}", i + 1,e.message)) //method for formated display to make it cleaner
+                 .map(|e| e.message.clone()) 
+                  .collect::<Vec<_>>()
+                  .join("; ");
+              Err(joined_errors.into())
+          
+      }
+ }
+}
+
+
 
 #[cfg(test)]
 mod jvm_based_tests {
@@ -871,4 +954,75 @@ mod jvm_based_tests {
             )
         }
     }
+    mod Conversion_tests
+    {
+        use super::*;
+        #[test]
+fn test_get_cedar_schema_internal_valid() {
+    let env = &mut JVM.attach_current_thread().unwrap();
+    let json_input = r#"
+    {
+        "schema": {
+            "entityTypes": {
+                "User": {
+                    "memberOfTypes": ["Group"]
+                },
+                "Group": {},
+                "File": {}
+            },
+            "actions": {
+                "read": {
+                    "appliesTo": {
+                        "principalTypes": ["User"],
+                        "resourceTypes": ["File"]
+                    }
+                }
+            }
+        }
+    }
+    "#;
+
+    let jstr = env.new_string(json_input).unwrap();
+    let result = get_cedar_schema_internal(env, jstr);
+    assert!(result.is_ok(), "Expected Cedar conversion to succeed");
+
+    let cedar = result.unwrap();
+    assert!(cedar.contains("entity User"), "Expected output to contain 'entity User'");
+}
+#[test]
+fn test_get_json_schema_internal_valid() {
+    let env = &mut JVM.attach_current_thread().unwrap();
+    let cedar_input = r#"
+        entity User = {
+            name: String,
+            age?: Long,
+        };
+        entity Photo in Album;
+        entity Album;
+        action view appliesTo {
+            principal : [User],
+            resource: [Album,Photo]
+        }; 
+    "#;
+
+    let jstr = env.new_string(cedar_input).unwrap();
+    let result = get_json_schema_internal(env, jstr);
+    assert!(result.is_ok(), "Expected JSON conversion to succeed");
+
+    let json = result.unwrap();
+    assert!(json.contains("\"entityTypes\""), "Expected JSON output to contain 'entityTypes'");
+}
+#[test]
+fn test_get_json_schema_internal_invalid_input() {
+    let env = &mut JVM.attach_current_thread().unwrap();
+    let invalid_cedar = "this is not cedar schema";
+    let jstr = env.new_string(invalid_cedar).unwrap();
+
+    let result = get_json_schema_internal(env, jstr);
+    assert!(result.is_err(), "Expected error on invalid Cedar input");
+}
+
+
+    }
+   
 }

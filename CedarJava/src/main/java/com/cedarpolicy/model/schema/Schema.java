@@ -16,12 +16,12 @@
 
 package com.cedarpolicy.model.schema;
 
+import java.util.Optional;
+
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Optional;
 
 /** Represents a schema. */
 public final class Schema {
@@ -101,6 +101,21 @@ public final class Schema {
         }
     }
 
+    public String toCedarFormat() throws InternalException {
+        if (type != JsonOrCedar.Json || schemaJson.isEmpty()) {
+            throw new InternalException("Schema is not in JSON format");
+        }
+        String json = schemaJson.get().toString();
+        return jsonToCedarJni(json);
+    }
+
+    public String toJsonFormat() throws InternalException {
+        if (type != JsonOrCedar.Cedar || schemaText.isEmpty()) {
+            throw new InternalException("Schema is not in cedar format");
+        }
+        return cedarToJsonJni(schemaText.get());
+    }
+
     /**
      * Try to parse a string representing a JSON or Cedar schema. If parsing
      * succeeds, return a `Schema`, otherwise raise an exception.
@@ -125,13 +140,15 @@ public final class Schema {
     /** Specifies the schema format used. */
     public enum JsonOrCedar {
         /**
-         * Cedar JSON schema format. See <a href="https://docs.cedarpolicy.com/schema/json-schema.html">
-         *     https://docs.cedarpolicy.com/schema/json-schema.html</a>
+         * Cedar JSON schema format. See
+         * <a href="https://docs.cedarpolicy.com/schema/json-schema.html">
+         * https://docs.cedarpolicy.com/schema/json-schema.html</a>
          */
         Json,
         /**
-         * Cedar schema format. See <a href="https://docs.cedarpolicy.com/schema/human-readable-schema.html">
-         *     https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
+         * Cedar schema format. See
+         * <a href="https://docs.cedarpolicy.com/schema/human-readable-schema.html">
+         * https://docs.cedarpolicy.com/schema/human-readable-schema.html</a>
          */
         Cedar
     }
@@ -139,4 +156,8 @@ public final class Schema {
     private static native String parseJsonSchemaJni(String schemaJson) throws InternalException, NullPointerException;
 
     private static native String parseCedarSchemaJni(String schemaText) throws InternalException, NullPointerException;
+
+    private static native String jsonToCedarJni(String json) throws InternalException, NullPointerException;
+
+    private static native String cedarToJsonJni(String cedar) throws InternalException, NullPointerException;
 }
