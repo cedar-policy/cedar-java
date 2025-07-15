@@ -128,3 +128,130 @@ pub fn jstr_list_to_rust_vec<'a>(
 
     Ok(rust_vec)
 }
+#[cfg(test)]
+mod jlist_tests {
+    use crate::{
+        jlist::{jstr_list_to_rust_vec, List},
+        jvm_based_tests::JVM,
+    };
+
+    use super::*;
+    use jni::objects::JString;
+
+    #[test]
+    fn list_new_creates_empty_list() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let list = List::<JString>::new(&mut env).unwrap();
+        assert_eq!(list.size(&mut env).unwrap(), 0);
+    }
+
+    #[test]
+    fn list_add_increases_size_and_stores_value() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut list = List::<JString>::new(&mut env).unwrap();
+        let jstr = env.new_string("hello").unwrap();
+
+        list.add(&mut env, jstr).unwrap();
+        assert_eq!(list.size(&mut env).unwrap(), 1);
+
+        let val = list.get(&mut env, 0).unwrap();
+        let val_str = env.get_string(&val).unwrap();
+        assert_eq!(val_str.to_str().unwrap(), "hello");
+    }
+
+    #[test]
+    fn list_get_out_of_bounds_throws() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut list = List::<JString>::new(&mut env).unwrap();
+        let jstr = env.new_string("item").unwrap();
+        list.add(&mut env, jstr).unwrap();
+
+        let result = list.get(&mut env, 1);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn list_iterator_returns_all_items_in_order() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut list = List::<JString>::new(&mut env).unwrap();
+
+        for s in ["one", "two", "three"] {
+            let jstr = env.new_string(s).unwrap();
+            list.add(&mut env, jstr).unwrap();
+        }
+
+        let iterated: Vec<String> = list
+            .iter(&mut env)
+            .unwrap()
+            .map(|jstr| env.get_string(&jstr).unwrap().into())
+            .collect();
+
+        assert_eq!(iterated, vec!["one", "two", "three"]);
+    }
+
+    #[test]
+    fn jstr_list_to_rust_vec_correct_conversion() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut list = List::<JString>::new(&mut env).unwrap();
+        for s in ["a", "b", "c"] {
+            let jstr = env.new_string(s).unwrap();
+            list.add(&mut env, jstr).unwrap();
+        }
+
+        let vec = jstr_list_to_rust_vec(&mut env, &list).unwrap();
+        assert_eq!(vec, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn jstr_list_to_rust_vec_empty() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let list = List::<JString>::new(&mut env).unwrap();
+
+        let vec = jstr_list_to_rust_vec(&mut env, &list).unwrap();
+        assert!(vec.is_empty());
+    }
+
+    #[test]
+    fn list_cast_unchecked_from_valid_obj() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let obj = env.new_object("java/util/ArrayList", "()V", &[]).unwrap();
+
+        let mut list = List::<JString>::cast_unchecked(obj, &mut env).unwrap();
+        assert_eq!(list.size(&mut env).unwrap(), 0);
+
+        let jstr = env.new_string("test").unwrap();
+        list.add(&mut env, jstr).unwrap();
+        assert_eq!(list.size(&mut env).unwrap(), 1);
+    }
+
+    #[test]
+    fn as_ref_returns_jobject() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let list = List::<JString>::new(&mut env).unwrap();
+        let jobject = list.as_ref();
+
+        assert!(!jobject.is_null());
+        let jobject2 = list.as_ref();
+        assert_eq!(jobject.as_raw(), jobject2.as_raw());
+    }
+    #[test]
+    fn index_out_of_bounds_error() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut list = List::<JString>::new(&mut env).unwrap();
+        let jstr = env.new_string("item").unwrap();
+        list.add(&mut env, jstr).unwrap();
+
+        let result = list.get(&mut env, 1);
+        let _error_msg = match result {
+            Err(ref err) => format!("{}", err),
+            Ok(_) => panic!("Expected error, but got Ok"),
+        };
+        assert!(result.is_err());
+    }
+    #[test]
+    fn size_method_works() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let list = List::<JString>::new(&mut env).unwrap();
+        assert_eq!(list.size(&mut env).unwrap(), 0);
+    }
+}

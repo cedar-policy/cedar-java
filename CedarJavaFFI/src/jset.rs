@@ -60,3 +60,28 @@ impl<'a, T> AsRef<JObject<'a>> for Set<'a, T> {
         &self.obj
     }
 }
+#[cfg(test)]
+mod jset_tests {
+    use super::*;
+    use crate::interface::jvm_based_tests::JVM;
+    use jni::objects::JString;
+
+    #[test]
+    fn test_add() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let mut set = Set::<JString>::new(&mut env).unwrap();
+        let test_string = env.new_string("test").unwrap();
+
+        assert!(set.add(&mut env, test_string).is_ok());
+        assert_eq!(set.size, 1);
+    }
+
+    #[test]
+    fn test_as_ref() {
+        let mut env = JVM.attach_current_thread().unwrap();
+        let set = Set::<JString>::new(&mut env).unwrap();
+        let jobject = set.as_ref();
+
+        assert!(!jobject.is_null());
+    }
+}
