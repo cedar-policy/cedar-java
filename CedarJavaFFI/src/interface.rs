@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
@@ -705,16 +704,20 @@ fn policies_str_to_pretty_internal<'a>(
 }
 
 #[cfg(test)]
-mod jvm_based_tests {
+pub(crate) mod jvm_based_tests {
     use super::*;
     use crate::jvm_test_utils::*;
     use jni::JavaVM;
     use std::sync::LazyLock;
 
+    pub(crate) static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
     // Static JVM to be used by all the tests. LazyLock for thread-safe lazy initialization
-    static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
 
     mod policy_tests {
+        use std::result;
+
+        use cedar_policy::Effect;
+
         use super::*;
 
         #[track_caller]
@@ -731,6 +734,17 @@ mod jvm_based_tests {
             let mut env = JVM.attach_current_thread().unwrap();
             policy_effect_test_util(&mut env, "permit(principal,action,resource);", "permit");
             policy_effect_test_util(&mut env, "forbid(principal,action,resource);", "forbid");
+        }
+        #[test]
+        fn policy_effect_jni_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_obj = JObject::null();
+            let result = policy_effect_jni_internal(&mut env, null_obj.into());
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
         }
 
         #[track_caller]
@@ -802,8 +816,328 @@ mod jvm_based_tests {
                 "myAnnotatedValue",
             );
         }
-    }
+        #[test]
+        fn get_template_annotations_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_obj = JObject::null();
+            let result = get_template_annotations_internal(&mut env, null_obj.into());
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected java exception due to a null input"
+            );
+        }
+        #[test]
+        fn parse_policy_internal_success_basic() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"permit(principal,action,resource);"#;
+            let policy_jstr = env.new_string(input).unwrap();
 
+            let result = parse_policy_internal(&mut env, policy_jstr);
+            assert!(
+                result.is_ok(),
+                "Expected parse_policy_internal to succeed: {:?}",
+                result
+            );
+
+            let jvalue = result.unwrap();
+            let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let actual_parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
+            let expected_policy_object = cedar_policy::Policy::from_str(input).unwrap();
+            let expected_canonical_string = expected_policy_object.to_string();
+
+            assert_eq!(
+                actual_parsed_string, expected_canonical_string,
+                "Parsed policy string should match the expected canonical format."
+            );
+        }
+
+        #[test]
+        fn parse_policy_template_internal_invalid_missing_template_slots() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"permit(principal == User::"alice", action == Action::"read", resource == Resource::"file");"#;
+            let jstr = env.new_string(input).unwrap();
+
+            let result = parse_policy_template_internal(&mut env, jstr);
+
+            assert!(
+                result.is_err(),
+                "Expected parse_policy_template_internal to fail due to missing template slots"
+            );
+        }
+        #[test]
+        fn get_policy_annotations_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_obj = JObject::null();
+            let result = get_policy_annotations_internal(&mut env, null_obj.into());
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected java exception due to a null input"
+            );
+        }
+        #[test]
+        fn parse_policy_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = parse_policy_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+        #[test]
+        fn parse_policy_template_valid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let policy_template = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
+            let jstr = env.new_string(policy_template).unwrap();
+            let result = parse_policy_template_internal(&mut env, jstr);
+            assert!(result.is_ok());
+
+            let jvalue = result.unwrap();
+            let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let actual_parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
+            let expected_template_object =
+                cedar_policy::Template::from_str(policy_template).unwrap();
+            let expected_canonical_string = expected_template_object.to_string();
+
+            assert_eq!(
+                actual_parsed_string, expected_canonical_string,
+                "Parsed template string should match the expected canonical format."
+            );
+        }
+
+        #[test]
+        fn parse_policy_template_invalid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"permit(Principa,Action,Resource );"#;
+            let jstr = env.new_string(invalid_input).unwrap();
+            let result = parse_policy_template_internal(&mut env, jstr);
+            assert!(result.is_err(), "Expected to fail for invalid input");
+        }
+        #[test]
+        fn parse_policy_template_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = parse_policy_template_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+        #[test]
+        fn from_json_test_valid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+
+            let policy_json = r#"
+    {
+        "effect": "permit",
+        "principal": {
+            "op": "==",
+            "entity": { "type": "User", "id": "12UA45" }
+        },
+        "action": {
+            "op": "==",
+            "entity": { "type": "Action", "id": "view" }
+        },
+        "resource": {
+            "op": "in",
+            "entity": { "type": "Folder", "id": "abc" }
+        },
+        "conditions": [
+            {
+                "kind": "when",
+                "body": {
+                    "==": {
+                        "left": {
+                            ".": {
+                                "left": { "Var": "context" },
+                                "attr": "tls_version"
+                            }
+                        },
+                        "right": { "Value": "1.3" }
+                    }
+                }
+            }
+        ]
+    }
+    "#;
+
+            let java_str = env.new_string(policy_json).unwrap();
+            let result = from_json_internal(&mut env, java_str);
+            assert!(
+                result.is_ok(),
+                "Expected from_json parsing to succeed, got: {:?}",
+                result
+            );
+
+            let java_val = result.unwrap();
+            let obj = java_val.l().unwrap();
+            let policy_str: String = env.get_string(&obj.into()).unwrap().into();
+
+            let policy_json_value: serde_json::Value = serde_json::from_str(policy_json).unwrap();
+            let expected_policy = cedar_policy::Policy::from_json(None, policy_json_value).unwrap();
+            let expected_policy_str = expected_policy.to_string();
+
+            assert_eq!(
+                policy_str, expected_policy_str,
+                "Parsed policy string should match the expected Cedar policy format"
+            );
+        }
+        #[test]
+        fn from_json_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = from_json_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+
+        #[test]
+        fn from_json_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"
+        {
+            "Effect": "permit",
+            "Principal": {
+                "op": "==",
+                "Entity": { "type": "User", "id": "12UA45" }
+            },
+            "Action": {
+                "op": "==",
+                "entity": { "type": "Action", "id": "view" }
+            },
+            "Resource": {
+                "op": "in",
+                "entity": { "type": "Folder", "id": "abc" }
+            },
+            "Conditions": [
+                {
+                    "kind": "when",
+                    "body": {
+                        "==": {
+                            "left": {
+                                ".": {
+                                    "left": {
+                                        "Var": "context"
+                                    },
+                                    "attr": "tls_version"
+                                }
+                            },
+                            "right": {
+                                "Value": "1.3"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+        "#;
+
+            let java_str = env.new_string(invalid_input).unwrap();
+            let result = from_json_internal(&mut env, java_str);
+            assert!(
+                result.is_err(),
+                "Expected json parsing to fail: {:?}",
+                result
+            );
+        }
+
+        #[test]
+        fn to_json_internal_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"permit(principal, action, resource);"#;
+            let jstr = env.new_string(input).unwrap();
+            let result = to_json_internal(&mut env, jstr);
+
+            assert!(result.is_ok(), "Expected to_json to succeed");
+
+            let jval = result.unwrap();
+            let obj = jval.l().unwrap();
+            let actual_json_str: String = env.get_string(&obj.into()).unwrap().into();
+
+            let expected_policy = cedar_policy::Policy::from_str(input).unwrap();
+            let expected_json_str =
+                serde_json::to_string(&expected_policy.to_json().unwrap()).unwrap();
+
+            assert_eq!(
+                actual_json_str, expected_json_str,
+                "Generated JSON should match expected policy JSON format"
+            );
+        }
+
+        #[test]
+        fn to_json_internal_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"Permit(Principal, Resource, Action);"#;
+            let jstr = env.new_string(invalid_input).unwrap();
+
+            let result = from_json_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected json_internal parsing to fail: {:?}",
+                result
+            );
+        }
+        #[test]
+        fn to_json_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = to_json_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+        #[test]
+        fn template_effect_jni_internal_permit_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let template_policy = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
+
+            let jstr = env.new_string(template_policy).unwrap();
+            let result = template_effect_jni_internal(&mut env, jstr);
+            assert!(result.is_ok());
+
+            let jvalue = result.unwrap();
+            let jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let effect = String::from(env.get_string(&jstring).unwrap());
+            assert_eq!(effect, "permit");
+        }
+
+        #[test]
+        fn template_effect_jni_internal_forbid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let cedar_policy = r#"forbid(principal==?principal,action == Action::"readfile",resource==?resource );"#;
+            let jstr = env.new_string(cedar_policy).unwrap();
+
+            let result = template_effect_jni_internal(&mut env, jstr);
+            assert!(result.is_ok());
+
+            let jvalue = result.unwrap();
+            let jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let effect = String::from(env.get_string(&jstring).unwrap());
+
+            assert_eq!(effect, "forbid");
+        }
+
+        #[test]
+        fn template_effect_jni_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_obj = JObject::null();
+            let result = template_effect_jni_internal(&mut env, null_obj.into());
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+    }
     mod map_tests {
         use super::*;
 
@@ -869,6 +1203,152 @@ mod jvm_based_tests {
                 retrieved_value_str, "test_value",
                 "Retrieved value should be equal to the inserted value."
             )
+        }
+    }
+    mod schema_test {
+        use std::result;
+
+        use super::*;
+        use cedar_policy::{EntityId, Schema};
+
+        #[test]
+        fn parse_json_schema_internal_valid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"{
+    "schema": {
+        "entityTypes": {
+            "User": {
+                "memberOfTypes": ["Group"]
+            },
+            "Group": {},
+            "File": {}
+        },
+        "actions": {
+            "read": {
+                "appliesTo": {
+                    "principalTypes": ["User"],
+                    "resourceTypes": ["File"]
+                }
+            }
+        }
+    }
+}"#;
+            let jstr = env.new_string(input).unwrap();
+            let result = parse_json_schema_internal(&mut env, jstr);
+            assert!(result.is_ok(), "Expected schema to parse successfully");
+
+            let output = result.unwrap();
+            let jstring_obj = output.l().unwrap();
+            let jstring: jni::objects::JString = JString::from(jstring_obj);
+            let rust_output: String = env.get_string(&jstring).unwrap().into();
+            assert_eq!(rust_output, "success");
+        }
+
+        #[test]
+        fn parse_json_schema_internal_invalid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_input = r#"{
+    "Schema": {
+        "entityTypes": {
+            "User": {
+                "MemberOfTypes": ["Group"]
+            },
+            "Group": {},
+            "File": {}
+        },
+        "Actions": {
+            "read": {
+                "AppliesTo": {
+                    "principalTypes": ["User"],
+                    "AesourceTypes": ["File"]
+                }
+            }
+        }
+    }
+}"#;
+
+            let jstr = env.new_string(invalid_input).unwrap();
+            let result = parse_json_schema_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected json_schema_internal parsing to fail: {:?}",
+                result
+            );
+        }
+        #[test]
+        fn parse_json_schema_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = parse_json_schema_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+        #[test]
+        fn parse_cedar_schema_internal_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+
+            let invalid_input = "Not a valid input";
+            let schema_jstr = env.new_string(invalid_input).unwrap();
+            let result = parse_cedar_schema_internal(&mut env, schema_jstr);
+            assert!(
+                result.is_err(),
+                "Expected parse_cedar_schema_internal to fail"
+            );
+        }
+        #[test]
+        fn parse_cedar_schema_internal_valid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let input = r#"
+            entity User = {
+                name: String,
+                age?: Long,
+            };
+            entity Photo in Album;
+            entity Album;
+            action view appliesTo {
+                principal : [User],
+                resource: [Album,Photo]
+            };
+            "#;
+
+            let schema_jstr = env.new_string(input).unwrap();
+            let result = parse_cedar_schema_internal(&mut env, schema_jstr);
+
+            assert!(
+                result.is_ok(),
+                "Expected parse_cedar_schema_internal to succeed"
+            );
+
+            let jvalue = result.unwrap();
+            let parsed_jstring = JString::cast(&mut env, jvalue.l().unwrap()).unwrap();
+            let parsed_string = String::from(env.get_string(&parsed_jstring).unwrap());
+            assert_eq!(parsed_string, "success");
+        }
+        #[test]
+        fn parse_cedar_schema_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = parse_cedar_schema_internal(&mut env, null_str);
+            assert!(result.is_ok(), "Expected error on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+        }
+        #[test]
+        fn test_get_template_annotations_internal_invalid_template() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_template = "invalid template syntax";
+            let jstr = env.new_string(invalid_template).unwrap();
+
+            let result = get_template_annotations_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected error for invalid template syntax"
+            );
         }
     }
 }
