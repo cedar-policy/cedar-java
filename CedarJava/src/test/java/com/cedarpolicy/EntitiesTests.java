@@ -16,24 +16,26 @@
 
 package com.cedarpolicy;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import com.cedarpolicy.value.*;
-import com.cedarpolicy.model.entity.Entity;
-import com.cedarpolicy.model.entity.Entities;
-import static com.cedarpolicy.CedarJson.objectWriter;
-
-import org.skyscreamer.jsonassert.*;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.json.JSONException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+
+import static com.cedarpolicy.CedarJson.objectWriter;
+import com.cedarpolicy.model.entity.Entities;
+import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.value.EntityUID;
+import com.cedarpolicy.value.PrimString;
+import com.cedarpolicy.value.Value;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class EntitiesTests {
     private static final String TEST_RESOURCES_DIR = "src/test/resources/";
@@ -60,7 +62,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenValidJSONStringParseReturns() throws JsonProcessingException {
+    public void givenValidJSONStringParseReturns() throws JsonProcessingException, JSONException {
         String validEntitiesJson = """
                 [
                     {"uid":{"type":"Photo","id":"pic02"},"parents":[{"type":"PhotoParent","id":"picParent"}],
@@ -98,7 +100,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenInvalidJSONStringParseThrows() throws JsonProcessingException {
+    public void givenInvalidJSONStringParseThrows() throws JsonProcessingException, JSONException {
         String invalidEntityJson = """
                 [{"uid":{"type":"Photo","id":"pic01"}},
                 {"uid":{"type":"Photo","id":"pic02"},"parents":[],"attrs":{}}]
@@ -119,7 +121,7 @@ public class EntitiesTests {
     }
 
     @Test
-    public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException {
+    public void givenValidJSONFileParseReturns() throws JsonProcessingException, IOException, JSONException {
         Entities entities = Entities.parse(Path.of(TEST_RESOURCES_DIR + "valid_entities.json"));
         String actualRepresentation = objectWriter().writeValueAsString(entities);
         String expectedRepresentation = "{\"entities\":[" + "{\"uid\":{\"type\":\"Photo\",\"id\":\"pic02\"},"
