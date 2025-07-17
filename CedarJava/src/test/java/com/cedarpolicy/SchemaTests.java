@@ -16,13 +16,17 @@
 
 package com.cedarpolicy;
 
-import com.cedarpolicy.model.schema.Schema;
-import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class SchemaTests {
     @Test
@@ -107,4 +111,65 @@ public class SchemaTests {
             Schema.parse(JsonOrCedar.Cedar, "namspace Foo::Bar;");
         });
     }
+
+    @Test
+    public void testToCedarFormat() throws InternalException {
+        String cedarSchema = "entity User;";
+        Schema cedarSchemaObj = new Schema(cedarSchema);
+        String result = cedarSchemaObj.toCedarFormat();
+        assertNotNull(result);
+        assertEquals(cedarSchema, result);
+
+        String jsonSchema = """
+                {
+                    "": {
+                        "entityTypes": {
+                            "User": {}
+                        },
+                        "actions": {}
+                    }
+                }
+                """;
+        Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
+        String convertedCedar = jsonSchemaObj.toCedarFormat();
+        assertNotNull(convertedCedar);
+        assertTrue(convertedCedar.contains("entity User"));
+
+        Schema invalidSchema = new Schema(JsonOrCedar.Cedar, java.util.Optional.empty(), java.util.Optional.empty());
+        assertThrows(InternalException.class, () -> {
+            invalidSchema.toCedarFormat();
+        });
+    }
+
+    @Test
+    public void testToJsonFormat() throws Exception {
+        String cedarSchema = "entity User;";
+        Schema cedarSchemaObj = new Schema(cedarSchema);
+        JsonNode jsonResult = cedarSchemaObj.toJsonFormat();
+        assertNotNull(jsonResult);
+        assertTrue(jsonResult.has(""));
+        assertTrue(jsonResult.get("").has("entityTypes"));
+        assertTrue(jsonResult.get("").get("entityTypes").has("User"));
+
+        String jsonSchema = """
+                {
+                    "": {
+                        "entityTypes": {
+                            "User": {}
+                        },
+                        "actions": {}
+                    }
+                }
+                """;
+        Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
+        assertThrows(InternalException.class, () -> {
+            jsonSchemaObj.toJsonFormat();
+        });
+
+        Schema invalidSchema = new Schema(JsonOrCedar.Cedar, java.util.Optional.empty(), java.util.Optional.empty());
+        assertThrows(InternalException.class, () -> {
+            invalidSchema.toJsonFormat();
+        });
+    }
+
 }
