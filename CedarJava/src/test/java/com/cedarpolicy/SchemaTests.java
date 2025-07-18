@@ -156,7 +156,7 @@ public class SchemaTests {
         void testEmptySchema() {
             Schema emptySchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.empty());
             Exception exception = assertThrows(IllegalStateException.class, emptySchema::toCedarFormat);
-            assertEquals("Schema content is missing", exception.getMessage());
+            assertEquals("No schema found", exception.getMessage());
         }
 
         @Test
@@ -224,7 +224,7 @@ public class SchemaTests {
         void testEmptySchema() {
             Schema emptySchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.empty());
             Exception exception = assertThrows(IllegalStateException.class, emptySchema::toJsonFormat);
-            assertEquals("Schema content is missing", exception.getMessage());
+            assertEquals("No schema found", exception.getMessage());
         }
 
         @Test

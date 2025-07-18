@@ -130,15 +130,15 @@ public final class Schema {
      * @return String representing the schema in Cedar format
      * @throws InternalException     If conversion from JSON to Cedar format fails
      * @throws IllegalStateException If schema content is missing
-     * @throws NullPointerException  If schema text is null
+     * @throws NullPointerException
      */
-    public String toCedarFormat() throws InternalException {
+    public String toCedarFormat() throws InternalException, IllegalStateException, NullPointerException {
         if (type == JsonOrCedar.Cedar && schemaText.isPresent()) {
             return schemaText.get();
         } else if (type == JsonOrCedar.Json && schemaJson.isPresent()) {
             return jsonToCedarJni(schemaJson.get().toString());
         } else {
-            throw new IllegalStateException("Schema content is missing");
+            throw new IllegalStateException("No schema found");
         }
     }
 
@@ -147,19 +147,20 @@ public final class Schema {
      *
      * @return JsonNode representing the schema in JSON format
      * @throws InternalException       If conversion from Cedar to JSON format fails
-     * @throws JsonMappingException    If JSON mapping fails
-     * @throws JsonProcessingException If JSON processing fails
      * @throws IllegalStateException   If schema content is missing
-     * @throws NullPointerException    If schema text is null
+     * @throws JsonMappingException    If invalid JSON 
+     * @throws JsonProcessingException If invalid JSON 
+     * @throws NullPointerException
      */
     public JsonNode toJsonFormat()
-            throws InternalException, JsonMappingException, JsonProcessingException, NullPointerException {
+            throws InternalException, JsonMappingException, JsonProcessingException, NullPointerException,
+            IllegalStateException {
         if (type == JsonOrCedar.Json && schemaJson.isPresent()) {
             return schemaJson.get();
         } else if (type == JsonOrCedar.Cedar && schemaText.isPresent()) {
             return OBJECT_MAPPER.readTree(cedarToJsonJni(schemaText.get()));
         } else {
-            throw new IllegalStateException("Schema content is missing");
+            throw new IllegalStateException("No schema found");
         }
     }
 
