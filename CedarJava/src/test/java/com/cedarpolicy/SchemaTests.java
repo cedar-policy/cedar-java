@@ -146,9 +146,9 @@ public class SchemaTests {
                     """;
             Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
             String result = jsonSchemaObj.toCedarFormat();
-            
+
             assertNotNull(result, "Result should not be null");
-            assertTrue(result.contains("entity User"), "Converted Cedar should contain the User entity");
+            assertTrue(result.contains("entity User;"), "Converted Cedar should contain the User entity");
         }
 
         @Test
@@ -158,22 +158,23 @@ public class SchemaTests {
             Exception exception = assertThrows(IllegalStateException.class, emptySchema::toCedarFormat);
             assertEquals("Schema content is missing", exception.getMessage());
         }
-        
+
         @Test
         @DisplayName("Should throw exception for malformed JSON schema")
         void testMalformedSchema() {
-            // Missing closing brace in the JSON structure
             String malformedJson = """
                     {
                         "": {
-                            "entityTypes": {
+                            "entityMalformedTypes": {
                                 "User": {}
                             },
-                            "actions": {
+                            "actions": {}
                         }
-                    """; 
+                    }
+                    """;
             Schema malformedSchema = new Schema(JsonOrCedar.Json, Optional.of(malformedJson), Optional.empty());
-            assertThrows(IllegalStateException.class, malformedSchema::toCedarFormat);
+            assertNotNull(malformedSchema.schemaJson);
+            assertThrows(InternalException.class, malformedSchema::toCedarFormat);
         }
     }
 
@@ -187,10 +188,10 @@ public class SchemaTests {
             String cedarSchema = "entity User;";
             Schema cedarSchemaObj = new Schema(cedarSchema);
             JsonNode result = cedarSchemaObj.toJsonFormat();
-            
+
             String expectedJson = "{\"\":{\"entityTypes\":{\"User\":{}},\"actions\":{}}}";
             JsonNode expectedNode = new ObjectMapper().readTree(expectedJson);
-            
+
             assertNotNull(result, "Result should not be null");
             assertEquals(expectedNode, result, "JSON should match expected structure");
         }
@@ -210,10 +211,10 @@ public class SchemaTests {
                     """;
             Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
             JsonNode result = jsonSchemaObj.toJsonFormat();
-            
+
             ObjectMapper mapper = new ObjectMapper();
             JsonNode expectedNode = mapper.readTree(jsonSchema);
-            
+
             assertNotNull(result, "Result should not be null");
             assertEquals(expectedNode, result, "JSON should match the original schema");
         }
@@ -225,7 +226,7 @@ public class SchemaTests {
             Exception exception = assertThrows(IllegalStateException.class, emptySchema::toJsonFormat);
             assertEquals("Schema content is missing", exception.getMessage());
         }
-        
+
         @Test
         @DisplayName("Should throw exception for malformed Cedar schema")
         void testMalformedSchema() {

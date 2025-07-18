@@ -1447,18 +1447,18 @@ pub(crate) mod jvm_based_tests {
 }"#;
 
             let expected_cedar = r#"namespace schema {
-  entity File;
+            entity File;
 
-  entity Group;
+            entity Group;
 
-  entity User in [Group];
+            entity User in [Group];
 
-  action "read" appliesTo {
-    principal: [User],
-    resource: [File],
-    context: {}
-  };
-}"#;
+            action "read" appliesTo {
+                principal: [User],
+                resource: [File],
+                context: {}
+            };
+            }"#;
 
             let jstr = env.new_string(json_input).unwrap();
             let result = get_cedar_schema_internal(&mut env, jstr);
@@ -1506,46 +1506,46 @@ pub(crate) mod jvm_based_tests {
         fn get_json_schema_internal_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let cedar_input = r#"
-    namespace schema {
-      entity File;
+            namespace schema {
+            entity File;
 
-      entity Group;
+            entity Group;
 
-      entity User in [Group];
+            entity User in [Group];
 
-      action "read" appliesTo {
-        principal: [User],
-        resource: [File],
-        context: {}
-      };
-    }
-    "#;
+            action "read" appliesTo {
+                principal: [User],
+                resource: [File],
+                context: {}
+            };
+            }
+            "#;
 
             let expected_json = r#"{
-  "schema": {
-    "entityTypes": {
-      "File": {},
-      "Group": {},
-      "User": {
-        "memberOfTypes": [
-          "Group"
-        ]
-      }
-    },
-    "actions": {
-      "read": {
-        "appliesTo": {
-          "resourceTypes": [
-            "File"
-          ],
-          "principalTypes": [
-            "User"
-          ]
-        }
-      }
-    }
-  }
-}"#;
+            "schema": {
+                "entityTypes": {
+                "File": {},
+                "Group": {},
+                "User": {
+                    "memberOfTypes": [
+                    "Group"
+                    ]
+                }
+                },
+                "actions": {
+                "read": {
+                    "appliesTo": {
+                    "resourceTypes": [
+                        "File"
+                    ],
+                    "principalTypes": [
+                        "User"
+                    ]
+                    }
+                }
+                }
+            }
+            }"#;
 
             let jstr = env.new_string(cedar_input).unwrap();
             let result = get_json_schema_internal(&mut env, jstr);
