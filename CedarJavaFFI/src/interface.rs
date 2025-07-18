@@ -15,7 +15,7 @@
  */
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
- use is_authorized_partial_json_str;
+use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::ffi::{
    schema_to_json, schema_to_text, Schema as FFISchema,
     SchemaToJsonAnswer, SchemaToTextAnswer,
