@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -148,7 +147,8 @@ public class SchemaTests {
             String result = jsonSchemaObj.toCedarFormat();
 
             assertNotNull(result, "Result should not be null");
-            assertTrue(result.contains("entity User;"), "Converted Cedar should contain the User entity");
+            String expectedCedar = "entity User;";
+            assertEquals(expectedCedar, result.trim(), "Converted Cedar should match expected format");
         }
 
         @Test
