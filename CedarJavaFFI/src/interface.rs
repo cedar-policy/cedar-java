@@ -1000,39 +1000,39 @@ pub(crate) mod jvm_based_tests {
         fn from_json_test_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
 
-            let policy_json = r#"
-    {
-        "effect": "permit",
-        "principal": {
-            "op": "==",
-            "entity": { "type": "User", "id": "12UA45" }
-        },
-        "action": {
-            "op": "==",
-            "entity": { "type": "Action", "id": "view" }
-        },
-        "resource": {
-            "op": "in",
-            "entity": { "type": "Folder", "id": "abc" }
-        },
-        "conditions": [
-            {
-                "kind": "when",
-                "body": {
-                    "==": {
-                        "left": {
-                            ".": {
-                                "left": { "Var": "context" },
-                                "attr": "tls_version"
+                        let policy_json = r#"
+                {
+                    "effect": "permit",
+                    "principal": {
+                        "op": "==",
+                        "entity": { "type": "User", "id": "12UA45" }
+                    },
+                    "action": {
+                        "op": "==",
+                        "entity": { "type": "Action", "id": "view" }
+                    },
+                    "resource": {
+                        "op": "in",
+                        "entity": { "type": "Folder", "id": "abc" }
+                    },
+                    "conditions": [
+                        {
+                            "kind": "when",
+                            "body": {
+                                "==": {
+                                    "left": {
+                                        ".": {
+                                            "left": { "Var": "context" },
+                                            "attr": "tls_version"
+                                        }
+                                    },
+                                    "right": { "Value": "1.3" }
+                                }
                             }
-                        },
-                        "right": { "Value": "1.3" }
-                    }
+                        }
+                    ]
                 }
-            }
-        ]
-    }
-    "#;
+                "#;
 
             let java_str = env.new_string(policy_json).unwrap();
             let result = from_json_internal(&mut env, java_str);
@@ -1284,24 +1284,24 @@ pub(crate) mod jvm_based_tests {
         fn parse_json_schema_internal_valid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input = r#"{
-    "schema": {
-        "entityTypes": {
-            "User": {
-                "memberOfTypes": ["Group"]
-            },
-            "Group": {},
-            "File": {}
-        },
-        "actions": {
-            "read": {
-                "appliesTo": {
-                    "principalTypes": ["User"],
-                    "resourceTypes": ["File"]
+                "schema": {
+                    "entityTypes": {
+                        "User": {
+                            "memberOfTypes": ["Group"]
+                        },
+                        "Group": {},
+                        "File": {}
+                    },
+                    "actions": {
+                        "read": {
+                            "appliesTo": {
+                                "principalTypes": ["User"],
+                                "resourceTypes": ["File"]
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-}"#;
+            }"#;
             let jstr = env.new_string(input).unwrap();
             let result = parse_json_schema_internal(&mut env, jstr);
             assert!(result.is_ok(), "Expected schema to parse successfully");
@@ -1317,24 +1317,24 @@ pub(crate) mod jvm_based_tests {
         fn parse_json_schema_internal_invalid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
             let invalid_input = r#"{
-    "Schema": {
-        "entityTypes": {
-            "User": {
-                "MemberOfTypes": ["Group"]
-            },
-            "Group": {},
-            "File": {}
-        },
-        "Actions": {
-            "read": {
-                "AppliesTo": {
-                    "principalTypes": ["User"],
-                    "AesourceTypes": ["File"]
+                "Schema": {
+                    "entityTypes": {
+                        "User": {
+                            "MemberOfTypes": ["Group"]
+                        },
+                        "Group": {},
+                        "File": {}
+                    },
+                    "Actions": {
+                        "read": {
+                            "AppliesTo": {
+                                "principalTypes": ["User"],
+                                "AesourceTypes": ["File"]
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-}"#;
+            }"#;
 
             let jstr = env.new_string(invalid_input).unwrap();
             let result = parse_json_schema_internal(&mut env, jstr);
@@ -1427,24 +1427,24 @@ pub(crate) mod jvm_based_tests {
         fn get_cedar_schema_internal_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let json_input = r#"{
-    "schema": {
-        "entityTypes": {
-            "User": {
-                "memberOfTypes": ["Group"]
-            },
-            "Group": {},
-            "File": {}
-        },
-        "actions": {
-            "read": {
-                "appliesTo": {
-                    "principalTypes": ["User"],
-                    "resourceTypes": ["File"]
+                "schema": {
+                    "entityTypes": {
+                        "User": {
+                            "memberOfTypes": ["Group"]
+                        },
+                        "Group": {},
+                        "File": {}
+                    },
+                    "actions": {
+                        "read": {
+                            "appliesTo": {
+                                "principalTypes": ["User"],
+                                "resourceTypes": ["File"]
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-}"#;
+            }"#;
 
             let expected_cedar = r#"namespace schema {
             entity File;
