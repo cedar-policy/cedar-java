@@ -1000,7 +1000,7 @@ pub(crate) mod jvm_based_tests {
         fn from_json_test_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
 
-                        let policy_json = r#"
+            let policy_json = r#"
                 {
                     "effect": "permit",
                     "principal": {
