@@ -1514,11 +1514,7 @@ pub(crate) mod jvm_based_tests {
             let json_jval = result.unwrap();
             let json_jstr = JString::cast(&mut env, json_jval.l().unwrap()).unwrap();
             let json_str = String::from(env.get_string(&json_jstr).unwrap());
-
-            // Parse the JSON to normalize it for comparison
             let actual_json: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-
-            // Expected JSON structure
             let expected_json = serde_json::json!({
                 "schema": {
                     "entityTypes": {

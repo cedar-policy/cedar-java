@@ -124,6 +124,14 @@ public final class Schema {
 
     }
 
+    /**
+     * Converts a schema to Cedar format
+     *
+     * @return String representing the schema in Cedar format
+     * @throws InternalException     If conversion from JSON to Cedar format fails
+     * @throws IllegalStateException If schema content is missing
+     * @throws NullPointerException  If schema text is null
+     */
     public String toCedarFormat() throws InternalException {
         if (type == JsonOrCedar.Cedar && schemaText.isPresent()) {
             return schemaText.get();
@@ -138,9 +146,10 @@ public final class Schema {
      * Converts a Cedar format schema to JSON format
      *
      * @return JsonNode representing the schema in JSON format
-     * @throws InternalException       If schema is not in Cedar format
+     * @throws InternalException       If conversion from Cedar to JSON format fails
      * @throws JsonMappingException    If JSON mapping fails
      * @throws JsonProcessingException If JSON processing fails
+     * @throws IllegalStateException   If schema content is missing
      * @throws NullPointerException    If schema text is null
      */
     public JsonNode toJsonFormat()
@@ -153,7 +162,7 @@ public final class Schema {
             throw new IllegalStateException("Schema content is missing");
         }
     }
-    
+
     /** Specifies the schema format used. */
     public enum JsonOrCedar {
         /**
