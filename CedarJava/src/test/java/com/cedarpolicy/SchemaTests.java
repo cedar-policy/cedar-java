@@ -16,17 +16,22 @@
 
 package com.cedarpolicy;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SchemaTests {
     @Test
@@ -112,64 +117,121 @@ public class SchemaTests {
         });
     }
 
-    @Test
-    public void testToCedarFormat() throws InternalException {
-        String cedarSchema = "entity User;";
-        Schema cedarSchemaObj = new Schema(cedarSchema);
-        String result = cedarSchemaObj.toCedarFormat();
-        assertNotNull(result);
-        assertEquals(cedarSchema, result);
+    @Nested
+    @DisplayName("toCedarFormat Tests")
+    class ToCedarFormatTests {
 
-        String jsonSchema = """
-                {
-                    "": {
-                        "entityTypes": {
-                            "User": {}
-                        },
-                        "actions": {}
+        @Test
+        @DisplayName("Should return the same Cedar schema text")
+        void testFromCedar() throws InternalException {
+            String cedarSchema = "entity User;";
+            Schema cedarSchemaObj = new Schema(cedarSchema);
+            String result = cedarSchemaObj.toCedarFormat();
+            assertNotNull(result, "Result should not be null");
+            assertEquals(cedarSchema, result, "Should return the original Cedar schema");
+        }
+
+        @Test
+        @DisplayName("Should convert JSON schema to Cedar format")
+        void testFromJson() throws InternalException {
+            String jsonSchema = """
+                    {
+                        "": {
+                            "entityTypes": {
+                                "User": {}
+                            },
+                            "actions": {}
+                        }
                     }
-                }
-                """;
-        Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
-        String convertedCedar = jsonSchemaObj.toCedarFormat();
-        assertNotNull(convertedCedar);
-        assertTrue(convertedCedar.contains("entity User"));
+                    """;
+            Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
+            String result = jsonSchemaObj.toCedarFormat();
+            
+            assertNotNull(result, "Result should not be null");
+            assertTrue(result.contains("entity User"), "Converted Cedar should contain the User entity");
+        }
 
-        Schema invalidSchema = new Schema(JsonOrCedar.Cedar, java.util.Optional.empty(), java.util.Optional.empty());
-        assertThrows(InternalException.class, () -> {
-            invalidSchema.toCedarFormat();
-        });
+        @Test
+        @DisplayName("Should throw IllegalStateException for empty schema")
+        void testEmptySchema() {
+            Schema emptySchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.empty());
+            Exception exception = assertThrows(IllegalStateException.class, emptySchema::toCedarFormat);
+            assertEquals("Schema content is missing", exception.getMessage());
+        }
+        
+        @Test
+        @DisplayName("Should throw exception for malformed JSON schema")
+        void testMalformedSchema() {
+            // Missing closing brace in the JSON structure
+            String malformedJson = """
+                    {
+                        "": {
+                            "entityTypes": {
+                                "User": {}
+                            },
+                            "actions": {
+                        }
+                    """; 
+            Schema malformedSchema = new Schema(JsonOrCedar.Json, Optional.of(malformedJson), Optional.empty());
+            assertThrows(IllegalStateException.class, malformedSchema::toCedarFormat);
+        }
     }
 
-    @Test
-    public void testToJsonFormat() throws Exception {
-        String cedarSchema = "entity User;";
-        Schema cedarSchemaObj = new Schema(cedarSchema);
-        JsonNode jsonResult = cedarSchemaObj.toJsonFormat();
-        assertNotNull(jsonResult);
-        assertTrue(jsonResult.has(""));
-        assertTrue(jsonResult.get("").has("entityTypes"));
-        assertTrue(jsonResult.get("").get("entityTypes").has("User"));
+    @Nested
+    @DisplayName("toJsonFormat Tests")
+    class ToJsonFormatTests {
 
-        String jsonSchema = """
-                {
-                    "": {
-                        "entityTypes": {
-                            "User": {}
-                        },
-                        "actions": {}
+        @Test
+        @DisplayName("Should convert Cedar schema to JSON format")
+        void testFromCedar() throws Exception {
+            String cedarSchema = "entity User;";
+            Schema cedarSchemaObj = new Schema(cedarSchema);
+            JsonNode result = cedarSchemaObj.toJsonFormat();
+            
+            String expectedJson = "{\"\":{\"entityTypes\":{\"User\":{}},\"actions\":{}}}";
+            JsonNode expectedNode = new ObjectMapper().readTree(expectedJson);
+            
+            assertNotNull(result, "Result should not be null");
+            assertEquals(expectedNode, result, "JSON should match expected structure");
+        }
+
+        @Test
+        @DisplayName("Should return the same JSON schema object")
+        void testFromJson() throws Exception {
+            String jsonSchema = """
+                    {
+                        "": {
+                            "entityTypes": {
+                                "User": {}
+                            },
+                            "actions": {}
+                        }
                     }
-                }
-                """;
-        Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
-        assertThrows(InternalException.class, () -> {
-            jsonSchemaObj.toJsonFormat();
-        });
+                    """;
+            Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonSchema);
+            JsonNode result = jsonSchemaObj.toJsonFormat();
+            
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode expectedNode = mapper.readTree(jsonSchema);
+            
+            assertNotNull(result, "Result should not be null");
+            assertEquals(expectedNode, result, "JSON should match the original schema");
+        }
 
-        Schema invalidSchema = new Schema(JsonOrCedar.Cedar, java.util.Optional.empty(), java.util.Optional.empty());
-        assertThrows(InternalException.class, () -> {
-            invalidSchema.toJsonFormat();
-        });
+        @Test
+        @DisplayName("Should throw IllegalStateException for empty schema")
+        void testEmptySchema() {
+            Schema emptySchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.empty());
+            Exception exception = assertThrows(IllegalStateException.class, emptySchema::toJsonFormat);
+            assertEquals("Schema content is missing", exception.getMessage());
+        }
+        
+        @Test
+        @DisplayName("Should throw exception for malformed Cedar schema")
+        void testMalformedSchema() {
+            String malformedCedar = "entty User";
+            Schema malformedSchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.of(malformedCedar));
+            assertThrows(InternalException.class, malformedSchema::toJsonFormat);
+        }
     }
-
 }

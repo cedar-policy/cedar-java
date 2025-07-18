@@ -1446,29 +1446,33 @@ pub(crate) mod jvm_based_tests {
     }
 }"#;
 
+            let expected_cedar = r#"namespace schema {
+  entity File;
+
+  entity Group;
+
+  entity User in [Group];
+
+  action "read" appliesTo {
+    principal: [User],
+    resource: [File],
+    context: {}
+  };
+}"#;
+
             let jstr = env.new_string(json_input).unwrap();
             let result = get_cedar_schema_internal(&mut env, jstr);
             assert!(result.is_ok(), "Expected Cedar conversion to succeed");
 
             let cedar_jval = result.unwrap();
             let cedar_jstr = JString::cast(&mut env, cedar_jval.l().unwrap()).unwrap();
-            let cedar_str = String::from(env.get_string(&cedar_jstr).unwrap());
+            let cedar_str = String::from(env.get_string(&cedar_jstr).unwrap())
+                .trim()
+                .to_string();
 
-            assert!(
-                cedar_str.contains("User"),
-                "Expected output to contain 'User'"
-            );
-            assert!(
-                cedar_str.contains("Group"),
-                "Expected output to contain 'Group'"
-            );
-            assert!(
-                cedar_str.contains("File"),
-                "Expected output to contain 'File'"
-            );
-            assert!(
-                cedar_str.contains("read"),
-                "Expected output to contain 'read'"
+            assert_eq!(
+                cedar_str, expected_cedar,
+                "Cedar schema output did not match expected"
             );
         }
 
@@ -1499,28 +1503,49 @@ pub(crate) mod jvm_based_tests {
         }
 
         #[test]
-        fn get_cedar_schema_internal_null() {
-            let mut env = JVM.attach_current_thread().unwrap();
-            let null_str = JString::from(JObject::null());
-            let result = get_cedar_schema_internal(&mut env, null_str);
-            assert!(result.is_err(), "Expected error on null input");
-        }
-
-        #[test]
         fn get_json_schema_internal_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let cedar_input = r#"
-        entity User = {
-            name: String,
-            age?: Long,
-        };
-        entity Photo in Album;
-        entity Album;
-        action view appliesTo {
-            principal : [User],
-            resource: [Album,Photo]
-        }; 
+    namespace schema {
+      entity File;
+
+      entity Group;
+
+      entity User in [Group];
+
+      action "read" appliesTo {
+        principal: [User],
+        resource: [File],
+        context: {}
+      };
+    }
     "#;
+
+            let expected_json = r#"{
+  "schema": {
+    "entityTypes": {
+      "File": {},
+      "Group": {},
+      "User": {
+        "memberOfTypes": [
+          "Group"
+        ]
+      }
+    },
+    "actions": {
+      "read": {
+        "appliesTo": {
+          "resourceTypes": [
+            "File"
+          ],
+          "principalTypes": [
+            "User"
+          ]
+        }
+      }
+    }
+  }
+}"#;
 
             let jstr = env.new_string(cedar_input).unwrap();
             let result = get_json_schema_internal(&mut env, jstr);
@@ -1528,45 +1553,13 @@ pub(crate) mod jvm_based_tests {
 
             let json_jval = result.unwrap();
             let json_jstr = JString::cast(&mut env, json_jval.l().unwrap()).unwrap();
-            let json_str = String::from(env.get_string(&json_jstr).unwrap());
+            let json_str = String::from(env.get_string(&json_jstr).unwrap())
+                .trim()
+                .to_string();
 
-            assert!(
-                json_str.contains("\"entityTypes\""),
-                "Expected output to contain 'entityTypes'"
-            );
-            assert!(
-                json_str.contains("\"User\""),
-                "Expected output to contain 'User'"
-            );
-            assert!(
-                json_str.contains("\"Album\""),
-                "Expected output to contain 'Album'"
-            );
-            assert!(
-                json_str.contains("\"Photo\""),
-                "Expected output to contain 'Photo'"
-            );
-            assert!(
-                json_str.contains("\"actions\""),
-                "Expected output to contain 'actions'"
-            );
-            assert!(
-                json_str.contains("\"view\""),
-                "Expected output to contain 'view'"
-            );
-        }
-
-        #[test]
-        fn get_json_schema_internal_invalid_input() {
-            let mut env = JVM.attach_current_thread().unwrap();
-            let invalid_cedar = "this is not cedar schema";
-            let jstr = env.new_string(invalid_cedar).unwrap();
-
-            let result = get_json_schema_internal(&mut env, jstr);
-            assert!(
-                result.is_err(),
-                "Expected get_json_schema_internal to fail: {:?}",
-                result
+            assert_eq!(
+                json_str, expected_json,
+                "JSON schema output did not match expected"
             );
         }
 
@@ -1576,6 +1569,34 @@ pub(crate) mod jvm_based_tests {
             let null_str = JString::from(JObject::null());
             let result = get_json_schema_internal(&mut env, null_str);
             assert!(result.is_err(), "Expected error on null input");
+        }
+
+        #[test]
+        fn get_json_schema_internal_invalid_input() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_cedar = r#"
+            namespace schema {
+              entity File
+
+              entity Group with no semicolon
+
+              entity User in [NonExistentGroup];
+
+              action "read" appliesTo {
+                principal: [MissingEntity],
+                resource: [File],
+                context: {}
+              };
+            }
+            "#;
+            let jstr = env.new_string(invalid_cedar).unwrap();
+
+            let result = get_json_schema_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected get_json_schema_internal to fail: {:?}",
+                result
+            );
         }
     }
 }

@@ -130,7 +130,7 @@ public final class Schema {
         } else if (type == JsonOrCedar.Json && schemaJson.isPresent()) {
             return jsonToCedarJni(schemaJson.get().toString());
         } else {
-            throw new InternalException("Schema content is missing");
+            throw new IllegalStateException("Schema content is missing");
         }
     }
 
@@ -145,13 +145,15 @@ public final class Schema {
      */
     public JsonNode toJsonFormat()
             throws InternalException, JsonMappingException, JsonProcessingException, NullPointerException {
-        if (type != JsonOrCedar.Cedar || schemaText.isEmpty()) {
-            throw new InternalException("Schema is not in cedar format");
+        if (type == JsonOrCedar.Json && schemaJson.isPresent()) {
+            return schemaJson.get();
+        } else if (type == JsonOrCedar.Cedar && schemaText.isPresent()) {
+            return OBJECT_MAPPER.readTree(cedarToJsonJni(schemaText.get()));
+        } else {
+            throw new IllegalStateException("Schema content is missing");
         }
-        return OBJECT_MAPPER.readTree(cedarToJsonJni(schemaText.get()));
-
     }
-
+    
     /** Specifies the schema format used. */
     public enum JsonOrCedar {
         /**
