@@ -1427,38 +1427,24 @@ pub(crate) mod jvm_based_tests {
         fn get_cedar_schema_internal_valid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let json_input = r#"{
-                "schema": {
-                    "entityTypes": {
-                        "User": {
-                            "memberOfTypes": ["Group"]
-                        },
-                        "Group": {},
-                        "File": {}
-                    },
-                    "actions": {
-                        "read": {
-                            "appliesTo": {
-                                "principalTypes": ["User"],
-                                "resourceTypes": ["File"]
-                            }
-                        }
+        "schema": {
+            "entityTypes": {
+                "User": {
+                    "memberOfTypes": ["Group"]
+                },
+                "Group": {},
+                "File": {}
+            },
+            "actions": {
+                "read": {
+                    "appliesTo": {
+                        "principalTypes": ["User"],
+                        "resourceTypes": ["File"]
                     }
                 }
-            }"#;
-
-            let expected_cedar = r#"namespace schema {
-            entity File;
-
-            entity Group;
-
-            entity User in [Group];
-
-            action "read" appliesTo {
-                principal: [User],
-                resource: [File],
-                context: {}
-            };
-            }"#;
+            }
+        }
+    }"#;
 
             let jstr = env.new_string(json_input).unwrap();
             let result = get_cedar_schema_internal(&mut env, jstr);
@@ -1466,12 +1452,12 @@ pub(crate) mod jvm_based_tests {
 
             let cedar_jval = result.unwrap();
             let cedar_jstr = JString::cast(&mut env, cedar_jval.l().unwrap()).unwrap();
-            let cedar_str = String::from(env.get_string(&cedar_jstr).unwrap())
-                .trim()
-                .to_string();
+            let cedar_str = String::from(env.get_string(&cedar_jstr).unwrap());
 
+            let expected_cedar = "namespace schema {\n  entity File;\n\n  entity Group;\n\n  entity User in [Group];\n\n  action \"read\" appliesTo {\n    principal: [User],\n    resource: [File],\n    context: {}\n  };\n}";
             assert_eq!(
-                cedar_str, expected_cedar,
+                cedar_str.trim(),
+                expected_cedar,
                 "Cedar schema output did not match expected"
             );
         }
@@ -1521,45 +1507,41 @@ pub(crate) mod jvm_based_tests {
             }
             "#;
 
-            let expected_json = r#"{
-            "schema": {
-                "entityTypes": {
-                "File": {},
-                "Group": {},
-                "User": {
-                    "memberOfTypes": [
-                    "Group"
-                    ]
-                }
-                },
-                "actions": {
-                "read": {
-                    "appliesTo": {
-                    "resourceTypes": [
-                        "File"
-                    ],
-                    "principalTypes": [
-                        "User"
-                    ]
-                    }
-                }
-                }
-            }
-            }"#;
-
             let jstr = env.new_string(cedar_input).unwrap();
             let result = get_json_schema_internal(&mut env, jstr);
             assert!(result.is_ok(), "Expected JSON conversion to succeed");
 
             let json_jval = result.unwrap();
             let json_jstr = JString::cast(&mut env, json_jval.l().unwrap()).unwrap();
-            let json_str = String::from(env.get_string(&json_jstr).unwrap())
-                .trim()
-                .to_string();
+            let json_str = String::from(env.get_string(&json_jstr).unwrap());
+
+            // Parse the JSON to normalize it for comparison
+            let actual_json: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+            // Expected JSON structure
+            let expected_json = serde_json::json!({
+                "schema": {
+                    "entityTypes": {
+                        "File": {},
+                        "Group": {},
+                        "User": {
+                            "memberOfTypes": ["Group"]
+                        }
+                    },
+                    "actions": {
+                        "read": {
+                            "appliesTo": {
+                                "principalTypes": ["User"],
+                                "resourceTypes": ["File"]
+                            }
+                        }
+                    }
+                }
+            });
 
             assert_eq!(
-                json_str, expected_json,
-                "JSON schema output did not match expected"
+                actual_json, expected_json,
+                "JSON schema doesn't match expected structure"
             );
         }
 
