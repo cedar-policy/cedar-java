@@ -16,6 +16,9 @@
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
+use cedar_policy::ffi::{
+    schema_to_json, schema_to_text, Schema as FFISchema, SchemaToJsonAnswer, SchemaToTextAnswer,
+};
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
     Entities, EntityUid, Policy, PolicySet, Schema, Template,
@@ -702,6 +705,72 @@ fn policies_str_to_pretty_internal<'a>(
         }
     }
 }
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn jsonToCedarJni<'a>(mut env: JNIEnv<'a>, _: JClass, json_schema: JString<'a>) -> jvalue {
+    match get_cedar_schema_internal(&mut env, json_schema) {
+        Ok(val) => val.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+pub fn get_cedar_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    schema_json_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    let rust_str = env.get_string(&schema_json_jstr)?;
+    let schema_str = rust_str.to_str()?;
+
+    let schema: FFISchema = serde_json::from_str(schema_str)?;
+    let cedar_format = schema_to_text(schema);
+
+    match cedar_format {
+        SchemaToTextAnswer::Success { text, warnings } => {
+            let jstr = env.new_string(&text)?;
+            Ok(JValueGen::Object(JObject::from(jstr)).into())
+        }
+        SchemaToTextAnswer::Failure { errors } => {
+            let joined_errors = errors
+                .iter()
+                .map(|e| e.message.clone())
+                .collect::<Vec<_>>()
+                .join("; ");
+            Err(joined_errors.into())
+        }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.schema.Schema")]
+pub fn cedarToJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, cedar_schema: JString<'a>) -> jvalue {
+    match get_json_schema_internal(&mut env, cedar_schema) {
+        Ok(val) => val.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+pub fn get_json_schema_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    cedar_schema_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    let schema_jstr = env.get_string(&cedar_schema_jstr)?;
+    let schema_str = schema_jstr.to_str()?;
+    let cedar_schema_str = FFISchema::Cedar(schema_str.into());
+    let json_format = schema_to_json(cedar_schema_str);
+
+    match json_format {
+        SchemaToJsonAnswer::Success { json, warnings: _ } => {
+            let json_pretty = serde_json::to_string_pretty(&json)?;
+            let jstr = env.new_string(&json_pretty)?;
+            Ok(JValueGen::Object(JObject::from(jstr)).into())
+        }
+        SchemaToJsonAnswer::Failure { errors } => {
+            let joined_errors = errors
+                .iter()
+                .map(|e| e.message.clone())
+                .collect::<Vec<_>>()
+                .join("; ");
+            Err(joined_errors.into())
+        }
+    }
+}
 
 #[cfg(test)]
 pub(crate) mod jvm_based_tests {
@@ -932,38 +1001,38 @@ pub(crate) mod jvm_based_tests {
             let mut env = JVM.attach_current_thread().unwrap();
 
             let policy_json = r#"
-    {
-        "effect": "permit",
-        "principal": {
-            "op": "==",
-            "entity": { "type": "User", "id": "12UA45" }
-        },
-        "action": {
-            "op": "==",
-            "entity": { "type": "Action", "id": "view" }
-        },
-        "resource": {
-            "op": "in",
-            "entity": { "type": "Folder", "id": "abc" }
-        },
-        "conditions": [
-            {
-                "kind": "when",
-                "body": {
-                    "==": {
-                        "left": {
-                            ".": {
-                                "left": { "Var": "context" },
-                                "attr": "tls_version"
+                {
+                    "effect": "permit",
+                    "principal": {
+                        "op": "==",
+                        "entity": { "type": "User", "id": "12UA45" }
+                    },
+                    "action": {
+                        "op": "==",
+                        "entity": { "type": "Action", "id": "view" }
+                    },
+                    "resource": {
+                        "op": "in",
+                        "entity": { "type": "Folder", "id": "abc" }
+                    },
+                    "conditions": [
+                        {
+                            "kind": "when",
+                            "body": {
+                                "==": {
+                                    "left": {
+                                        ".": {
+                                            "left": { "Var": "context" },
+                                            "attr": "tls_version"
+                                        }
+                                    },
+                                    "right": { "Value": "1.3" }
+                                }
                             }
-                        },
-                        "right": { "Value": "1.3" }
-                    }
+                        }
+                    ]
                 }
-            }
-        ]
-    }
-    "#;
+                "#;
 
             let java_str = env.new_string(policy_json).unwrap();
             let result = from_json_internal(&mut env, java_str);
@@ -1215,24 +1284,24 @@ pub(crate) mod jvm_based_tests {
         fn parse_json_schema_internal_valid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input = r#"{
-    "schema": {
-        "entityTypes": {
-            "User": {
-                "memberOfTypes": ["Group"]
-            },
-            "Group": {},
-            "File": {}
-        },
-        "actions": {
-            "read": {
-                "appliesTo": {
-                    "principalTypes": ["User"],
-                    "resourceTypes": ["File"]
+                "schema": {
+                    "entityTypes": {
+                        "User": {
+                            "memberOfTypes": ["Group"]
+                        },
+                        "Group": {},
+                        "File": {}
+                    },
+                    "actions": {
+                        "read": {
+                            "appliesTo": {
+                                "principalTypes": ["User"],
+                                "resourceTypes": ["File"]
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-}"#;
+            }"#;
             let jstr = env.new_string(input).unwrap();
             let result = parse_json_schema_internal(&mut env, jstr);
             assert!(result.is_ok(), "Expected schema to parse successfully");
@@ -1248,24 +1317,24 @@ pub(crate) mod jvm_based_tests {
         fn parse_json_schema_internal_invalid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
             let invalid_input = r#"{
-    "Schema": {
-        "entityTypes": {
-            "User": {
-                "MemberOfTypes": ["Group"]
-            },
-            "Group": {},
-            "File": {}
-        },
-        "Actions": {
-            "read": {
-                "AppliesTo": {
-                    "principalTypes": ["User"],
-                    "AesourceTypes": ["File"]
+                "Schema": {
+                    "entityTypes": {
+                        "User": {
+                            "MemberOfTypes": ["Group"]
+                        },
+                        "Group": {},
+                        "File": {}
+                    },
+                    "Actions": {
+                        "read": {
+                            "AppliesTo": {
+                                "principalTypes": ["User"],
+                                "AesourceTypes": ["File"]
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    }
-}"#;
+            }"#;
 
             let jstr = env.new_string(invalid_input).unwrap();
             let result = parse_json_schema_internal(&mut env, jstr);
@@ -1348,6 +1417,163 @@ pub(crate) mod jvm_based_tests {
             assert!(
                 result.is_err(),
                 "Expected error for invalid template syntax"
+            );
+        }
+    }
+    mod conversion_tests {
+        use super::*;
+
+        #[test]
+        fn get_cedar_schema_internal_valid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let json_input = r#"{
+        "schema": {
+            "entityTypes": {
+                "User": {
+                    "memberOfTypes": ["Group"]
+                },
+                "Group": {},
+                "File": {}
+            },
+            "actions": {
+                "read": {
+                    "appliesTo": {
+                        "principalTypes": ["User"],
+                        "resourceTypes": ["File"]
+                    }
+                }
+            }
+        }
+    }"#;
+
+            let jstr = env.new_string(json_input).unwrap();
+            let result = get_cedar_schema_internal(&mut env, jstr);
+            assert!(result.is_ok(), "Expected Cedar conversion to succeed");
+
+            let cedar_jval = result.unwrap();
+            let cedar_jstr = JString::cast(&mut env, cedar_jval.l().unwrap()).unwrap();
+            let cedar_str = String::from(env.get_string(&cedar_jstr).unwrap());
+
+            let expected_cedar = "namespace schema {\n  entity File;\n\n  entity Group;\n\n  entity User in [Group];\n\n  action \"read\" appliesTo {\n    principal: [User],\n    resource: [File],\n    context: {}\n  };\n}";
+            assert_eq!(
+                cedar_str.trim(),
+                expected_cedar,
+                "Cedar schema output did not match expected"
+            );
+        }
+
+        #[test]
+        fn get_cedar_schema_internal_invalid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let json_input = r#"
+        
+            entity User = {
+                        name: String,
+                        age?: Long,
+                    };
+                    entity Photo in Album;
+                    entity Album;
+                    action view appliesTo {
+                        principal : [User],
+                        resource: [Album,Photo]
+                    };
+            "#;
+
+            let jstr = env.new_string(json_input).unwrap();
+            let result = get_cedar_schema_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected get_cedar_schema_internal to fail {:?}",
+                result
+            );
+        }
+
+        #[test]
+        fn get_json_schema_internal_valid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let cedar_input = r#"
+            namespace schema {
+            entity File;
+
+            entity Group;
+
+            entity User in [Group];
+
+            action "read" appliesTo {
+                principal: [User],
+                resource: [File],
+                context: {}
+            };
+            }
+            "#;
+
+            let jstr = env.new_string(cedar_input).unwrap();
+            let result = get_json_schema_internal(&mut env, jstr);
+            assert!(result.is_ok(), "Expected JSON conversion to succeed");
+
+            let json_jval = result.unwrap();
+            let json_jstr = JString::cast(&mut env, json_jval.l().unwrap()).unwrap();
+            let json_str = String::from(env.get_string(&json_jstr).unwrap());
+            let actual_json: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+            let expected_json = serde_json::json!({
+                "schema": {
+                    "entityTypes": {
+                        "File": {},
+                        "Group": {},
+                        "User": {
+                            "memberOfTypes": ["Group"]
+                        }
+                    },
+                    "actions": {
+                        "read": {
+                            "appliesTo": {
+                                "principalTypes": ["User"],
+                                "resourceTypes": ["File"]
+                            }
+                        }
+                    }
+                }
+            });
+
+            assert_eq!(
+                actual_json, expected_json,
+                "JSON schema doesn't match expected structure"
+            );
+        }
+
+        #[test]
+        fn get_json_schema_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let null_str = JString::from(JObject::null());
+            let result = get_json_schema_internal(&mut env, null_str);
+            assert!(result.is_err(), "Expected error on null input");
+        }
+
+        #[test]
+        fn get_json_schema_internal_invalid_input() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let invalid_cedar = r#"
+            namespace schema {
+              entity File
+
+              entity Group with no semicolon
+
+              entity User in [NonExistentGroup];
+
+              action "read" appliesTo {
+                principal: [MissingEntity],
+                resource: [File],
+                context: {}
+              };
+            }
+            "#;
+            let jstr = env.new_string(invalid_cedar).unwrap();
+
+            let result = get_json_schema_internal(&mut env, jstr);
+            assert!(
+                result.is_err(),
+                "Expected get_json_schema_internal to fail: {:?}",
+                result
             );
         }
     }
