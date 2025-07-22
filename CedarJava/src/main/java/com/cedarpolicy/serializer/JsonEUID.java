@@ -16,13 +16,15 @@
 
 package com.cedarpolicy.serializer;
 
+import java.util.Optional;
+
 import com.cedarpolicy.model.exception.InvalidEUIDException;
+import com.cedarpolicy.value.EntityUID;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.cedarpolicy.value.EntityUID;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.Optional;
 
 /** Represent JSON format of Entity Unique Identifier. */
 public class JsonEUID {
@@ -51,7 +53,8 @@ public class JsonEUID {
      * @param id   Entity ID.
      */
     public JsonEUID(String type, String id) {
-        this.type = type; this.id = id;
+        this.type = type;
+        this.id = id.replace("\\\"", "\"");
     }
 
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
@@ -68,6 +71,7 @@ public class JsonEUID {
 
     /** Build JsonEUID (default constructor needed by Jackson). */
     public JsonEUID() {
-        this.type = ""; this.id = "";
+        this.type = "";
+        this.id = "";
     }
 }

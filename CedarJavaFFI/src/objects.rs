@@ -81,7 +81,8 @@ impl<'a> JEntityTypeName<'a> {
 
     /// Get the string representation for this EntityTypeName
     pub fn get_string_repr(&self) -> String {
-        self.get_rust_repr().to_string()
+        
+        self.type_name.to_string()
     }
 
     /// Decode the java representation into the rust representation

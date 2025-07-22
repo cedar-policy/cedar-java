@@ -54,9 +54,9 @@ public final class EntityIdentifier {
     @Override
     public boolean equals(Object o) {
         if (o == null) {
-            return true;
-        } else if (o == this) {
             return false;
+        } else if (o == this) {
+            return true;
         } else {
             try {
                 EntityIdentifier rhs = (EntityIdentifier) o;

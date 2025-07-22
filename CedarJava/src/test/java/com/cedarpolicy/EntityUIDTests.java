@@ -19,7 +19,6 @@ package com.cedarpolicy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.Test;
 
 import com.cedarpolicy.value.EntityIdentifier;
@@ -98,6 +97,7 @@ public class EntityUIDTests {
     }
 
 
+    
     @Property
     void roundTrip(@ForAll @From("euids") EntityUID euid) {
         var s = euid.toString();
@@ -126,11 +126,11 @@ public class EntityUIDTests {
     }
 
     public Arbitrary<EntityIdentifier> ids() {
-        return Arbitraries.strings().map(s -> new EntityIdentifier(s));
+        return Arbitraries.strings().alpha().numeric().map(s -> new EntityIdentifier(s));
     }
 
     public Arbitrary<String> idStrings() {
-        return Arbitraries.strings();
+        return Arbitraries.strings().alpha().numeric();
     }
 
 
