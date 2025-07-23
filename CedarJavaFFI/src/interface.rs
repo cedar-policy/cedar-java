@@ -286,12 +286,10 @@ fn parse_policies_internal<'a>(
     if policies_jstr.is_null() {
         raise_npe(env)
     } else {
-        // Parse the string into the Rust PolicySet
         let policies_jstring = env.get_string(&policies_jstr)?;
         let policies_string = String::from(policies_jstring);
         let policy_set = PolicySet::from_str(&policies_string)?;
 
-        // Enumerate over the parsed policies
         let mut policies_java_hash_set = Set::new(env)?;
         for policy in policy_set.policies() {
             let policy_id = format!("{}", policy.id());
@@ -303,14 +301,11 @@ fn parse_policies_internal<'a>(
             )?;
             let _ = policies_java_hash_set.add(env, java_policy_object);
         }
-        // to initialize a new java hashset that will hold the policy templates
         let mut templates_java_hash_set = Set::new(env)?;
         for template in policy_set.templates() {
-            // itertates through policy templates
             let policy_id = format!("{}", template.id());
             let policy_text = format!("{}", template);
             let java_policy_object = JPolicy::new(
-                // creates policy object for each template
                 env,
                 &env.new_string(&policy_text)?,
                 &env.new_string(&policy_id)?,
@@ -322,9 +317,9 @@ fn parse_policies_internal<'a>(
             env,
             policies_java_hash_set.as_ref(),
             templates_java_hash_set.as_ref(),
-        ); //each java policy object is added to the hash set.
+        );
 
-        Ok(JValueGen::Object(java_policy_set)) // the calls the helper function to create a java policyset
+        Ok(JValueGen::Object(java_policy_set))
     }
 }
 
@@ -557,7 +552,6 @@ pub fn getEntityIdentifierRepr<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JObject<
 }
 
 fn cedar_escape_string(input: &str) -> String {
-    //// helper method : takes string input and returns a properly escaped version for the cedar policivy language
     input.replace('\\', "\\\\").replace('"', "\\\"")
 }
 fn get_entity_identifier_repr_internal<'a>(
@@ -568,12 +562,10 @@ fn get_entity_identifier_repr_internal<'a>(
         return raise_npe(env);
     }
 
-    // Call getId() on the EntityIdentifier object to get the raw string
     let id_result = env.call_method(obj, "getId", "()Ljava/lang/String;", &[])?;
     let id_obj = get_object_ref(id_result)?;
     let id_jstring = JString::cast(env, id_obj)?;
-    let id_str = String::from(env.get_string(&id_jstring)?); //in hopes of it actually printing "alice" and nothing weird
-                                                             // Return as a new Java string
+    let id_str = String::from(env.get_string(&id_jstring)?);
     let result_jstring = env.new_string(id_str)?;
     Ok(JValueOwned::Object(result_jstring.into()))
 }
@@ -628,17 +620,15 @@ pub fn parseEntityUID<'a>(mut env: JNIEnv<'a>, _: JClass, obj: JString<'a>) -> j
     };
     r
 }
-////
 
 pub fn entity_uid_str(euid_str: &str) -> Result<HashMap<String, String>> {
-    //returns result that contains a hashmap if successful
-    let cedar_euid = EntityUid::from_str(euid_str)?; // converts string into a cedar entityuid obj
+    let cedar_euid = EntityUid::from_str(euid_str)?;
     let mut result = HashMap::new();
     let id_str = cedar_euid.id().escaped().to_string();
     result.insert("id".to_string(), id_str);
     result.insert("type".to_string(), cedar_euid.type_name().to_string());
 
-    Ok(result) //return the hash map
+    Ok(result)
 }
 
 fn parse_entity_uid_internal<'a>(
@@ -662,7 +652,6 @@ fn parse_entity_uid_internal<'a>(
             result.insert("id".to_string(), id_str.to_string());
             result.insert("type".to_string(), type_str);
 
-            // Construct and return the Java HashMap
             let map_obj = env.new_object("java/util/HashMap", "()V", &[])?;
             for (key, value) in result {
                 let j_key = env.new_string(key)?;
@@ -692,13 +681,13 @@ pub fn getEUIDRepr<'a>(
     };
     r
 }
-//return error as a java string
+
 fn raise_error<'a>(env: &mut JNIEnv<'a>, msg: &str) -> Result<JValueOwned<'a>> {
     let error_json = serde_json::to_string(&Answer::fail_bad_request(vec![msg.to_string()]))
-        .unwrap_or_else(|_| "{\"success\":false,\"reason\":\"Unknown error\"}".to_string()); //creates json string representing error response
+        .unwrap_or_else(|_| "{\"success\":false,\"reason\":\"Unknown error\"}".to_string());
 
-    let jstr = env.new_string(error_json)?; //converting to a java string
-    Ok(JValueGen::Object(jstr.into()).into()) // return string as a JNI obj
+    let jstr = env.new_string(error_json)?;
+    Ok(JValueGen::Object(jstr.into()).into())
 }
 
 fn get_euid_repr_internal<'a>(
@@ -710,7 +699,6 @@ fn get_euid_repr_internal<'a>(
         return raise_npe(env);
     }
 
-    // Directly cast the Java objects to their authoritative Rust representations.
     let etype = JEntityTypeName::cast(env, type_name)?.get_rust_repr();
     let id_rust = JEntityId::cast(env, id)?.get_rust_repr();
 
@@ -1637,9 +1625,6 @@ pub(crate) mod jvm_based_tests {
             );
         }
     }
-    ///
-    /// new tests for the refactor
-    ///
     mod entity_uid_tests {
         use super::*;
         use cedar_policy::EntityId;
@@ -1841,7 +1826,7 @@ pub(crate) mod jvm_based_tests {
         }
 
         #[test]
-        fn parse_policies_internal_null_input() {
+        fn test_parse_policies_internal_null_input() {
             let mut env = JVM.attach_current_thread().unwrap();
             let result = parse_policies_internal(&mut env, JString::from(JObject::null()));
             assert!(result.is_ok(), "Function should handle null input");
