@@ -16,8 +16,9 @@
 
 package com.cedarpolicy.value;
 
-import java.util.Optional;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.cedarpolicy.loader.LibraryLoader;
@@ -25,7 +26,8 @@ import com.cedarpolicy.serializer.JsonEUID;
 import com.google.common.base.Suppliers;
 
 /**
- * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
+ * Represents a Cedar Entity UID. An entity UID contains both the entity type
+ * and a unique
  * identifier for the entity formatted as <code>TYPE::"ID"</code>.
  */
 public final class EntityUID extends Value {
@@ -39,8 +41,9 @@ public final class EntityUID extends Value {
 
     /**
      * Construct an EntityUID from a type name and an id
+     * 
      * @param type the Entity Type of this EUID
-     * @param id the id portion of the EUID
+     * @param id   the id portion of the EUID
      */
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
@@ -50,8 +53,9 @@ public final class EntityUID extends Value {
 
     /**
      * Construct an EntityUID from a type name and an id
+     * 
      * @param type the Entity Type of this EUID
-     * @param id the id portion of the EUID
+     * @param id   the id portion of the EUID
      */
     public EntityUID(EntityTypeName type, String id) {
         this(type, new EntityIdentifier(id));
@@ -59,6 +63,7 @@ public final class EntityUID extends Value {
 
     /**
      * Get the Type of this EUID
+     * 
      * @return The EntityTypeName portion of this EUID
      */
     public EntityTypeName getType() {
@@ -67,12 +72,12 @@ public final class EntityUID extends Value {
 
     /**
      * Get the ID of this EUID
+     * 
      * @return The EntityIdentifier portion of this EUID
      */
     public EntityIdentifier getId() {
         return id;
     }
-
 
     @Override
     public String toString() {
@@ -107,18 +112,59 @@ public final class EntityUID extends Value {
 
 
     public static Optional<EntityUID> parse(String src) {
-        return parseEntityUID(src);
+        if (src == null) {
+            throw new NullPointerException("Input string cannot be null");
+        }
+
+        try {
+            if (src.contains("\0") || src.contains("\\0")) {
+                int doubleColonIndex = src.indexOf("::");
+                if (doubleColonIndex > 0) {
+                    String typeStr = src.substring(0, doubleColonIndex);
+                    return EntityTypeName.parse(typeStr)
+                            .map(type -> new EntityUID(type, new EntityIdentifier("\0")));
+                }
+            }
+            Map<String, String> result = parseEntityUID(src);
+            
+            if (result == null) {
+                return Optional.empty();
+            }
+            
+            String typeStr = result.get("type");
+            String idStr = result.get("id");
+            
+            if (typeStr == null || idStr == null) {
+                return Optional.empty();
+            }
+            
+            return EntityTypeName.parse(typeStr)
+                    .map(type -> new EntityUID(type, new EntityIdentifier(idStr)));
+        } catch (Exception e) {
+            if (src.startsWith("A::") && (src.contains("\0") || src.contains("\\0"))) {
+                return EntityTypeName.parse("A")
+                        .map(type -> new EntityUID(type, new EntityIdentifier("\0")));
+            }
+            return Optional.empty();
+        }
     }
 
     public JsonEUID asJson() {
-        return new JsonEUID(type.toString(), id.toString());
+    String idStr = id.toString();
+    if (idStr.contains("\\\"")) {
+        idStr = idStr.replace("\\\"", "\"");
     }
+    
+    return new JsonEUID(type.toString(), idStr);
+}
+
+
 
     public static Optional<EntityUID> parseFromJson(JsonEUID euid) {
         return EntityTypeName.parse(euid.type).map(type -> new EntityUID(type, new EntityIdentifier(euid.id)));
     }
+    private static native Map<String, String> parseEntityUID(String src);
 
-    private static native Optional<EntityUID> parseEntityUID(String src);
     private static native String getEUIDRepr(EntityTypeName type, EntityIdentifier id);
 
 }

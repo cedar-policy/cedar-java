@@ -16,6 +16,9 @@
 
 package com.cedarpolicy.serializer;
 
+import java.io.IOException;
+import java.util.Map;
+
 import com.cedarpolicy.model.exception.InvalidValueSerializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
@@ -30,8 +33,6 @@ import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import java.io.IOException;
-import java.util.Map;
 
 /** Serialize Value to Json. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
@@ -49,7 +50,11 @@ public class ValueSerializer extends JsonSerializer<Value> {
             jsonGenerator.writeFieldName(ENTITY_ESCAPE_SEQ);
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName("id");
-            jsonGenerator.writeString(((EntityUID) value).getId().toString());
+            String idStr = ((EntityUID) value).getId().toString();
+            if (idStr.contains("\\\"")) {
+                idStr = idStr.replace("\\\"", "\"");
+            }
+            jsonGenerator.writeString(idStr);
             jsonGenerator.writeFieldName("type");
             jsonGenerator.writeString(((EntityUID) value).getType().toString());
             jsonGenerator.writeEndObject();
