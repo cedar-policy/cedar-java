@@ -81,7 +81,6 @@ impl<'a> JEntityTypeName<'a> {
 
     /// Get the string representation for this EntityTypeName
     pub fn get_string_repr(&self) -> String {
-        
         self.type_name.to_string()
     }
 

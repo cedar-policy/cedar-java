@@ -97,7 +97,7 @@ public class EntityUIDTests {
     }
 
 
-    
+
     @Property
     void roundTrip(@ForAll @From("euids") EntityUID euid) {
         var s = euid.toString();
