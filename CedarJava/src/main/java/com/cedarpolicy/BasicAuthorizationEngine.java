@@ -26,6 +26,7 @@ import java.util.Set;
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.EntityValidationRequest;
+import com.cedarpolicy.model.LevelValidationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
@@ -57,7 +58,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
 
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
-                                              PolicySet policySet, Set<Entity> entities) throws AuthException {
+            PolicySet policySet, Set<Entity> entities) throws AuthException {
         final AuthorizationRequest request = new AuthorizationRequest(q, policySet, entities);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
@@ -67,14 +68,14 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
      */
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
-                                              PolicySet policySet, Entities entities) throws AuthException {
+            PolicySet policySet, Entities entities) throws AuthException {
         return isAuthorized(q, policySet, entities.getEntities());
     }
 
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
-                                                            PolicySet policySet, Set<Entity> entities) throws AuthException {
+            PolicySet policySet, Set<Entity> entities) throws AuthException {
         try {
             final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, policySet, entities);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
@@ -93,13 +94,18 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     @Override
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
-                                                            PolicySet policySet, Entities entities) throws AuthException {
+            PolicySet policySet, Entities entities) throws AuthException {
         return isAuthorizedPartial(q, policySet, entities.getEntities());
     }
 
     @Override
     public ValidationResponse validate(ValidationRequest q) throws AuthException {
         return call("ValidateOperation", ValidationResponse.class, q);
+    }
+
+    @Override
+    public ValidationResponse validateWithLevel(LevelValidationRequest q) throws AuthException {
+        return call("ValidateWithLevelOperation", ValidationResponse.class, q);
     }
 
     @Override
@@ -199,12 +205,12 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
 
         PartialAuthorizationRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, PolicySet policySet, Set<Entity> entities) {
             super(
-                request.principal,
-                request.action,
-                request.resource,
-                request.context,
-                request.schema,
-                request.enableRequestValidation);
+                    request.principal,
+                    request.action,
+                    request.resource,
+                    request.context,
+                    request.schema,
+                    request.enableRequestValidation);
             this.policies = policySet;
             this.entities = entities;
         }
