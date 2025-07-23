@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cedarpolicy.model.DetailedError;
+import com.cedarpolicy.model.LevelValidationRequest;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.ValidationResponse.SuccessOrFailure;
@@ -56,6 +57,8 @@ public class ValidationTests {
         givenSchema(EMPTY_SCHEMA);
         ValidationResponse response = whenValidated();
         thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
     }
 
     /** Test. */
@@ -71,6 +74,8 @@ public class ValidationTests {
                         + ");");
         ValidationResponse response = whenValidated();
         thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
     }
 
     /** Test. */
@@ -86,6 +91,8 @@ public class ValidationTests {
                         + ");");
         ValidationResponse response = whenValidated();
         thenIsNotValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsNotValid(levelResponse);
     }
 
     /** Test. */
@@ -95,6 +102,8 @@ public class ValidationTests {
         givenPolicy("policy0", "permit { }");
         ValidationResponse response = whenValidated();
         thenValidationFailed(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenValidationFailed(levelResponse);
     }
 
     @Test
@@ -119,6 +128,8 @@ public class ValidationTests {
         this.policies = new PolicySet(new HashSet<>(), templates, templateLinks);
         ValidationResponse response = whenValidated();
         thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
     }
 
     @Test
@@ -136,34 +147,79 @@ public class ValidationTests {
         // fails if we provide a value for the wrong slot
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template1", "policy", List.of(principalLink))));
-        ValidationResponse response2 = whenValidated();
-        thenValidationFailed(response2);
+        ValidationResponse response1 = whenValidated();
+        thenValidationFailed(response1);
+        ValidationResponse levelResponse1 = whenLevelValidated(1);
+        thenValidationFailed(levelResponse1);
 
         // fails if we provide a value for too many slots
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template2", "policy", List.of(principalLink, resourceLink))));
-        ValidationResponse response3 = whenValidated();
-        thenValidationFailed(response3);
+        ValidationResponse response2 = whenValidated();
+        thenValidationFailed(response2);
+        ValidationResponse levelResponse2 = whenLevelValidated(1);
+        thenValidationFailed(levelResponse2);
 
         // fails if we don't provide a value for all slots
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template0", "policy", List.of(resourceLink))));
-        ValidationResponse response4 = whenValidated();
-        thenValidationFailed(response4);
+        ValidationResponse response3 = whenValidated();
+        thenValidationFailed(response3);
+        ValidationResponse levelResponse3 = whenLevelValidated(1);
+        thenValidationFailed(levelResponse3);
+
 
         // validation returns an error if we provide a link with the wrong type
         LinkValue badLink1 = new LinkValue("?resource", EntityUID.parse("Library::User::\"Victor\"").get());
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template1", "policy", List.of(badLink1))));
-        ValidationResponse response5 = whenValidated();
-        thenIsNotValid(response5);
+        ValidationResponse response4 = whenValidated();
+        thenIsNotValid(response4);
+        ValidationResponse levelResponse4 = whenLevelValidated(1);
+        thenIsNotValid(levelResponse4);
 
         // validation returns an error if we provide a link with an invalid type
         LinkValue badLink2 = new LinkValue("?resource", EntityUID.parse("Library::BOOK::\"The black Swan\"").get());
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template1", "policy", List.of(badLink2))));
-        ValidationResponse response6 = whenValidated();
-        thenIsNotValid(response6);
+        ValidationResponse response5 = whenValidated();
+        thenIsNotValid(response5);
+        ValidationResponse levelResponse5 = whenLevelValidated(1);
+        thenIsNotValid(levelResponse5);
+    }
+
+     @Test
+    public void validateLevelPolicySuccessTest() {
+        givenSchema(LEVEL_SCHEMA);
+        givenPolicy(
+        "policy0",
+        "permit(\n"
+                + "    principal in UserGroup::\"alice_friends\",\n"
+                + "    action == Action::\"viewPhoto\",\n"
+                + "    resource\n"
+                + ") when {principal in resource.owner.friend};");
+
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(2);
+        thenIsValid(levelResponse);
+    }
+
+    @Test
+    public void validateLevelPolicyFailsWhenExpected() {
+        givenSchema(LEVEL_SCHEMA);
+        givenPolicy(
+        "policy0",
+        "permit(\n"
+                + "    principal in UserGroup::\"alice_friends\",\n"
+                + "    action == Action::\"viewPhoto\",\n"
+                + "    resource\n"
+                + ") when {principal in resource.owner.friend};");
+
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsNotValid(levelResponse);
     }
 
     private void givenSchema(Schema testSchema) {
@@ -178,6 +234,11 @@ public class ValidationTests {
     private ValidationResponse whenValidated() {
         ValidationRequest request = new ValidationRequest(schema, policies);
         return assertDoesNotThrow(() -> engine.validate(request));
+    }
+
+    private ValidationResponse whenLevelValidated(long maxDerefLevel) {
+        LevelValidationRequest request = new LevelValidationRequest(schema, policies, maxDerefLevel);
+        return assertDoesNotThrow(() -> engine.validateWithLevel(request));
     }
 
     private void thenIsValid(ValidationResponse response) {
@@ -223,4 +284,5 @@ public class ValidationTests {
     private static final Schema EMPTY_SCHEMA = loadSchemaResource("/empty_schema.json");
     private static final Schema PHOTOFLASH_SCHEMA = loadSchemaResource("/photoflash_schema.json");
     private static final Schema LIBRARY_SCHEMA = loadSchemaResource("/library_schema.json");
+    private static final Schema LEVEL_SCHEMA = loadSchemaResource("/level_schema.json");
 }
