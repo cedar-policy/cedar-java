@@ -1,3 +1,18 @@
+/*
+ * Copyright Cedar Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 use cedar_policy::{
     ffi::{
         JsonValueWithNoDuplicateKeys, PolicySet as FFIPolicySet, ValidationAnswer, ValidationError,
@@ -6,10 +21,6 @@ use cedar_policy::{
 };
 use miette::Context;
 use serde::{Deserialize, Serialize};
-///
-/// This needs to be in cedar_policy::ffi. However, in order to not wait for another release of cedar for this new FFI API to be used in CedarJava4.4, recreating MVP
-/// by borrowing some ffi code here. This will be deleted after this change is published in a subsequent Cedar release
-///
 
 /// Configuration for the validation call
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -185,7 +196,6 @@ mod test {
         let ans = validate_with_level(serde_json::from_value(json).unwrap());
         let ans_val = serde_json::to_value(ans).unwrap();
         let result: Result<ValidationAnswer, _> = serde_json::from_value(ans_val);
-        println!("{:?}", result);
         assert_matches!(result, Ok(ValidationAnswer::Success { validation_errors, validation_warnings: _, other_warnings: _ }) => {
             assert_eq!(validation_errors.len(), 0, "Unexpected validation errors: {validation_errors:?}");
         });
