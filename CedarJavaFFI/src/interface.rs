@@ -1640,18 +1640,14 @@ pub(crate) mod jvm_based_tests {
 
         #[test]
         fn entity_uid_str_hash_functionality() {
-            // Parse two identical entity UIDs
             let result1 = entity_uid_str("User::\"alice\"").unwrap();
             let result2 = entity_uid_str("User::\"alice\"").unwrap();
 
-            // Parse a different entity UID
             let result3 = entity_uid_str("User::\"bob\"").unwrap();
 
-            // Test that the HashMap keys work correctly
             let mut test_map = HashMap::new();
             test_map.insert("type".to_string(), "test_value");
 
-            // Calculate hash values for the HashMap keys
             let mut hasher1 = DefaultHasher::new();
             let mut hasher2 = DefaultHasher::new();
 
@@ -1661,13 +1657,10 @@ pub(crate) mod jvm_based_tests {
             let hash1 = hasher1.finish();
             let hash2 = hasher2.finish();
 
-            // Identical strings should have identical hash values
             assert_eq!(
                 hash1, hash2,
                 "Hash values for identical strings should be equal"
             );
-
-            // Test that we can retrieve values from the HashMaps using string keys
             assert_eq!(result1.get("type").unwrap(), "User");
             assert_eq!(result1.get("id").unwrap(), "alice");
             assert_eq!(result2.get("type").unwrap(), "User");
@@ -1685,7 +1678,6 @@ pub(crate) mod jvm_based_tests {
                 "Alice's data",
             );
 
-            // We should be able to retrieve using an equivalent key constructed from result2
             let key2 = format!(
                 "{}-{}",
                 result2.get("type").unwrap(),
@@ -1697,7 +1689,6 @@ pub(crate) mod jvm_based_tests {
                 "Should retrieve value using equivalent key"
             );
 
-            // We should not get data for a different key constructed from result3
             let key3 = format!(
                 "{}-{}",
                 result3.get("type").unwrap(),
@@ -1826,7 +1817,7 @@ pub(crate) mod jvm_based_tests {
         }
 
         #[test]
-        fn test_parse_policies_internal_null_input() {
+        fn parse_policies_internal_null_input() {
             let mut env = JVM.attach_current_thread().unwrap();
             let result = parse_policies_internal(&mut env, JString::from(JObject::null()));
             assert!(result.is_ok(), "Function should handle null input");
