@@ -30,6 +30,7 @@ import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.model.LevelValidationRequest;
 
 /**
  * Implementations of the AuthorizationEngine interface invoke Cedar to respond to an authorization
@@ -119,6 +120,18 @@ public interface AuthorizationEngine {
      * @throws AuthException if any internal errors occurred while validating the policies.
      */
     ValidationResponse validate(ValidationRequest request) throws AuthException;
+
+    /**
+     * Asks whether the policies in the given {@link LevelValidationRequest} <code>q</code> are correct
+     * when validated against the schema it describes. If validation passes, run level validation (RFC 76)
+     *
+     * @param request The request containing the policies to validate, the schema to validate them
+     *     against and maximum dereferencing level.
+     * @return A {@link ValidationResponse} describing any validation errors found in the policies.
+     * @throws BadRequestException if any errors were found in the syntax of the policies.
+     * @throws AuthException if any internal errors occurred while validating the policies.
+     */
+    ValidationResponse validateWithLevel(LevelValidationRequest request) throws AuthException;
 
     /**
      * Asks whether the entities in the given {@link EntityValidationRequest} <code>q</code> are correct

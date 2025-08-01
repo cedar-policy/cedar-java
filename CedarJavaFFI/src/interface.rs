@@ -34,7 +34,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use std::{error::Error, str::FromStr, thread};
 
-use crate::objects::JFormatterConfig;
 use crate::{
     answer::Answer,
     jmap::Map,
@@ -42,6 +41,7 @@ use crate::{
     objects::{JEntityId, JEntityTypeName, JEntityUID, JPolicy, Object},
     utils::raise_npe,
 };
+use crate::{helpers::validate_with_level_json_str, objects::JFormatterConfig};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -49,6 +49,7 @@ const V0_AUTH_OP: &str = "AuthorizationOperation";
 #[cfg(feature = "partial-eval")]
 const V0_AUTH_PARTIAL_OP: &str = "AuthorizationPartialOperation";
 const V0_VALIDATE_OP: &str = "ValidateOperation";
+const V0_VALIDATE_LEVEL_OP: &str = "ValidateWithLevelOperation";
 const V0_VALIDATE_ENTITIES: &str = "ValidateEntities";
 
 fn build_err_obj(env: &JNIEnv<'_>, err: &str) -> jstring {
@@ -123,6 +124,7 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
         V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(input),
         V0_VALIDATE_OP => validate_json_str(input),
         V0_VALIDATE_ENTITIES => json_validate_entities(&input),
+        V0_VALIDATE_LEVEL_OP => validate_with_level_json_str(input),
         _ => {
             let ires = Answer::fail_internally(format!("unsupported operation: {}", call));
             serde_json::to_string(&ires)
@@ -783,10 +785,6 @@ pub(crate) mod jvm_based_tests {
     // Static JVM to be used by all the tests. LazyLock for thread-safe lazy initialization
 
     mod policy_tests {
-        use std::result;
-
-        use cedar_policy::Effect;
-
         use super::*;
 
         #[track_caller]

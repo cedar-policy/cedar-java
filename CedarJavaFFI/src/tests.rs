@@ -194,6 +194,111 @@ mod validation_tests {
         let result = call_cedar("ValidateOperation", r#"{ "schema": "", "policies": {} }"#);
         assert_validation_success(&result);
     }
+
+    #[test]
+    fn validate_with_level_succeeds() {
+        let input = r#" {
+            "schema": {
+                "": {
+                    "entityTypes": {
+                        "User": {
+                            "memberOfTypes": [
+                                "UserGroup"
+                            ],
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "friend": {
+                                        "type": "Entity",
+                                        "name": "User"
+                                    }
+                                }
+                            }
+                        },
+                        "Photo": {
+                            "memberOfTypes": [
+                                "Album",
+                                "Account"
+                            ],
+                            "shape": {
+                                "type": "Record",
+                                "attributes": {
+                                    "owner": {
+                                        "type": "Entity",
+                                        "name": "User"
+                                    }
+                                }
+                            }
+                        },
+                        "Album": {
+                            "memberOfTypes": [
+                                "Album",
+                                "Account"
+                            ]
+                        },
+                        "Account": {},
+                        "UserGroup": {}
+                    },
+                    "actions": {
+                        "readOnly": {},
+                        "readWrite": {},
+                        "createAlbum": {
+                            "appliesTo": {
+                                "resourceTypes": [
+                                    "Account",
+                                    "Album"
+                                ],
+                                "principalTypes": [
+                                    "User"
+                                ]
+                            }
+                        },
+                        "addPhotoToAlbum": {
+                            "appliesTo": {
+                                "resourceTypes": [
+                                    "Album"
+                                ],
+                                "principalTypes": [
+                                    "User"
+                                ]
+                            }
+                        },
+                        "viewPhoto": {
+                            "appliesTo": {
+                                "resourceTypes": [
+                                    "Photo"
+                                ],
+                                "principalTypes": [
+                                    "User"
+                                ]
+                            }
+                        },
+                        "viewComments": {
+                            "appliesTo": {
+                                "resourceTypes": [
+                                    "Photo"
+                                ],
+                                "principalTypes": [
+                                    "User"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "policies": {
+                "staticPolicies": {
+                    "policy0": "permit(principal in UserGroup::\"alice_friends\", action == Action::\"viewPhoto\", resource) when {principal in resource.owner.friend};"
+                }
+            },
+            "maxDerefLevel": 2
+        }
+        "#;
+
+        let result = call_cedar("ValidateWithLevelOperation", input);
+
+        assert_validation_success(&result);
+    }
 }
 
 mod entity_validation_tests {
