@@ -28,14 +28,14 @@ import java.util.Objects;
 public final class LevelValidationRequest {
     private final Schema schema;
     private final PolicySet policies;
-    private final long maxDerefLevel;
+    private final long maxDerefLevel; // Must be non-negative (>=0)  
 
     /**
      * Construct a validation request.
      *
      * @param schema        Schema for the request
      * @param policies      Map of Policy ID to policy
-     * @param maxDerefLevel Maximum level of dereferencing allowed for validation
+     * @param maxDerefLevel Maximum level of dereferencing allowed for validation. Must be non-negative (>=0)
      */
     @SuppressFBWarnings
     public LevelValidationRequest(Schema schema, PolicySet policies, long maxDerefLevel) {

@@ -137,7 +137,7 @@ impl LevelValidationCall {
     }
 }
 
-pub fn validate__with_level_json_str(json: &str) -> Result<String, serde_json::Error> {
+pub fn validate_with_level_json_str(json: &str) -> Result<String, serde_json::Error> {
     let ans = validate_with_level(serde_json::from_str(json)?);
     serde_json::to_string(&ans)
 }
@@ -148,7 +148,6 @@ pub fn validate_with_level(call: LevelValidationCall) -> ValidationAnswer {
             t: Ok((policies, schema, settings, max_deref_level)),
             warnings,
         } => {
-            // otherwise, call `Validator::validate`
             let validator = Validator::new(schema);
 
             let validation_result =

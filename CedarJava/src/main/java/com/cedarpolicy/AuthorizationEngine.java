@@ -135,7 +135,7 @@ public interface AuthorizationEngine {
 
     /**
      * Asks whether the entities in the given {@link EntityValidationRequest} <code>q</code> are correct
-     * when validated against the schema it describes. 
+     * when validated against the schema it describes.
      *
      * @param request The request containing the entities to validate and the schema to validate them
      *    against.
