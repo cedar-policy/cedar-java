@@ -1,15 +1,17 @@
 /*
  * Copyright Cedar Contributors
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * https://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.cedarpolicy.value;
@@ -26,23 +28,26 @@ import java.util.Objects;
  * Represents a Cedar datetime extension value. DateTime values are encoded as strings in the
  * following formats (Follows ISO 8601 standard):
  *
- *   "YYYY-MM-DD" (date only)
- *   "YYYY-MM-DDThh:mm:ssZ" (UTC)
- *   "YYYY-MM-DDThh:mm:ss.SSSZ" (UTC with millisecond precision)
- *   "YYYY-MM-DDThh:mm:ss(+/-)hhmm" (With timezone offset in hours and minutes)
- *   "YYYY-MM-DDThh:mm:ss.SSS(+/-)hhmm" (With timezone offset in hours and minutes and millisecond precision)
+ * "YYYY-MM-DD" (date only) "YYYY-MM-DDThh:mm:ssZ" (UTC) "YYYY-MM-DDThh:mm:ss.SSSZ" (UTC with
+ * millisecond precision) "YYYY-MM-DDThh:mm:ss(+/-)hhmm" (With timezone offset in hours and minutes)
+ * "YYYY-MM-DDThh:mm:ss.SSS(+/-)hhmm" (With timezone offset in hours and minutes and millisecond
+ * precision)
  *
  */
 public class DateTime extends Value {
 
     private static class DateTimeValidator {
 
-        private static final List<DateTimeFormatter> FORMATTERS =
-                Arrays.asList(DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT),
-                        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'").withResolverStyle(ResolverStyle.STRICT),
-                        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'").withResolverStyle(ResolverStyle.STRICT),
-                        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssXX").withResolverStyle(ResolverStyle.STRICT),
-                        DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSXX").withResolverStyle(ResolverStyle.STRICT));
+        private static final List<DateTimeFormatter> FORMATTERS = Arrays.asList(
+                DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")
+                        .withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssXX")
+                        .withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSXX")
+                        .withResolverStyle(ResolverStyle.STRICT));
 
         /**
          * Validates a datetime string against the supported formats. Automatically enforces range
@@ -57,8 +62,7 @@ public class DateTime extends Value {
                 return false;
             }
 
-            return FORMATTERS.stream()
-                    .anyMatch(formatter -> canParse(formatter, dateTimeString));
+            return FORMATTERS.stream().anyMatch(formatter -> canParse(formatter, dateTimeString));
         }
 
         private static boolean canParse(DateTimeFormatter formatter, String dateTimeString) {
