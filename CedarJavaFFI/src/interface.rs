@@ -16,9 +16,9 @@
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
-use cedar_policy::ffi::PolicySet as PolicySetFFI;
 use cedar_policy::ffi::{
-    schema_to_json, schema_to_text, Schema as FFISchema, SchemaToJsonAnswer, SchemaToTextAnswer,
+    schema_to_json, schema_to_text, PolicySet as PolicySetFFI, Schema as FFISchema,
+    SchemaToJsonAnswer, SchemaToTextAnswer,
 };
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
@@ -1491,7 +1491,7 @@ pub(crate) mod jvm_based_tests {
         fn get_cedar_schema_internal_invalid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let json_input = r#"
-        
+
             entity User = {
                         name: String,
                         age?: Long,
