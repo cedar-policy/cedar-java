@@ -17,12 +17,17 @@
 package com.cedarpolicy.value;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a Cedar datetime extension value. DateTime values are encoded as strings in the
@@ -50,33 +55,53 @@ public class DateTime extends Value {
                         .withResolverStyle(ResolverStyle.STRICT));
 
         /**
-         * Validates a datetime string against the supported formats. Automatically enforces range
-         * constraints: - Month: 01-12 - Day: 01-31 (considering month-specific limits) - Hour:
-         * 00-23 - Minute: 00-59 - Second: 00-59
+         * Parses a datetime string and returns the parsed Instant. Combines validation and parsing
+         * into a single operation to avoid redundancy. All datetime formats are normalized to
+         * Instant for consistent equality comparison.
          *
-         * @param dateTimeString the string to validate
-         * @return true if valid, false otherwise
+         * @param dateTimeString the string to parse
+         * @return Optional containing the parsed Instant, or empty if parsing fails
          */
-        public static boolean isValid(String dateTimeString) {
+        private static Optional<Instant> parseToInstant(String dateTimeString) {
             if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
-                return false;
+                return java.util.Optional.empty();
             }
 
-            return FORMATTERS.stream().anyMatch(formatter -> canParse(formatter, dateTimeString));
+            return FORMATTERS.stream()
+                    .flatMap(formatter -> tryParseWithFormatter(dateTimeString, formatter).stream())
+                    .findFirst();
         }
 
-        private static boolean canParse(DateTimeFormatter formatter, String dateTimeString) {
+        /**
+         * Attempts to parse a datetime string with a specific formatter.
+         *
+         * @param dateTimeString the string to parse
+         * @param formatter the formatter to use
+         * @return Optional containing the parsed Instant, or empty if parsing fails
+         */
+        private static Optional<Instant> tryParseWithFormatter(String dateTimeString,
+                DateTimeFormatter formatter) {
             try {
-                formatter.parse(dateTimeString);
-                return true;
+                if (formatter == FORMATTERS.get(0)) {
+                    // Date-only format - convert to start of day UTC
+                    LocalDate date = LocalDate.parse(dateTimeString, formatter);
+                    return Optional.of(date.atStartOfDay(ZoneOffset.UTC).toInstant());
+                } else {
+                    // DateTime format - parse and convert to Instant
+                    OffsetDateTime dateTime = OffsetDateTime.parse(dateTimeString, formatter);
+                    return Optional.of(dateTime.toInstant());
+                }
             } catch (DateTimeParseException e) {
-                return false;
+                return Optional.empty();
             }
         }
     }
 
     /** Datetime as a string. */
     private final String dateTime;
+
+    /** Parsed datetime as Instant for semantic comparison. */
+    private final Instant parsedInstant;
 
     /**
      * Construct DateTime.
@@ -85,11 +110,14 @@ public class DateTime extends Value {
      */
     @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public DateTime(String dateTime) throws NullPointerException, IllegalArgumentException {
-        if (!DateTimeValidator.isValid(dateTime)) {
+        Optional<Instant> parsed = DateTimeValidator.parseToInstant(dateTime);
+        if (parsed.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Input string is not a valid DateTime format: " + dateTime);
+                    "Input string is not a supported DateTime format: " + dateTime);
+        } else {
+            this.dateTime = dateTime;
+            this.parsedInstant = parsed.get();
         }
-        this.dateTime = dateTime;
     }
 
     /** Convert DateTime to Cedar expr that can be used in a Cedar policy. */
@@ -98,7 +126,11 @@ public class DateTime extends Value {
         return "datetime(\"" + dateTime + "\")";
     }
 
-    /** Equals. */
+    /**
+     * Equals based on semantic comparison of the parsed datetime values. Two DateTime objects are
+     * equal if they represent the same instant in time, regardless of their string representation
+     * format.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -107,14 +139,16 @@ public class DateTime extends Value {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DateTime dateTime1 = (DateTime) o;
-        return dateTime.equals(dateTime1.dateTime);
+        DateTime other = (DateTime) o;
+        return Objects.equals(this.parsedInstant, other.parsedInstant);
     }
 
-    /** Hash. */
+    /**
+     * Hash based on the parsed datetime value for semantic equality.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(dateTime);
+        return Objects.hash(parsedInstant);
     }
 
     /** As a string. */

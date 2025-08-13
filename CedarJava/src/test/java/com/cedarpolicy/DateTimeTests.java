@@ -271,13 +271,61 @@ public class DateTimeTests {
     }
 
     @Test
-    public void testEqualityWithDifferentFormats() {
+    public void testSemanticEqualityWithDifferentFormats() {
         DateTime date1 = new DateTime("2023-12-25");
         DateTime date2 = new DateTime("2023-12-25T00:00:00Z");
 
-        // Since we store the original string, these should not be equal
-        assertNotEquals(date1, date2);
+        // With semantic equality, these should be equal as they represent the same instant
+        assertEquals(date1, date2);
+        assertEquals(date1.hashCode(), date2.hashCode());
+
+        // But their string representations remain different
         assertNotEquals(date1.toString(), date2.toString());
+    }
+
+    @Test
+    public void testSemanticEqualityWithTimezones() {
+        // These all represent the same instant: noon UTC on Dec 25, 2023
+        DateTime utc = new DateTime("2023-12-25T12:00:00Z");
+        DateTime eastern = new DateTime("2023-12-25T07:00:00-0500");
+        DateTime pacific = new DateTime("2023-12-25T04:00:00-0800");
+        DateTime plus5 = new DateTime("2023-12-25T17:00:00+0500");
+
+        // All should be semantically equal
+        assertEquals(utc, eastern);
+        assertEquals(utc, pacific);
+        assertEquals(utc, plus5);
+        assertEquals(eastern, pacific);
+        assertEquals(eastern, plus5);
+        assertEquals(pacific, plus5);
+
+        // Hash codes should match
+        assertEquals(utc.hashCode(), eastern.hashCode());
+        assertEquals(utc.hashCode(), pacific.hashCode());
+        assertEquals(utc.hashCode(), plus5.hashCode());
+
+        // But string representations should be different
+        assertNotEquals(utc.toString(), eastern.toString());
+        assertNotEquals(utc.toString(), pacific.toString());
+        assertNotEquals(utc.toString(), plus5.toString());
+    }
+
+    @Test
+    public void testSemanticEqualityWithMilliseconds() {
+        // Test that millisecond precision affects equality
+        DateTime withMillis = new DateTime("2023-12-25T12:00:12.000Z");
+        DateTime withoutMillis = new DateTime("2023-12-25T12:00:00Z");
+        DateTime differentMillis = new DateTime("2023-12-25T12:00:00.456Z");
+
+        // These should not be equal due to different milliseconds
+        assertNotEquals(withMillis, withoutMillis);
+        assertNotEquals(withMillis, differentMillis);
+        assertNotEquals(withoutMillis, differentMillis);
+
+        // Same milliseconds should be equal
+        DateTime sameMillis = new DateTime("2023-12-25T12:00:12Z");
+        assertEquals(withMillis, sameMillis);
+        assertEquals(withMillis.hashCode(), sameMillis.hashCode());
     }
 
     @Test
