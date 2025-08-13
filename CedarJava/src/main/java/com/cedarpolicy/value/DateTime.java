@@ -33,10 +33,11 @@ import java.util.Optional;
  * Represents a Cedar datetime extension value. DateTime values are encoded as strings in the
  * following formats (Follows ISO 8601 standard):
  *
- * "YYYY-MM-DD" (date only) "YYYY-MM-DDThh:mm:ssZ" (UTC) "YYYY-MM-DDThh:mm:ss.SSSZ" (UTC with
- * millisecond precision) "YYYY-MM-DDThh:mm:ss(+/-)hhmm" (With timezone offset in hours and minutes)
- * "YYYY-MM-DDThh:mm:ss.SSS(+/-)hhmm" (With timezone offset in hours and minutes and millisecond
- * precision)
+ * "YYYY-MM-DD" (date only)
+ * "YYYY-MM-DDThh:mm:ssZ" (UTC)
+ * "YYYY-MM-DDThh:mm:ss.SSSZ" (UTC with millisecond precision)
+ * "YYYY-MM-DDThh:mm:ss(+/-)hhmm" (With timezone offset in hours and minutes)
+ * "YYYY-MM-DDThh:mm:ss.SSS(+/-)hhmm" (With timezone offset in hours and minutes and millisecond precision)
  *
  */
 public class DateTime extends Value {
