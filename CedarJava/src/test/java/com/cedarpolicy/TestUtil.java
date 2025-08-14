@@ -60,7 +60,7 @@ public final class TestUtil {
         EntityTypeName principalType = EntityTypeName.parse("User").get();
         Set<Policy> policies = new HashSet<>();
         Set<Policy> templates = new HashSet<>();
-        ArrayList<TemplateLink> templateLinks = new ArrayList<TemplateLink>(); 
+        ArrayList<TemplateLink> templateLinks = new ArrayList<TemplateLink>();
         ArrayList<LinkValue> linkValueList = new ArrayList<>();
 
         String fullPolicy =
@@ -86,7 +86,7 @@ public final class TestUtil {
         EntityTypeName principalType = EntityTypeName.parse("User").get();
         Set<Policy> policies = new HashSet<>();
         Set<Policy> templates = new HashSet<>();
-        ArrayList<TemplateLink> templateLinks = new ArrayList<TemplateLink>(); 
+        ArrayList<TemplateLink> templateLinks = new ArrayList<TemplateLink>();
         ArrayList<LinkValue> linkValueList = new ArrayList<>();
 
         String fullPolicy =
