@@ -113,8 +113,7 @@ public class PolicySet {
       * @throws JsonProcessingException if there is an error serializing the object to JSON
       */
       public String toJson() throws InternalException, JsonProcessingException {
-        String ffiCompatibleJson = objectWriter().writeValueAsString(this);
-        return policySetToJson(ffiCompatibleJson);
+        return policySetToJson(objectWriter().writeValueAsString(this));
     }
 
     /**
@@ -144,5 +143,5 @@ public class PolicySet {
     }
 
     private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
-    private static native String policySetToJson(String policySetJStr) throws InternalException, NullPointerException;
+    private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
 }

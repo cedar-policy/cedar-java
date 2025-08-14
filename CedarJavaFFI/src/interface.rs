@@ -1618,7 +1618,7 @@ pub(crate) mod jvm_based_tests {
         #[test]
         fn policyset_to_json_valid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
-            let policy_set_str = r#"{
+            let policyset_str = r#"{
                 "staticPolicies": {
                     "p1": "permit(principal == User::\"Bob\", action == Action::\"View_Photo\", resource in Album::\"Vacation\");"
                 },
@@ -1634,14 +1634,14 @@ pub(crate) mod jvm_based_tests {
                 }]
             }"#;
 
-            let policy_set_jstr = env.new_string(policy_set_str).unwrap();
-            let policy_set_json_result = policy_set_to_json_internal(&mut env, policy_set_jstr);
+            let policyset_jstr = env.new_string(policyset_str).unwrap();
+            let policyset_json_result = policy_set_to_json_internal(&mut env, policyset_jstr);
 
-            assert!(policy_set_json_result.is_ok());
+            assert!(policyset_json_result.is_ok());
 
-            let policy_set_json_jstr =
-                JString::cast(&mut env, policy_set_json_result.unwrap().l().unwrap()).unwrap();
-            let actual_json_str = String::from(env.get_string(&policy_set_json_jstr).unwrap());
+            let policyset_json_jstr =
+                JString::cast(&mut env, policyset_json_result.unwrap().l().unwrap()).unwrap();
+            let actual_json_str = String::from(env.get_string(&policyset_json_jstr).unwrap());
 
             let expected_json = serde_json::json!({
                 "templates": {
@@ -1721,7 +1721,7 @@ pub(crate) mod jvm_based_tests {
         #[test]
         fn policyset_to_json_invalid_test() {
             let mut env = JVM.attach_current_thread().unwrap();
-            let policy_set_str = r#"{
+            let policyset_str = r#"{
                 "staticPolicies": {
                     "p1": "permit(principal == User::\"Bob\", act == Action::\"View_Photo\", resrce in Album::\"Vacation\");"
                 },
@@ -1731,11 +1731,11 @@ pub(crate) mod jvm_based_tests {
                 }
             }"#;
 
-            let policy_set_jstr = env.new_string(policy_set_str).unwrap();
-            let policy_set_json_result = policy_set_to_json_internal(&mut env, policy_set_jstr);
+            let policyset_jstr = env.new_string(policyset_str).unwrap();
+            let policyset_json_result = policy_set_to_json_internal(&mut env, policyset_jstr);
 
             assert!(
-                policy_set_json_result.is_err(),
+                policyset_json_result.is_err(),
                 "Expected error when converting a malformed policy set"
             );
 
