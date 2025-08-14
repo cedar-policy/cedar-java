@@ -168,6 +168,7 @@ mod jlist_tests {
 
         let result = list.get(&mut env, 1);
         assert!(result.is_err());
+        env.exception_clear().unwrap();
     }
 
     #[test]
@@ -247,6 +248,7 @@ mod jlist_tests {
             Ok(_) => panic!("Expected error, but got Ok"),
         };
         assert!(result.is_err());
+        env.exception_clear().unwrap();
     }
     #[test]
     fn size_method_works() {
