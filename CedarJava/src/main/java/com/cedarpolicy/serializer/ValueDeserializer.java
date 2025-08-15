@@ -20,6 +20,7 @@ import com.cedarpolicy.model.exception.DeserializationRecursionDepthException;
 import com.cedarpolicy.model.exception.InvalidValueDeserializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
+import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
@@ -74,8 +75,7 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
             } else if (node.isObject()) {
                 Iterator<Map.Entry<String, JsonNode>> iter = node.fields();
                 // Do two passes, one to check if it is an escaped entity or extension and a second to
-                // write into a
-                // map
+                // write into a map
                 EscapeType escapeType = EscapeType.UNRECOGNIZED;
                 int count = 0;
                 while (iter.hasNext()) {
@@ -127,6 +127,8 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                                 return new Decimal(arg.textValue());
                             } else if (fn.textValue().equals("unknown")) {
                                 return new Unknown(arg.textValue());
+                            } else if (fn.textValue().equals("datetime")) {
+                                return new DateTime(arg.textValue());
                             } else {
                                 throw new InvalidValueDeserializationException(parser,
                                         "Invalid function type: " + fn.toString(), node.asToken(), Map.class);

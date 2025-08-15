@@ -30,6 +30,7 @@ import com.cedarpolicy.model.policy.LinkValue;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.policy.TemplateLink;
+import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.EntityTypeName;
@@ -444,6 +445,106 @@ public class IntegrationTests {
                         + ")\n"
                         + " when {\n"
                         + "principal.ip == ip(\"192.168.0.24\")\n"
+                        + "};";
+        final String policyId = "ID0";
+        Policy policy = new Policy(p, policyId);
+        Set<Policy> policies = new HashSet<>();
+        policies.add(policy);
+        PolicySet policySet = new PolicySet(policies);
+        Map<String, Value> currentContext = new HashMap<>();
+        AuthorizationRequest request =
+                new AuthorizationRequest(
+                        principal, action, resource, currentContext);
+        assertAllowed(request, policySet, entities);
+    }
+
+    /** Test DateTime extension. */
+    @Test
+    public void testDateTimeExtension() {
+        Set<Entity> entities = new HashSet<>();
+        String principalId = "alice";
+        Map<String, Value> principalAttributes = new HashMap<>();
+        principalAttributes.put("DOB", new DateTime("2000-01-01"));
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
+
+        String actionId = "view";
+        Map<String, Value> actionAttributes = new HashMap<>();
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
+
+        String resourceId = "photo.jpg";
+        Map<String, Value> resourceAttributes = new HashMap<>();
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
+
+        String p =
+                "permit(\n"
+                        + "principal=="
+                        + principal.getEUID().toString()
+                        + ",\n"
+                        + "action=="
+                        + action.getEUID().toString()
+                        + ",\n"
+                        + "resource=="
+                        + resource.getEUID().toString()
+                        + "\n"
+                        + ")\n"
+                        + " when {\n"
+                        + "principal.DOB > datetime(\"1999-01-01\")\n"
+                        + "};";
+        final String policyId = "ID0";
+        Policy policy = new Policy(p, policyId);
+        Set<Policy> policies = new HashSet<>();
+        policies.add(policy);
+        PolicySet policySet = new PolicySet(policies);
+        Map<String, Value> currentContext = new HashMap<>();
+        AuthorizationRequest request =
+                new AuthorizationRequest(
+                        principal, action, resource, currentContext);
+        assertAllowed(request, policySet, entities);
+    }
+
+    /** Test DateTime extension with different timezones. */
+    @Test
+    public void testDateTimeExtensionWithDifferentTimezones() {
+        Set<Entity> entities = new HashSet<>();
+        String principalId = "alice";
+        Map<String, Value> principalAttributes = new HashMap<>();
+        principalAttributes.put("DOB", new DateTime("2023-12-25T10:30:45-0800"));
+        Set<EntityUID> principalParents = new HashSet<>();
+        Entity principal = new Entity(new EntityUID(principalType, principalId), principalAttributes, principalParents);
+        entities.add(principal);
+
+        String actionId = "view";
+        Map<String, Value> actionAttributes = new HashMap<>();
+        Set<EntityUID> actionParents = new HashSet<>();
+        Entity action = new Entity(new EntityUID(actionType, actionId), actionAttributes, actionParents);
+        entities.add(action);
+
+        String resourceId = "photo.jpg";
+        Map<String, Value> resourceAttributes = new HashMap<>();
+        Set<EntityUID> resourceParents = new HashSet<>();
+        var resource = new Entity(new EntityUID(resourceType, resourceId), resourceAttributes, resourceParents);
+        entities.add(resource);
+
+        String p =
+                "permit(\n"
+                        + "principal=="
+                        + principal.getEUID().toString()
+                        + ",\n"
+                        + "action=="
+                        + action.getEUID().toString()
+                        + ",\n"
+                        + "resource=="
+                        + resource.getEUID().toString()
+                        + "\n"
+                        + ")\n"
+                        + " when {\n"
+                        + "principal.DOB > datetime(\"2023-12-25T14:30:20-0400\")\n"
                         + "};";
         final String policyId = "ID0";
         Policy policy = new Policy(p, policyId);

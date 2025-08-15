@@ -19,6 +19,7 @@ package com.cedarpolicy.serializer;
 import com.cedarpolicy.model.exception.InvalidValueSerializationException;
 import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
+import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.IpAddress;
@@ -98,6 +99,16 @@ public class ValueSerializer extends JsonSerializer<Value> {
             jsonGenerator.writeStartObject();
             jsonGenerator.writeFieldName("fn");
             jsonGenerator.writeString("unknown");
+            jsonGenerator.writeFieldName("arg");
+            jsonGenerator.writeString(value.toString());
+            jsonGenerator.writeEndObject();
+            jsonGenerator.writeEndObject();
+        } else if (value instanceof DateTime) {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName(EXTENSION_ESCAPE_SEQ);
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("fn");
+            jsonGenerator.writeString("datetime");
             jsonGenerator.writeFieldName("arg");
             jsonGenerator.writeString(value.toString());
             jsonGenerator.writeEndObject();

@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+* Added Schema conversion APIs [#325](https://github.com/cedar-policy/cedar-java/pull/325)
+* Added Level Validation [#327](https://github.com/cedar-policy/cedar-java/pull/327)
+* Added DateTime extension support [#328](https://github.com/cedar-policy/cedar-java/pull/328)
+
+## 4.3.1
 ### Added
 * Added Zig version validation for publishing artifacts [#306](https://github.com/cedar-policy/cedar-java/pull/306)
 
