@@ -16,8 +16,10 @@
 
 package com.cedarpolicy.model.policy;
 
+import static com.cedarpolicy.CedarJson.objectWriter;
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.exception.InternalException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.Collections;
 import java.util.List;
@@ -87,20 +89,31 @@ public class PolicySet {
 
     /**
      * Gets number of static policies in the Policy Set.
-     * 
+     *
      * @return number of static policies, returns 0 if policies set is null
      */
     public int getNumPolicies() {
         return policies != null ? policies.size() : 0;
-    } 
+    }
 
     /**
      * Gets number of templates in the Policy Set.
-     * 
+     *
      * @return number of templates, returns 0 if templates set is null
      */
     public int getNumTemplates() {
         return templates != null ? templates.size() : 0;
+    }
+
+    /**
+      * Converts the PolicySet object to a Cedar JSON string representation.
+      *
+      * @return Cedar JSON string representation of the PolicySet
+      * @throws InternalException if there is an error during JSON conversion in the Rust native code
+      * @throws JsonProcessingException if there is an error serializing the object to JSON
+      */
+      public String toJson() throws InternalException, JsonProcessingException {
+        return policySetToJson(objectWriter().writeValueAsString(this));
     }
 
     /**
@@ -130,4 +143,5 @@ public class PolicySet {
     }
 
     private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
+    private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
 }

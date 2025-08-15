@@ -17,7 +17,8 @@ use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::ffi::{
-    schema_to_json, schema_to_text, Schema as FFISchema, SchemaToJsonAnswer, SchemaToTextAnswer,
+    schema_to_json, schema_to_text, PolicySet as PolicySetFFI, Schema as FFISchema,
+    SchemaToJsonAnswer, SchemaToTextAnswer,
 };
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
@@ -267,6 +268,32 @@ fn parse_policy_internal<'a>(
                 Ok(JValueGen::Object(env.new_string(&policy_text)?.into()))
             }
         }
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
+pub fn policySetToJson<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
+    match policy_set_to_json_internal(&mut env, policies_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policies_set) => policies_set.as_jni(),
+    }
+}
+
+fn policy_set_to_json_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policy_set_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policy_set_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let policy_set_jstring = env.get_string(&policy_set_jstr)?;
+        let policy_set_string = String::from(policy_set_jstring);
+        let policy_set_ffi: PolicySetFFI = serde_json::from_str(&policy_set_string)?;
+        let policy_set = policy_set_ffi
+            .parse()
+            .map_err(|err| format!("Error parsing policy set: {:?}", err))?;
+        let policy_set_json = serde_json::to_string(&policy_set.to_json().unwrap())?;
+        Ok(JValueGen::Object(env.new_string(&policy_set_json)?.into()))
     }
 }
 
@@ -812,6 +839,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
 
         #[track_caller]
@@ -893,6 +921,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn parse_policy_internal_success_basic() {
@@ -942,6 +971,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn parse_policy_internal_null() {
@@ -953,6 +983,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn parse_policy_template_valid_test() {
@@ -993,6 +1024,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn from_json_test_valid() {
@@ -1063,6 +1095,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
 
         #[test]
@@ -1161,6 +1194,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn template_effect_jni_internal_permit_test() {
@@ -1203,6 +1237,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
     }
     mod map_tests {
@@ -1352,6 +1387,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn parse_cedar_schema_internal_invalid() {
@@ -1404,6 +1440,7 @@ pub(crate) mod jvm_based_tests {
                 env.exception_check().unwrap(),
                 "Expected Java exception due to a null input"
             );
+            env.exception_clear().unwrap();
         }
         #[test]
         fn test_get_template_annotations_internal_invalid_template() {
@@ -1464,7 +1501,7 @@ pub(crate) mod jvm_based_tests {
         fn get_cedar_schema_internal_invalid() {
             let mut env = JVM.attach_current_thread().unwrap();
             let json_input = r#"
-        
+
             entity User = {
                         name: String,
                         age?: Long,
@@ -1573,6 +1610,144 @@ pub(crate) mod jvm_based_tests {
                 "Expected get_json_schema_internal to fail: {:?}",
                 result
             );
+        }
+    }
+
+    mod policyset_tests {
+        use super::*;
+        #[test]
+        fn policyset_to_json_valid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let policyset_str = r#"{
+                "staticPolicies": {
+                    "p1": "permit(principal == User::\"Bob\", action == Action::\"View_Photo\", resource in Album::\"Vacation\");"
+                },
+                "templates": {
+                    "t0": "permit(principal == ?principal, action == Action::\"View_Photo\", resource in Album::\"Vacation\");"
+                },
+                "templateLinks": [{
+                    "templateId": "t0",
+                    "newId": "tl0",
+                    "values": {
+                        "?principal": {"type": "User", "id": "Alice"}
+                    }
+                }]
+            }"#;
+
+            let policyset_jstr = env.new_string(policyset_str).unwrap();
+            let policyset_json_result = policy_set_to_json_internal(&mut env, policyset_jstr);
+
+            assert!(policyset_json_result.is_ok());
+
+            let policyset_json_jstr =
+                JString::cast(&mut env, policyset_json_result.unwrap().l().unwrap()).unwrap();
+            let actual_json_str = String::from(env.get_string(&policyset_json_jstr).unwrap());
+
+            let expected_json = serde_json::json!({
+                "templates": {
+                    "t0": {
+                        "effect": "permit",
+                        "principal": {
+                            "op": "==",
+                            "slot": "?principal"
+                        },
+                        "action": {
+                            "op": "==",
+                            "entity": {
+                                "type": "Action",
+                                "id": "View_Photo"
+                            }
+                        },
+                        "resource": {
+                            "op": "in",
+                            "entity": {
+                                "type": "Album",
+                                "id": "Vacation"
+                            }
+                        },
+                        "conditions": []
+                    }
+                },
+                "staticPolicies": {
+                    "p1": {
+                        "effect": "permit",
+                        "principal": {
+                            "op": "==",
+                            "entity": {
+                                "type": "User",
+                                "id": "Bob"
+                            }
+                        },
+                        "action": {
+                            "op": "==",
+                            "entity": {
+                                "type": "Action",
+                                "id": "View_Photo"
+                            }
+                        },
+                        "resource": {
+                            "op": "in",
+                            "entity": {
+                                "type": "Album",
+                                "id": "Vacation"
+                            }
+                        },
+                        "conditions": []
+                    }
+                },
+                "templateLinks": [{
+                    "templateId": "t0",
+                    "newId": "tl0",
+                    "values": {
+                        "?principal": {
+                            "__entity": {
+                                "type": "User",
+                                "id": "Alice"
+                            }
+                        }
+                    }
+                }]
+            });
+
+            let actual_json: serde_json::Value = serde_json::from_str(&actual_json_str)
+                .expect("Failed to parse actual JSON response");
+
+            assert_eq!(
+                expected_json, actual_json,
+                "PolicySet JSON output does not match expected structure"
+            );
+        }
+
+        #[test]
+        fn policyset_to_json_invalid_test() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let policyset_str = r#"{
+                "staticPolicies": {
+                    "p1": "permit(principal == User::\"Bob\", act == Action::\"View_Photo\", resrce in Album::\"Vacation\");"
+                },
+                "templates": {
+                    "t0": "permit(principal == ?
+                    }
+                }
+            }"#;
+
+            let policyset_jstr = env.new_string(policyset_str).unwrap();
+            let policyset_json_result = policy_set_to_json_internal(&mut env, policyset_jstr);
+
+            assert!(
+                policyset_json_result.is_err(),
+                "Expected error when converting a malformed policy set"
+            );
+
+            let null_str = JString::from(JObject::null());
+            let null_result = policy_set_to_json_internal(&mut env, null_str);
+
+            assert!(null_result.is_ok(), "Expected Ok on null input");
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected Java exception due to a null input"
+            );
+            env.exception_clear().unwrap();
         }
     }
 }
