@@ -24,8 +24,6 @@ import com.cedarpolicy.ExperimentalFeature;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Successful partial authorization response
@@ -33,31 +31,29 @@ import com.google.common.collect.ImmutableSet;
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
 public final class PartialAuthorizationSuccessResponse {
     private final AuthorizationSuccessResponse.Decision decision;
-    private final ImmutableSet<String> satisfied;
-    private final ImmutableSet<String> errored;
-    private final ImmutableSet<String> mayBeDetermining;
-    private final ImmutableSet<String> mustBeDetermining;
-    private final ImmutableMap<String, JsonNode> residuals;
-    private final ImmutableSet<String> nontrivialResiduals;
-    private final ImmutableSet<String> warnings;
+    private final Set<String> satisfied;
+    private final Set<String> errored;
+    private final Set<String> mayBeDetermining;
+    private final Set<String> mustBeDetermining;
+    private final Map<String, JsonNode> residuals;
+    private final Set<String> nontrivialResiduals;
+    private final Set<String> warnings;
 
     public PartialAuthorizationSuccessResponse(
         AuthorizationSuccessResponse.Decision decision, Set<String> satisfied, Set<String> errored,
         Set<String> mayBeDetermining, Set<String> mustBeDetermining, Map<String, JsonNode> residuals,
         Set<String> nontrivialResiduals, Set<String> warnings) {
         this.decision = decision;
-        // note that ImmutableSet.copyOf() attempts to avoid a full copy when possible
-        // see https://github.com/google/guava/wiki/ImmutableCollectionsExplained
-        this.satisfied = ImmutableSet.copyOf(satisfied);
-        this.errored = ImmutableSet.copyOf(errored);
-        this.mayBeDetermining = ImmutableSet.copyOf(mayBeDetermining);
-        this.mustBeDetermining = ImmutableSet.copyOf(mustBeDetermining);
-        this.residuals = ImmutableMap.copyOf(residuals);
-        this.nontrivialResiduals = ImmutableSet.copyOf(nontrivialResiduals);
+        this.satisfied = Set.copyOf(satisfied);
+        this.errored = Set.copyOf(errored);
+        this.mayBeDetermining = Set.copyOf(mayBeDetermining);
+        this.mustBeDetermining = Set.copyOf(mustBeDetermining);
+        this.residuals = Map.copyOf(residuals);
+        this.nontrivialResiduals = Set.copyOf(nontrivialResiduals);
         if (warnings == null) {
-            this.warnings = ImmutableSet.of(); // empty
+            this.warnings = Set.of(); // empty
         } else {
-            this.warnings = ImmutableSet.copyOf(warnings);
+            this.warnings = Set.copyOf(warnings);
         }
     }
 
