@@ -460,6 +460,100 @@ mod entity_validation_tests {
     }
 
     #[test]
+    fn validate_entities_with_cedarschema_succeeds() {
+        let json_data = json!(
+        {
+            "entities":[
+            {
+                "uid": {
+                    "type": "PhotoApp::User",
+                    "id": "alice"
+                },
+                "attrs": {
+                    "userId": "897345789237492878",
+                    "personInformation": {
+                        "age": 25,
+                        "name": "alice"
+                    },
+                },
+                "parents": [
+                    {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "alice_friends"
+                    },
+                    {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    }
+                ]
+            },
+            {
+                "uid": {
+                    "type": "PhotoApp::Photo",
+                    "id": "vacationPhoto.jpg"
+                },
+                "attrs": {
+                    "private": false,
+                    "account": {
+                        "__entity": {
+                            "type": "PhotoApp::Account",
+                            "id": "ahmad"
+                        }
+                    }
+                },
+                "parents": []
+            },
+            {
+                "uid": {
+                    "type": "PhotoApp::UserGroup",
+                    "id": "alice_friends"
+                },
+                "attrs": {},
+                "parents": []
+            },
+            {
+                "uid": {
+                    "type": "PhotoApp::UserGroup",
+                    "id": "AVTeam"
+                },
+                "attrs": {},
+                "parents": []
+            }
+            ],
+            "schema":r#"
+                namespace PhotoApp {
+                    type ContextType = {
+                    "authenticated": __cedar::Bool,
+                    "ip"?: __cedar::ipaddr
+                    };
+
+                    type PersonType = {
+                    "age": __cedar::Long,
+                    "name": __cedar::String
+                    };
+
+                    entity Account;
+
+                    entity Album;
+
+                    entity Photo in [Album, Account] = {
+                    "account": Account,
+                    "private": __cedar::Bool
+                    };
+
+                    entity User in [UserGroup] = {
+                    "personInformation": PersonType,
+                    "userId": __cedar::String
+                    };
+
+                    entity UserGroup;
+                    }"#
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_success(&result);
+    }
+
+    #[test]
     fn validate_entities_field_missing() {
         let json_data = json!(
             {
@@ -610,6 +704,95 @@ mod entity_validation_tests {
     }
 
     #[test]
+    fn validate_entities_with_cedarschema_field_missing() {
+        let json_data = json!(
+            {
+              "entities":[
+                {
+                    "uid": {
+                        "type": "PhotoApp::User",
+                        "id": "alice"
+                    },
+                    "attrs": {
+                        "userId": "897345789237492878"
+                    },
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "alice_friends"
+                        },
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::Photo",
+                        "id": "vacationPhoto.jpg"
+                    },
+                    "attrs": {
+                        "private": false,
+                        "account": {
+                            "__entity": {
+                                "type": "PhotoApp::Account",
+                                "id": "ahmad"
+                            }
+                        }
+                    },
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "alice_friends"
+                    },
+                    "attrs": {},
+                    "parents": []
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": []
+                }
+              ],
+              "schema":r#"namespace PhotoApp {
+                    type ContextType = {
+                    "authenticated": __cedar::Bool,
+                    "ip"?: __cedar::ipaddr
+                    };
+
+                    type PersonType = {
+                    "age": __cedar::Long,
+                    "name": __cedar::String
+                    };
+
+                    entity Account;
+
+                    entity Album;
+
+                    entity Photo in [Album, Account] = {
+                    "account": Account,
+                    "private": __cedar::Bool
+                    };
+
+                    entity User in [UserGroup] = {
+                    "personInformation": PersonType,
+                    "userId": __cedar::String
+                    };
+
+                    entity UserGroup;
+                    }"#
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(&result);
+    }
+
+    #[test]
     #[should_panic]
     fn validate_entities_invalid_json_fails() {
         call_cedar("ValidateEntities", "{]");
@@ -647,6 +830,50 @@ mod entity_validation_tests {
             result.contains(
                 "unknown field `shape44`, expected one of `memberOfTypes`, `shape`, `tags`"
             ),
+            "result was `{result}`",
+        );
+    }
+
+    #[test]
+    fn validate_entities_invalid_cedarschema_fails() {
+        let json_data = json!(
+        {
+            "entities": [
+
+            ],
+            "schema": r#"namespace PhotoApp {
+                type ContextType = {
+                "authenticated": __cedar::Bool,
+                "ip"?: __cedar::ipaddr
+                };
+
+                type PersonType = {
+                "age": __cedar::Long,
+                "name": __cedar::String
+                };
+
+                entity Account;
+
+                entity Album;
+
+                entity Photo in [Album, Account] = {
+                "account": Account,
+                "private": __cedar::Tool
+                };
+
+                entity User in [UserGroup] = {
+                "personInformation": PersonType,
+                "userId": __cedar::String
+                };
+
+                entity UserGroup;
+                }"#
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(&result);
+
+        assert!(
+            result.contains("failed to resolve type: __cedar::Tool"),
             "result was `{result}`",
         );
     }
@@ -700,6 +927,52 @@ mod entity_validation_tests {
                     "actions": {}
                 }
             }
+        });
+        let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
+        assert_failure(&result);
+
+        assert!(
+            result.contains("input graph has a cycle containing vertex `PhotoApp::UserGroup"),
+            "result was `{result}`",
+        );
+    }
+
+    #[test]
+    fn validate_entities_with_cedarschema_detect_cycle_fails() {
+        let json_data = json!(
+        {
+            "entities": [
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "ABCTeam"
+                    },
+                    "attrs": {},
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "AVTeam"
+                        }
+                    ]
+                },
+                {
+                    "uid": {
+                        "type": "PhotoApp::UserGroup",
+                        "id": "AVTeam"
+                    },
+                    "attrs": {},
+                    "parents": [
+                        {
+                            "type": "PhotoApp::UserGroup",
+                            "id": "ABCTeam"
+                        }
+                    ]
+                }
+            ],
+            "schema": r#"namespace PhotoApp {
+                entity UserGroup in [UserGroup];
+                }
+                "#
         });
         let result = call_cedar("ValidateEntities", json_data.to_string().as_str());
         assert_failure(&result);
