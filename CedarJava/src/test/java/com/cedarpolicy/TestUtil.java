@@ -56,6 +56,18 @@ public final class TestUtil {
         }
     }
 
+    public static Schema loadCedarSchemaResource(String schemaFile) {
+        try {
+            String text = new String(Files.readAllBytes(
+                    Paths.get(
+                            ValidationTests.class.getResource(schemaFile).toURI())),
+                    StandardCharsets.UTF_8);
+            return new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.of(text));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load test schema file " + schemaFile, e);
+        }
+    }
+
     public static PolicySet buildValidPolicySet() {
         EntityTypeName principalType = EntityTypeName.parse("User").get();
         Set<Policy> policies = new HashSet<>();

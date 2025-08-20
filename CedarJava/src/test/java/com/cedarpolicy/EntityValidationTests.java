@@ -17,6 +17,7 @@
 package com.cedarpolicy;
 
 import static com.cedarpolicy.TestUtil.loadSchemaResource;
+import static com.cedarpolicy.TestUtil.loadCedarSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,10 +52,14 @@ public class EntityValidationTests {
     public void testValidEntity() throws AuthException {
         Entity entity = EntityValidationTests.entityGen.arbitraryEntity();
 
-        EntityValidationRequest r = new EntityValidationRequest(
-                ROLE_SCHEMA, List.of(entity));
+        EntityValidationRequest request = new EntityValidationRequest(ROLE_SCHEMA, List.of(entity));
 
-        engine.validateEntities(r);
+        engine.validateEntities(request);
+
+        EntityValidationRequest cedarFormatRequest =
+                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+
+        engine.validateEntities(cedarFormatRequest);
     }
 
     /**
@@ -67,11 +72,25 @@ public class EntityValidationTests {
 
         EntityValidationRequest request = new EntityValidationRequest(ROLE_SCHEMA, List.of(entity));
 
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
+        BadRequestException exception =
+                assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
-        assertTrue(errMsg.matches("attribute `test` on `Role::\".*\"` should not exist according to the schema"),
+        assertTrue(errMsg.matches(
+                "attribute `test` on `Role::\".*\"` should not exist according to the schema"),
                 "Expected to match regex but was: '%s'".formatted(errMsg));
+
+        EntityValidationRequest cedarFormatRequest =
+                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+
+        exception = assertThrows(BadRequestException.class,
+                () -> engine.validateEntities(cedarFormatRequest));
+
+        errMsg = exception.getErrors().get(0);
+        assertTrue(errMsg.matches(
+                "attribute `test` on `Role::\".*\"` should not exist according to the schema"),
+                "Expected to match regex but was: '%s'".formatted(errMsg));
+
     }
 
     /**
@@ -87,13 +106,26 @@ public class EntityValidationTests {
         childEntity.parentsEUIDs.add(parentEntity.getEUID());
         parentEntity.parentsEUIDs.add(childEntity.getEUID());
 
-        EntityValidationRequest request = new EntityValidationRequest(ROLE_SCHEMA, List.of(parentEntity, childEntity));
+        EntityValidationRequest request =
+                new EntityValidationRequest(ROLE_SCHEMA, List.of(parentEntity, childEntity));
 
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
+        BadRequestException exception =
+                assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.matches("input graph has a cycle containing vertex `Role::\".*\"`"),
                 "Expected to match regex but was: '%s'".formatted(errMsg));
+
+        EntityValidationRequest cedarFormatRequest =
+                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(parentEntity, childEntity));
+
+        exception = assertThrows(BadRequestException.class,
+                () -> engine.validateEntities(cedarFormatRequest));
+
+        errMsg = exception.getErrors().get(0);
+        assertTrue(errMsg.matches("input graph has a cycle containing vertex `Role::\".*\"`"),
+                "Expected to match regex but was: '%s'".formatted(errMsg));
+
     }
 
     /**
@@ -106,12 +138,26 @@ public class EntityValidationTests {
 
         EntityValidationRequest request = new EntityValidationRequest(ROLE_SCHEMA, List.of(entity));
 
-        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
+        BadRequestException exception =
+                assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
-        assertTrue(errMsg.matches("found a tag `test` on `Role::\".*\"`, "
-            + "but no tags should exist on `Role::\".*\"` according to the schema"),
-            "Expected to match regex but was: '%s'".formatted(errMsg));
+        assertTrue(
+                errMsg.matches("found a tag `test` on `Role::\".*\"`, "
+                        + "but no tags should exist on `Role::\".*\"` according to the schema"),
+                "Expected to match regex but was: '%s'".formatted(errMsg));
+
+        EntityValidationRequest cedarFormatRequest =
+                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+
+        exception = assertThrows(BadRequestException.class,
+                () -> engine.validateEntities(cedarFormatRequest));
+
+        errMsg = exception.getErrors().get(0);
+        assertTrue(
+                errMsg.matches("found a tag `test` on `Role::\".*\"`, "
+                        + "but no tags should exist on `Role::\".*\"` according to the schema"),
+                "Expected to match regex but was: '%s'".formatted(errMsg));
     }
 
     @BeforeAll
@@ -124,4 +170,6 @@ public class EntityValidationTests {
     }
 
     private static final Schema ROLE_SCHEMA = loadSchemaResource("/role_schema.json");
+    private static final Schema ROLE_SCHEMA_CEDAR =
+            loadCedarSchemaResource("/role_schema.cedarschema");
 }
