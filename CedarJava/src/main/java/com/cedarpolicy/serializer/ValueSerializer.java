@@ -21,6 +21,7 @@ import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
+import com.cedarpolicy.value.Duration;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.IpAddress;
 import com.cedarpolicy.value.PrimBool;
@@ -28,6 +29,7 @@ import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
 import com.cedarpolicy.value.Unknown;
 import com.cedarpolicy.value.Value;
+import com.cedarpolicy.value.functions.Offset;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -111,6 +113,30 @@ public class ValueSerializer extends JsonSerializer<Value> {
             jsonGenerator.writeString("datetime");
             jsonGenerator.writeFieldName("arg");
             jsonGenerator.writeString(value.toString());
+            jsonGenerator.writeEndObject();
+            jsonGenerator.writeEndObject();
+        } else if (value instanceof Duration) {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName(EXTENSION_ESCAPE_SEQ);
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("fn");
+            jsonGenerator.writeString("duration");
+            jsonGenerator.writeFieldName("arg");
+            jsonGenerator.writeString(value.toString());
+            jsonGenerator.writeEndObject();
+            jsonGenerator.writeEndObject();
+        } else if (value instanceof Offset) {
+            Offset offsetValue = (Offset) value;
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName(EXTENSION_ESCAPE_SEQ);
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("fn");
+            jsonGenerator.writeString("offset");
+            jsonGenerator.writeFieldName("args");
+            CedarList args = new CedarList();
+            args.add(offsetValue.getDateTime());
+            args.add(offsetValue.getOffsetDuration());
+            jsonGenerator.writeObject(args);
             jsonGenerator.writeEndObject();
             jsonGenerator.writeEndObject();
         } else {
