@@ -22,18 +22,43 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Represents a Cedar duration extension value. Duration values are encoded as strings in the
- * following format:
+ * Represents a Cedar Duration extension.
  *
- * Duration strings are of the form "1d2h3m4s5ms" where: - d: days - h: hours - m: minutes - s:
- * seconds - ms: milliseconds
+ * Duration values represent time spans and are encoded as strings combining multiple time units.
+ * They are useful for time-based policy decisions such as session timeouts, expiration periods,
+ * or time window calculations.
  *
- * Duration strings are required to be ordered from largest unit to smallest unit, and contain one
- * quantity per unit. Units with zero quantity may be omitted. Examples of valid duration strings:
- * "1h", "-10h", "5d3ms", "3h5m", "2h5ms", "1d2ms".
+ * <strong>Format:</strong> Duration strings follow the pattern {@code "XdYhZmAsLms"} where:
+ * <ul>
+ *   <li>{@code d} - days</li>
+ *   <li>{@code h} - hours</li>
+ *   <li>{@code m} - minutes (not followed by 's')</li>
+ *   <li>{@code s} - seconds</li>
+ *   <li>{@code ms} - milliseconds</li>
+ * </ul>
  *
- * The quantity part must be a natural number (positive integer), but the entire duration can be
- * negative by prefixing the first component with a minus sign.
+ * <strong>Rules:</strong>
+ * <ul>
+ *   <li>Units must appear in order from largest to smallest (days → hours → minutes → seconds → milliseconds)</li>
+ *   <li>Each unit can appear at most once</li>
+ *   <li>Units with zero quantity may be omitted</li>
+ *   <li>Each quantity must be a non-negative integer</li>
+ *   <li>The entire duration can be negative by prefixing with a minus sign</li>
+ * </ul>
+ *
+ * <strong>Examples:</strong>
+ * <ul>
+ *   <li>{@code "1h"} - one hour</li>
+ *   <li>{@code "-10h"} - negative ten hours</li>
+ *   <li>{@code "5d3ms"} - five days and three milliseconds</li>
+ *   <li>{@code "3h5m"} - three hours and five minutes</li>
+ *   <li>{@code "1d2h3m4s5ms"} - one day, two hours, three minutes, four seconds, and five milliseconds</li>
+ * </ul>
+ *
+ * Duration objects are immutable and thread-safe. Two Duration instances are considered equal
+ * if they represent the same time span, regardless of their string representation format.
+ * For example, {@code "60s"} and {@code "1m"} represent the same duration.
+ *
  */
 public class Duration extends Value implements Comparable<Duration> {
 
@@ -57,7 +82,6 @@ public class Duration extends Value implements Comparable<Duration> {
          * @return the parsed total milliseconds
          * @throws IllegalArgumentException if the format is invalid
          * @throws ArithmeticException if the value would cause overflow
-         * @throws NumberFormatException if the number format is invalid
          */
         private static long parseToMilliseconds(String durationString)
                 throws IllegalArgumentException, ArithmeticException {
@@ -212,13 +236,4 @@ public class Duration extends Value implements Comparable<Duration> {
         return Long.compare(this.totalMilliseconds, other.totalMilliseconds);
     }
 
-    /**
-     * Returns the total duration in milliseconds. This is used internally for datetime offset
-     * operations.
-     *
-     * @return the total duration in milliseconds
-     */
-    public long getTotalMilliseconds() {
-        return this.totalMilliseconds;
-    }
 }
