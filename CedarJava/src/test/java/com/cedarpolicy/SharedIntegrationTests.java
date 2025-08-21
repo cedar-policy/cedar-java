@@ -244,7 +244,6 @@ public class SharedIntegrationTests {
                             } catch (final InternalException e) {
                                 throw new RuntimeException("Internal exception processing file: " + path.toAbsolutePath().toString(), e);
                             } catch (final RuntimeException e) {
-                                // Catch any other runtime exceptions (including those from Jackson) and add file context
                                 throw new RuntimeException("Runtime exception processing file: " + path.toAbsolutePath().toString(), e);
                             }
                         });

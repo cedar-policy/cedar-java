@@ -39,7 +39,6 @@ import com.cedarpolicy.value.Value;
  *
  * @see DateTime
  * @see Duration
- * @see Value
  */
 @Getter
 public class Offset extends Value {
@@ -49,9 +48,7 @@ public class Offset extends Value {
     /**
      * Constructs an Offset with the specified datetime and duration.
      *
-     * <p>
-     * This represents the Cedar expression {@code dateTime.offset(offsetDuration)}. The offset duration
-     * can be positive (future) or negative (past).
+     * This represents the Cedar expression {@code dateTime.offset(offsetDuration)}.
      *
      * @param dateTime the base datetime to offset from, must not be null
      * @param offsetDuration the duration to offset by, must not be null
