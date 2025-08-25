@@ -31,6 +31,12 @@ public class IpAddress extends Value {
 
     private static class IpAddressValidator {
 
+        private static final int MIN_IPV4_LENGTH = 6;
+        private static final int MAX_IPV4_LENGTH = 18;
+
+        private static final int MIN_IPV6_LENGTH = 2;
+        private static final int MAX_IPV6_LENGTH = 43;
+
         private static final Pattern IPV4_PATTERN =
                 Pattern.compile(
                         "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)"
@@ -42,7 +48,7 @@ public class IpAddress extends Value {
                 return false;
             }
             ip = ip.trim();
-            if ((ip.length() < 6) || (ip.length() > 18)) {
+            if ((ip.length() < MIN_IPV4_LENGTH) || (ip.length() > MAX_IPV4_LENGTH)) {
                 return false;
             }
             try {
@@ -70,7 +76,7 @@ public class IpAddress extends Value {
                 return false;
             }
             ip = ip.trim();
-            if ((ip.length() < 2) || (ip.length() > 43)) {
+            if ((ip.length() < MIN_IPV6_LENGTH) || (ip.length() > MAX_IPV6_LENGTH)) {
                 return false;
             }
             try {
