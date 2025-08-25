@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Getter;
 
 /**
  * Represents a Cedar Duration extension.
@@ -89,14 +90,13 @@ public class Duration extends Value implements Comparable<Duration> {
                 throw new IllegalArgumentException("Duration string cannot be null or empty");
             }
 
-            Matcher matcher = DURATION_PATTERN.matcher(durationString.trim());
+            Matcher matcher = DURATION_PATTERN.matcher(durationString);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException("Invalid duration format");
             }
 
             // Extract the optional negative sign (group 1)
-            String signStr = matcher.group(1);
-            boolean isNegative = "-".equals(signStr);
+            String sign = matcher.group(1);
 
             long totalMs = 0;
             boolean hasAnyComponent = false;
@@ -104,7 +104,7 @@ public class Duration extends Value implements Comparable<Duration> {
             // Extract days (group 2)
             String daysStr = matcher.group(2);
             if (daysStr != null && !daysStr.isEmpty()) {
-                long days = Long.parseLong(daysStr);
+                long days = Long.parseLong(sign + daysStr);
                 totalMs = Math.addExact(totalMs, Math.multiplyExact(days, DAYS_TO_MS));
                 hasAnyComponent = true;
             }
@@ -112,7 +112,7 @@ public class Duration extends Value implements Comparable<Duration> {
             // Extract hours (group 3)
             String hoursStr = matcher.group(3);
             if (hoursStr != null && !hoursStr.isEmpty()) {
-                long hours = Long.parseLong(hoursStr);
+                long hours = Long.parseLong(sign + hoursStr);
                 totalMs = Math.addExact(totalMs, Math.multiplyExact(hours, HOURS_TO_MS));
                 hasAnyComponent = true;
             }
@@ -120,7 +120,7 @@ public class Duration extends Value implements Comparable<Duration> {
             // Extract minutes (group 4)
             String minutesStr = matcher.group(4);
             if (minutesStr != null && !minutesStr.isEmpty()) {
-                long minutes = Long.parseLong(minutesStr);
+                long minutes = Long.parseLong(sign + minutesStr);
                 totalMs = Math.addExact(totalMs, Math.multiplyExact(minutes, MINUTES_TO_MS));
                 hasAnyComponent = true;
             }
@@ -128,7 +128,7 @@ public class Duration extends Value implements Comparable<Duration> {
             // Extract seconds (group 5)
             String secondsStr = matcher.group(5);
             if (secondsStr != null && !secondsStr.isEmpty()) {
-                long seconds = Long.parseLong(secondsStr);
+                long seconds = Long.parseLong(sign + secondsStr);
                 totalMs = Math.addExact(totalMs, Math.multiplyExact(seconds, SECONDS_TO_MS));
                 hasAnyComponent = true;
             }
@@ -136,7 +136,7 @@ public class Duration extends Value implements Comparable<Duration> {
             // Extract milliseconds (group 6)
             String millisecondsStr = matcher.group(6);
             if (millisecondsStr != null && !millisecondsStr.isEmpty()) {
-                long milliseconds = Long.parseLong(millisecondsStr);
+                long milliseconds = Long.parseLong(sign + millisecondsStr);
                 totalMs = Math.addExact(totalMs, Math.multiplyExact(milliseconds, MILLISECONDS_TO_MS));
                 hasAnyComponent = true;
             }
@@ -144,11 +144,6 @@ public class Duration extends Value implements Comparable<Duration> {
             // Must have at least one component
             if (!hasAnyComponent) {
                 throw new IllegalArgumentException("Invalid duration format");
-            }
-
-            // Apply negative sign to the total if present
-            if (isNegative) {
-                totalMs = Math.negateExact(totalMs);
             }
 
             return totalMs;
@@ -159,6 +154,7 @@ public class Duration extends Value implements Comparable<Duration> {
     private final String durationString;
 
     /** Parsed duration as total milliseconds for semantic comparison. */
+    @Getter
     private final long totalMilliseconds;
 
     /**

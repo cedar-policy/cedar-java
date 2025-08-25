@@ -27,20 +27,47 @@ public class DurationTests {
 
     @Test
     public void testValidDurations() {
-        // Test basic valid formats
-        assertDoesNotThrow(() -> new Duration("1d2h3m4s5ms"));
-        assertDoesNotThrow(() -> new Duration("2h5ms"));
-        assertDoesNotThrow(() -> new Duration("2h"));
-        assertDoesNotThrow(() -> new Duration("1d2ms"));
-        assertDoesNotThrow(() -> new Duration("3h5m"));
-        assertDoesNotThrow(() -> new Duration("-10h"));
-        assertDoesNotThrow(() -> new Duration("1h"));
-        assertDoesNotThrow(() -> new Duration("5d3ms"));
+        // Test zero values
+        assertEquals(0, new Duration("0ms").getTotalMilliseconds());
+        assertEquals(0, new Duration("0d0s").getTotalMilliseconds());
+        assertEquals(0, new Duration("0d0h0m0s0ms").getTotalMilliseconds());
 
-        // Test edge cases
-        assertDoesNotThrow(() -> new Duration("0d"));
-        assertDoesNotThrow(() -> new Duration("1ms"));
-        assertDoesNotThrow(() -> new Duration("999s"));
+        // Test single unit calculations
+        assertEquals(1, new Duration("1ms").getTotalMilliseconds());
+        assertEquals(1000, new Duration("1s").getTotalMilliseconds());
+        assertEquals(60000, new Duration("1m").getTotalMilliseconds());
+        assertEquals(3600000, new Duration("1h").getTotalMilliseconds());
+        assertEquals(86400000, new Duration("1d").getTotalMilliseconds());
+
+        // Test compound calculations
+        assertEquals(12340, new Duration("12s340ms").getTotalMilliseconds());
+        assertEquals(1234, new Duration("1s234ms").getTotalMilliseconds());
+
+        // Test negative values
+        assertEquals(-1, new Duration("-1ms").getTotalMilliseconds());
+        assertEquals(-1000, new Duration("-1s").getTotalMilliseconds());
+        assertEquals(-4200, new Duration("-4s200ms").getTotalMilliseconds());
+        assertEquals(-9876, new Duration("-9s876ms").getTotalMilliseconds());
+
+        // Test large values
+        assertEquals(9223372036854L, new Duration("106751d23h47m16s854ms").getTotalMilliseconds());
+        assertEquals(-9223372036854L, new Duration("-106751d23h47m16s854ms").getTotalMilliseconds());
+
+        // Test boundary values (Long.MIN_VALUE and Long.MAX_VALUE)
+        assertEquals(-9223372036854775808L, new Duration("-9223372036854775808ms").getTotalMilliseconds());
+        assertEquals(9223372036854775807L, new Duration("9223372036854775807ms").getTotalMilliseconds());
+
+        // Test complex compound durations
+        assertEquals(93784005, new Duration("1d2h3m4s5ms").getTotalMilliseconds());
+        assertEquals(216000000, new Duration("2d12h").getTotalMilliseconds());
+        assertEquals(210000, new Duration("3m30s").getTotalMilliseconds());
+        assertEquals(5445000, new Duration("1h30m45s").getTotalMilliseconds());
+        assertEquals(192000000, new Duration("2d5h20m").getTotalMilliseconds());
+        assertEquals(-129600000, new Duration("-1d12h").getTotalMilliseconds());
+        assertEquals(-13500000, new Duration("-3h45m").getTotalMilliseconds());
+        assertEquals(86400001, new Duration("1d1ms").getTotalMilliseconds());
+        assertEquals(3599999, new Duration("59m59s999ms").getTotalMilliseconds());
+        assertEquals(86399999, new Duration("23h59m59s999ms").getTotalMilliseconds());
     }
 
     @Test
@@ -78,6 +105,36 @@ public class DurationTests {
         // Test signs on individual components (should be invalid)
         assertThrows(IllegalArgumentException.class, () -> new Duration("+2h"));
         assertThrows(IllegalArgumentException.class, () -> new Duration("2d-3m"));
+
+        // Test missing quantity for different units
+        assertThrows(IllegalArgumentException.class, () -> new Duration("d"));
+
+        // Test trailing numbers
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1d2h3m4s5ms6"));
+
+        // Test invalid units in different positions
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1x2m3s"));
+
+        // Test non-integral amounts
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1.23s"));
+
+        // Test different wrong orders
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1s1d"));
+
+        // Test different repeated units
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1s1s"));
+
+        // Test leading and trailing spaces (should be handled by trim, but test to be sure)
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1d2h3m4s5ms "));
+        assertThrows(IllegalArgumentException.class, () -> new Duration(" 1d2h3m4s5ms"));
+
+        // Test overflow cases
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1d9223372036854775807ms"));
+        assertThrows(IllegalArgumentException.class, () -> new Duration("1d92233720368547758071ms"));
+        assertThrows(IllegalArgumentException.class, () -> new Duration("9223372036854776s1ms"));
+        assertThrows(IllegalArgumentException.class, () -> new Duration("-12142442932071h"));
+        assertThrows(IllegalArgumentException.class, () -> new Duration("-9223372036854775809ms"));
+        assertThrows(IllegalArgumentException.class, () -> new Duration("9223372036854775808ms"));
     }
 
     @Test
@@ -158,7 +215,7 @@ public class DurationTests {
 
     @Test
     public void testJsonRoundTrip() throws IOException {
-        String[] testDurations = {"1d", "2h30m", "5m15s", "1d2h3m4s5ms", "30s", "999ms", "-2h", "0d"};
+        String[] testDurations = {"1d", "2h30m", "5m15s", "1d2h3m4s5ms", "30s", "999ms", "-2h", "0d", "-9223372036854775808ms"};
 
         for (String durationString : testDurations) {
             Duration original = new Duration(durationString);
