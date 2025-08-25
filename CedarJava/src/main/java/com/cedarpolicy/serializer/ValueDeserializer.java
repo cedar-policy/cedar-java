@@ -22,6 +22,7 @@ import com.cedarpolicy.value.CedarList;
 import com.cedarpolicy.value.CedarMap;
 import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
+import com.cedarpolicy.value.Duration;
 import com.cedarpolicy.value.EntityIdentifier;
 import com.cedarpolicy.value.EntityTypeName;
 import com.cedarpolicy.value.EntityUID;
@@ -31,6 +32,7 @@ import com.cedarpolicy.value.PrimLong;
 import com.cedarpolicy.value.PrimString;
 import com.cedarpolicy.value.Unknown;
 import com.cedarpolicy.value.Value;
+import com.cedarpolicy.value.functions.Offset;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -40,12 +42,22 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /** Deserialize Json to Value. This is mostly an implementation detail, but you may need to modify it if you extend the
  * `Value` class. */
 public class ValueDeserializer extends JsonDeserializer<Value> {
     private static final String ENTITY_ESCAPE_SEQ = "__entity";
     private static final String EXTENSION_ESCAPE_SEQ = "__extn";
+    private static final String FN_OFFSET = "offset";
+    private static final String FN_IP = "ip";
+    private static final String FN_DECIMAL = "decimal";
+    private static final String FN_UNKNOWN = "unknown";
+    private static final String FN_DATETIME = "datetime";
+    private static final String FN_DURATION = "duration";
+
+    private static final Set<String> MULTI_ARG_FN = Set.of(FN_OFFSET);
+    private static final Set<String> SINGLE_ARG_FN = Set.of(FN_IP, FN_DECIMAL, FN_UNKNOWN, FN_DATETIME, FN_DURATION);
 
     private enum EscapeType {
         ENTITY,
@@ -116,19 +128,13 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                                 throw new InvalidValueDeserializationException(parser,
                                         "Not textual node: " + fn.toString(), node.asToken(), Map.class);
                             }
-                            JsonNode arg = val.get("arg");
-                            if (!arg.isTextual()) {
-                                throw new InvalidValueDeserializationException(parser,
-                                        "Not textual node: " + arg.toString(), node.asToken(), Map.class);
-                            }
-                            if (fn.textValue().equals("ip")) {
-                                return new IpAddress(arg.textValue());
-                            } else if (fn.textValue().equals("decimal")) {
-                                return new Decimal(arg.textValue());
-                            } else if (fn.textValue().equals("unknown")) {
-                                return new Unknown(arg.textValue());
-                            } else if (fn.textValue().equals("datetime")) {
-                                return new DateTime(arg.textValue());
+
+                            String fnName = fn.textValue();
+
+                            if (MULTI_ARG_FN.contains(fnName)) {
+                                return deserializeMultiArgFunction(fnName, val, mapper, parser, node);
+                            } else if (SINGLE_ARG_FN.contains(fnName)) {
+                                return deserializeSingleArgFunction(fnName, val, parser, node);
                             } else {
                                 throw new InvalidValueDeserializationException(parser,
                                         "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
@@ -151,6 +157,81 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
             }
         } catch (StackOverflowError e) {
             throw new DeserializationRecursionDepthException("Stack overflow while deserializing value. " + e.toString());
+        }
+    }
+
+    private Value deserializeMultiArgFunction(String fnName, JsonNode val, ObjectMapper mapper, JsonParser parser,
+            JsonNode node) throws IOException {
+        JsonNode args = val.get("args");
+        if (args == null || !args.isArray()) {
+            throw new InvalidValueDeserializationException(parser,
+                    "Expected args to be an array" + (args != null ? ", got: " + args.getNodeType() : ""),
+                    node.asToken(), Map.class);
+        }
+
+        switch (fnName) {
+            case FN_OFFSET:
+                return deserializeOffset(args, mapper, parser, node);
+            default:
+                throw new InvalidValueDeserializationException(parser, "Invalid function type: " + fnName,
+                        node.asToken(), Map.class);
+        }
+    }
+
+    private Value deserializeSingleArgFunction(String fnName, JsonNode val, JsonParser parser, JsonNode node)
+            throws IOException {
+        JsonNode arg = val.get("arg");
+        if (arg == null || !arg.isTextual()) {
+            throw new InvalidValueDeserializationException(parser, "Not textual node: " + fnName, node.asToken(),
+                    Map.class);
+        }
+
+        String argValue = arg.textValue();
+        switch (fnName) {
+            case FN_IP:
+                return new IpAddress(argValue);
+            case FN_DECIMAL:
+                return new Decimal(argValue);
+            case FN_UNKNOWN:
+                return new Unknown(argValue);
+            case FN_DATETIME:
+                return new DateTime(argValue);
+            case FN_DURATION:
+                return new Duration(argValue);
+            default:
+                throw new InvalidValueDeserializationException(parser,
+                        "Invalid function type: " + fnName, node.asToken(), Map.class);
+        }
+    }
+
+    private Offset deserializeOffset(JsonNode args, ObjectMapper mapper, JsonParser parser, JsonNode node)
+            throws IOException {
+        if (args.size() != 2) {
+            throw new InvalidValueDeserializationException(parser,
+                    "Offset requires exactly two arguments but got: " + args.size(), node.asToken(), Offset.class);
+        }
+
+        try {
+            Value dateTimeValue = mapper.treeToValue(args.get(0), Value.class);
+            Value durationValue = mapper.treeToValue(args.get(1), Value.class);
+
+            if (!(dateTimeValue instanceof DateTime)) {
+                throw new InvalidValueDeserializationException(parser,
+                        "Offset first argument must be DateTime but got: " + dateTimeValue.getClass().getSimpleName(),
+                        node.asToken(), Offset.class);
+            }
+
+            if (!(durationValue instanceof Duration)) {
+                throw new InvalidValueDeserializationException(parser,
+                        "Offset second argument must be Duration but got: " + durationValue.getClass().getSimpleName(),
+                        node.asToken(), Offset.class);
+            }
+
+            return new Offset((DateTime) dateTimeValue, (Duration) durationValue);
+
+        } catch (IOException e) {
+            throw new InvalidValueDeserializationException(parser,
+                    "Failed to deserialize Offset arguments: " + e.getMessage(), node.asToken(), Offset.class);
         }
     }
 }
