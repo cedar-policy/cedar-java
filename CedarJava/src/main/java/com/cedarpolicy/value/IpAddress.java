@@ -31,17 +31,24 @@ public class IpAddress extends Value {
 
     private static class IpAddressValidator {
 
+        private static final int MIN_IPV4_LENGTH = 6;
+        private static final int MAX_IPV4_LENGTH = 18;
+
+        private static final int MIN_IPV6_LENGTH = 2;
+        private static final int MAX_IPV6_LENGTH = 43;
+
         private static final Pattern IPV4_PATTERN =
                 Pattern.compile(
                         "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.)"
-                                + "{3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+                                + "{3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+                                + "(?:/(?:[0-9]|[12][0-9]|3[0-2]))?$");
 
         public static boolean validIPv4(String ip) {
             if (ip == null || ip.isEmpty()) {
                 return false;
             }
             ip = ip.trim();
-            if ((ip.length() < 6) || (ip.length() > 15)) {
+            if ((ip.length() < MIN_IPV4_LENGTH) || (ip.length() > MAX_IPV4_LENGTH)) {
                 return false;
             }
             try {
@@ -54,21 +61,22 @@ public class IpAddress extends Value {
 
         private static final Pattern IPV6_PATTERN =
                 Pattern.compile(
-                        "^(([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|"
+                        "^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|:))|"
                                 + "(([0-9A-Fa-f]{1,4}:)(((:[0-9A-Fa-f]{1,4}){1,6})|:))|"
-                                + "((:)(((:[0-9A-Fa-f]{1,4}){1,7})|:))|$");
+                                + "((:)(((:[0-9A-Fa-f]{1,4}){1,7})|:)))"
+                                + "(?:/(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-8]))?$");
 
         public static boolean validIPv6(String ip) {
             if (ip == null || ip.isEmpty()) {
                 return false;
             }
             ip = ip.trim();
-            if ((ip.length() < 3) || (ip.length() > 39)) {
+            if ((ip.length() < MIN_IPV6_LENGTH) || (ip.length() > MAX_IPV6_LENGTH)) {
                 return false;
             }
             try {
