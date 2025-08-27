@@ -56,8 +56,7 @@ public class EntityValidationTests {
 
         engine.validateEntities(request);
 
-        EntityValidationRequest cedarFormatRequest =
-                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+        EntityValidationRequest cedarFormatRequest = new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
 
         engine.validateEntities(cedarFormatRequest);
     }
@@ -80,16 +79,13 @@ public class EntityValidationTests {
                 "attribute `test` on `Role::\".*\"` should not exist according to the schema"),
                 "Expected to match regex but was: '%s'".formatted(errMsg));
 
-        EntityValidationRequest cedarFormatRequest =
-                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+        EntityValidationRequest cedarFormatRequest = new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
 
-        exception = assertThrows(BadRequestException.class,
-                () -> engine.validateEntities(cedarFormatRequest));
+        exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(cedarFormatRequest));
 
         errMsg = exception.getErrors().get(0);
-        assertTrue(errMsg.matches(
-                "attribute `test` on `Role::\".*\"` should not exist according to the schema"),
-                "Expected to match regex but was: '%s'".formatted(errMsg));
+        assertTrue(errMsg.matches("attribute `test` on `Role::\".*\"` should not exist according to the schema"),
+                        "Expected to match regex but was: '%s'".formatted(errMsg));
 
     }
 
@@ -117,14 +113,13 @@ public class EntityValidationTests {
                 "Expected to match regex but was: '%s'".formatted(errMsg));
 
         EntityValidationRequest cedarFormatRequest =
-                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(parentEntity, childEntity));
+                        new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(parentEntity, childEntity));
 
-        exception = assertThrows(BadRequestException.class,
-                () -> engine.validateEntities(cedarFormatRequest));
+        exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(cedarFormatRequest));
 
         errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.matches("input graph has a cycle containing vertex `Role::\".*\"`"),
-                "Expected to match regex but was: '%s'".formatted(errMsg));
+                        "Expected to match regex but was: '%s'".formatted(errMsg));
 
     }
 
@@ -147,17 +142,14 @@ public class EntityValidationTests {
                         + "but no tags should exist on `Role::\".*\"` according to the schema"),
                 "Expected to match regex but was: '%s'".formatted(errMsg));
 
-        EntityValidationRequest cedarFormatRequest =
-                new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
+        EntityValidationRequest cedarFormatRequest = new EntityValidationRequest(ROLE_SCHEMA_CEDAR, List.of(entity));
 
-        exception = assertThrows(BadRequestException.class,
-                () -> engine.validateEntities(cedarFormatRequest));
+        exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(cedarFormatRequest));
 
         errMsg = exception.getErrors().get(0);
-        assertTrue(
-                errMsg.matches("found a tag `test` on `Role::\".*\"`, "
+        assertTrue(errMsg.matches("found a tag `test` on `Role::\".*\"`, "
                         + "but no tags should exist on `Role::\".*\"` according to the schema"),
-                "Expected to match regex but was: '%s'".formatted(errMsg));
+                        "Expected to match regex but was: '%s'".formatted(errMsg));
     }
 
     @BeforeAll
@@ -170,6 +162,5 @@ public class EntityValidationTests {
     }
 
     private static final Schema ROLE_SCHEMA = loadSchemaResource("/role_schema.json");
-    private static final Schema ROLE_SCHEMA_CEDAR =
-            loadCedarSchemaResource("/role_schema.cedarschema");
+    private static final Schema ROLE_SCHEMA_CEDAR = loadCedarSchemaResource("/role_schema.cedarschema");
 }
