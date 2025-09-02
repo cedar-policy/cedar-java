@@ -151,25 +151,31 @@ pub fn json_validate_entities(input: &str) -> serde_json::Result<String> {
 /// returns unit value () which is null value when serialized to json.
 pub fn validate_entities(input: &str) -> serde_json::Result<Answer> {
     let validate_entity_call = from_str::<ValidateEntityCall>(&input)?;
-    match Schema::from_json_value(validate_entity_call.schema) {
-        Err(e) => Ok(Answer::fail_bad_request(vec![e.to_string()])),
-        Ok(schema) => {
-            match Entities::from_json_value(validate_entity_call.entities, Some(&schema)) {
-                Err(error) => {
-                    let err_message = match error {
-                        EntitiesError::Serialization(err) => err.to_string(),
-                        EntitiesError::Deserialization(err) => err.to_string(),
-                        EntitiesError::Duplicate(err) => err.to_string(),
-                        EntitiesError::TransitiveClosureError(err) => err.to_string(),
-                        EntitiesError::InvalidEntity(err) => err.to_string(),
-                    };
-                    Ok(Answer::fail_bad_request(vec![err_message]))
-                }
-                Ok(_entities) => Ok(Answer::Success {
-                    result: "null".to_string(),
-                }),
-            }
+    let schema = match validate_entity_call.schema {
+        Value::String(cedarschema_str) => match Schema::from_cedarschema_str(&cedarschema_str) {
+            Ok(s) => s.0,
+            Err(e) => return Ok(Answer::fail_bad_request(vec![e.to_string()])),
+        },
+        cedarschema_json_obj => match Schema::from_json_value(cedarschema_json_obj) {
+            Ok(s) => s,
+            Err(e) => return Ok(Answer::fail_bad_request(vec![e.to_string()])),
+        },
+    };
+
+    match Entities::from_json_value(validate_entity_call.entities, Some(&schema)) {
+        Err(error) => {
+            let err_message = match error {
+                EntitiesError::Serialization(err) => err.to_string(),
+                EntitiesError::Deserialization(err) => err.to_string(),
+                EntitiesError::Duplicate(err) => err.to_string(),
+                EntitiesError::TransitiveClosureError(err) => err.to_string(),
+                EntitiesError::InvalidEntity(err) => err.to_string(),
+            };
+            Ok(Answer::fail_bad_request(vec![err_message]))
         }
+        Ok(_entities) => Ok(Answer::Success {
+            result: "null".to_string(),
+        }),
     }
 }
 

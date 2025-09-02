@@ -4,6 +4,10 @@
 * Added Schema conversion APIs [#325](https://github.com/cedar-policy/cedar-java/pull/325)
 * Added Level Validation [#327](https://github.com/cedar-policy/cedar-java/pull/327)
 * Added DateTime extension support [#328](https://github.com/cedar-policy/cedar-java/pull/328)
+* Added Duration extension support [#331](https://github.com/cedar-policy/cedar-java/pull/331)
+* Added Offset function support [#331](https://github.com/cedar-policy/cedar-java/pull/331)
+* Added PolicySet to JSON conversion API [#329](https://github.com/cedar-policy/cedar-java/pull/329)
+* Added Cedar Schema support for Entity Validation [#332](https://github.com/cedar-policy/cedar-java/pull/332)
 
 ## 4.3.1
 ### Added
