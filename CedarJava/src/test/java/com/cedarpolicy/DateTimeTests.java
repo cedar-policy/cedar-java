@@ -26,183 +26,114 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 
 public class DateTimeTests {
-
     @Test
-    public void testValidDateOnlyFormat() {
-        String validDate = "2023-12-25";
-        DateTime dateTime = new DateTime(validDate);
-
-        assertEquals(validDate, dateTime.toString());
-    }
-
-    @Test
-    public void testValidDateTimeWithZFormat() {
-        String validDateTime = "2023-12-25T10:30:45Z";
-        DateTime dateTime = new DateTime(validDateTime);
-
-        assertEquals(validDateTime, dateTime.toString());
-    }
-
-    @Test
-    public void testValidDateTimeWithMillisecondsZFormat() {
-        String validDateTime = "2023-12-25T10:30:45.123Z";
-        DateTime dateTime = new DateTime(validDateTime);
-
-        assertEquals(validDateTime, dateTime.toString());
-    }
-
-    @Test
-    public void testValidDateTimeWithTimezoneOffsetFormat() {
-        String validDateTime = "2023-12-25T10:30:45+0500";
-        DateTime dateTime = new DateTime(validDateTime);
-
-        assertEquals(validDateTime, dateTime.toString());
-    }
-
-    @Test
-    public void testValidDateTimeWithMillisecondsAndTimezoneOffsetFormat() {
-        String validDateTime = "2023-12-25T10:30:45.123-0300";
-        DateTime dateTime = new DateTime(validDateTime);
-
-        assertEquals(validDateTime, dateTime.toString());
-    }
-
-    @Test
-    public void testValidDateTimeEdgeCases() {
+    public void testValidDateTime() {
         // Test leap year
-        String leapYear = "2024-02-29";
-        DateTime dateTime1 = new DateTime(leapYear);
-        assertEquals(leapYear, dateTime1.toString());
+        assertEquals("2024-02-29", new DateTime("2024-02-29").toString());
+        assertEquals(1709164800000L, new DateTime("2024-02-29").toEpochMilli());
 
         // Test end of year
-        String endOfYear = "2023-12-31T23:59:59Z";
-        DateTime dateTime2 = new DateTime(endOfYear);
-        assertEquals(endOfYear, dateTime2.toString());
+        assertEquals("2023-12-31T23:59:59Z", new DateTime("2023-12-31T23:59:59Z").toString());
+        assertEquals(1704067199000L, new DateTime("2023-12-31T23:59:59Z").toEpochMilli());
 
         // Test beginning of year
-        String beginningOfYear = "2023-01-01T00:00:00Z";
-        DateTime dateTime3 = new DateTime(beginningOfYear);
-        assertEquals(beginningOfYear, dateTime3.toString());
+        assertEquals("2023-01-01T00:00:00Z", new DateTime("2023-01-01T00:00:00Z").toString());
+        assertEquals(1672531200000L, new DateTime("2023-01-01T00:00:00Z").toEpochMilli());
+
+        // Test extreme timezone cases
+        assertEquals(1728905942000L, new DateTime("2024-10-15T11:38:02+2359").toEpochMilli());
+        assertEquals(1729078622000L, new DateTime("2024-10-15T11:38:02-2359").toEpochMilli());
+
+        // Test extreme year cases
+        assertEquals(-62167219200000L, new DateTime("0000-01-01").toEpochMilli());
+        assertEquals(-62135596801000L, new DateTime("0000-12-31T23:59:59Z").toEpochMilli());
+        assertEquals(-62167305540000L, new DateTime("0000-01-01T00:00:00+2359").toEpochMilli());
+        assertEquals(253402214400000L, new DateTime("9999-12-31").toEpochMilli());
+        assertEquals(253402300799000L, new DateTime("9999-12-31T23:59:59Z").toEpochMilli());
+        assertEquals(253402300799999L, new DateTime("9999-12-31T23:59:59.999Z").toEpochMilli());
+        assertEquals(253402387139000L, new DateTime("9999-12-31T23:59:59-2359").toEpochMilli());
+
+        // Additional test cases
+        assertEquals(1665360000000L, new DateTime("2022-10-10").toEpochMilli());
+        assertEquals(-86400000L, new DateTime("1969-12-31").toEpochMilli());
+        assertEquals(-1000L, new DateTime("1969-12-31T23:59:59Z").toEpochMilli());
+        assertEquals(-999L, new DateTime("1969-12-31T23:59:59.001Z").toEpochMilli());
+        assertEquals(-1L, new DateTime("1969-12-31T23:59:59.999Z").toEpochMilli());
+        assertEquals(1728950400000L, new DateTime("2024-10-15").toEpochMilli());
+        assertEquals(1728992282000L, new DateTime("2024-10-15T11:38:02Z").toEpochMilli());
+        assertEquals(1728992282101L, new DateTime("2024-10-15T11:38:02.101Z").toEpochMilli());
+        assertEquals(1729033922101L, new DateTime("2024-10-15T11:38:02.101-1134").toEpochMilli());
+        assertEquals(1728950642101L, new DateTime("2024-10-15T11:38:02.101+1134").toEpochMilli());
+        assertEquals(1728950642000L, new DateTime("2024-10-15T11:38:02+1134").toEpochMilli());
+        assertEquals(1729033922000L, new DateTime("2024-10-15T11:38:02-1134").toEpochMilli());
+
     }
 
     @Test
-    public void testInvalidDateTimeFormatsThrowException() {
-        // Test null input
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime(null);
-        });
-
-        // Test empty string
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("");
-        });
-
-        // Test whitespace-only string
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("   ");
-        });
-
-        // Test invalid date format
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023/12/25");
-        });
-
-        // Test invalid month
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-15-25");
-        });
-
-        // Test invalid day
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-32");
-        });
-
-        // Test invalid hour
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T25:30:45Z");
-        });
-
-        // Test invalid minute
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:60:45Z");
-        });
-
-        // Test invalid second
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:60Z");
-        });
-
-        // Test invalid leap year date
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-02-29"); // 2023 is not a leap year
-        });
-
-        // Test invalid timezone format
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+ABC");
-        });
-
-        // Test millisecond precision beyond the pattern (more than 3 digits)
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45.1234Z");
-        });
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45.12345+0500");
-        });
-
-        // Test half-formed timezone offset (missing minutes)
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+09");
-        });
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45-05");
-        });
-
-        // Test incorrect timezone offset format (with colon separator)
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+08:30");
-        });
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45-09:45");
-        });
-
-        // Test timezone offset with invalid hour values
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+2600");
-        });
-
-        // Test timezone offset with invalid minute values
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45-0875");
-        });
-
-        // Test timezone offset with only one digit
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+5");
-        });
-
-        // Test timezone offset with too many digits
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:45+05000");
-        });
-
-        // Test timezone offset without sign
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10:30:450800");
-        });
-
-        // Test malformed string
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("not-a-date");
-        });
-
-        // Test incomplete datetime
-        assertThrows(IllegalArgumentException.class, () -> {
-            new DateTime("2023-12-25T10");
-        });
+    public void testInvalidDateTimeThrowException() {
+        assertThrows(IllegalArgumentException.class, () -> new DateTime(null));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime(""));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("a"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("-"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("-1"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime(" 2022-10-10"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2022-10-10 "));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2022-10- 10"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("11-12-13"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("011-12-13"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("00011-12-13"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-2-13"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-012-13"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-02-3"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-02-003"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T1:01:01Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T001:01:01Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:1:01Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:001:01Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:1Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:001Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.01Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.0001Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.001+01"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.001+001"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.001+00001"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.001+00:01"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("0001-01-01T01:01:01.001+00:00:01"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("-0001-01-01"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("1111-1x-20"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("1111-Jul-20"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("1111-July-20"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("1111-J-20"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-10-15Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-10-15T11:38:02ZZ"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01Ta"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01:"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01:02"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01:02:0b"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01::02:03"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01::02::03"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T31:02:03Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T01:60:03Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-12-31T23:59:60Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-12-31T23:59:61Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00T"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00ZZ"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00x001Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.001ZZ"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-12-31T23:59:60.000Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-12-31T23:59:60.000+0200"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00➕0000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00➖0000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.0001Z"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.001➖0000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.001➕0000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.001+00000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2024-01-01T00:00:00.001-00000"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-01-01T00:00:00+2400"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-01-01T00:00:00+0060"));
+        assertThrows(IllegalArgumentException.class, () -> new DateTime("2016-01-01T00:00:00+9999"));
     }
 
     @Test
