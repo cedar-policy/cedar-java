@@ -110,7 +110,7 @@ def rustJavaTargets = [
         'x86_64-unknown-linux-gnu' : 'linux/x86_64'
 ]
 
-def RustVersion = '1.85'
+def RustVersion = '1.89'
 
 tasks.register('installRequiredRustVersion', Exec) {
   group 'Build'
