@@ -76,19 +76,23 @@ configurations {
 }
 
 dependencies {
+    def junitVersion = '6.0.0'
+
     // Do not upgrade to Jackson 3.x without addressing stack overflow issues in ValueDeserializer
     // The upgrade should be reviewed by AppSec
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2'
-    implementation 'com.fizzed:jne:4.3.0'
-    implementation 'com.google.guava:guava:33.4.0-jre'
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testImplementation 'net.jqwik:jqwik:1.9.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.20.0'
+    implementation 'com.fizzed:jne:4.5.3'
+    implementation 'com.google.guava:guava:33.5.0-jre'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.7'
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
+    testImplementation 'net.jqwik:jqwik:1.9.3'
     testImplementation 'org.skyscreamer:jsonassert:2.0-rc1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:${junitVersion}"
 }
 
 def ffiDir = '../CedarJavaFFI'
