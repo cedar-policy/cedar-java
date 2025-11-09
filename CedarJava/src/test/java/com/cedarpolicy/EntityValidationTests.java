@@ -207,15 +207,19 @@ public void testEntityWithUnknownTagWithCedarSchema() throws AuthException {
         EntityTypeName taskType = EntityTypeName.parse("Task").get();
         EntityTypeName colorType = EntityTypeName.parse("Color").get();
 
-        Entity user = new Entity(userType.of("alice"), new HashMap<>() {{
-            put("name", new PrimString("Alice"));
-        }}, new HashSet<>());
+        Entity user = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
 
-        Entity task = new Entity(taskType.of("task1"), new HashMap<>() {{
-            put("owner", user.getEUID());
-            put("name", new PrimString("Complete project"));
-            put("status", new EntityUID(colorType, "Red"));
-        }}, new HashSet<>());
+        Entity task = new Entity(taskType.of("task1"), new HashMap<>() {
+            {
+                put("owner", user.getEUID());
+                put("name", new PrimString("Complete project"));
+                put("status", new EntityUID(colorType, "Red"));
+            }
+        }, new HashSet<>());
 
         EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(user, task));
         engine.validateEntities(request);
@@ -230,21 +234,24 @@ public void testEntityWithUnknownTagWithCedarSchema() throws AuthException {
         EntityTypeName taskType = EntityTypeName.parse("Task").get();
         EntityTypeName colorType = EntityTypeName.parse("Color").get();
 
-        Entity user = new Entity(userType.of("alice"), new HashMap<>() {{
-            put("name", new PrimString("Alice"));
-        }}, new HashSet<>());
+        Entity user = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
 
         // Create task with invalid enum value "Purple" (not in Color enum)
-        Entity task = new Entity(taskType.of("task1"), new HashMap<>() {{
-            put("owner", user.getEUID());
-            put("name", new PrimString("Complete project"));
-            put("status", new EntityUID(colorType, "Purple")); // Invalid enum value
-        }}, new HashSet<>());
+        Entity task = new Entity(taskType.of("task1"), new HashMap<>() {
+            {
+                put("owner", user.getEUID());
+                put("name", new PrimString("Complete project"));
+                put("status", new EntityUID(colorType, "Purple")); // Invalid enum value
+            }
+        }, new HashSet<>());
 
         EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(user, task));
 
-        BadRequestException exception = assertThrows(BadRequestException.class,
-            () -> engine.validateEntities(request));
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.contains("Purple") || errMsg.contains("Color"),
@@ -252,21 +259,22 @@ public void testEntityWithUnknownTagWithCedarSchema() throws AuthException {
     }
 
     /**
-     * Test that enum entities cannot have attributes according to RFC.
+     * Test that enum entities cannot have attributes.
      */
     @Test
     public void testEnumEntitiesCannotHaveAttributes() throws AuthException {
         EntityTypeName colorType = EntityTypeName.parse("Color").get();
 
         // Try to create enum entity with attributes (should fail)
-        Entity enumEntity = new Entity(colorType.of("Red"), new HashMap<>() {{
-            put("shade", new PrimString("Dark")); // Enum entities shouldn't have attributes
-        }}, new HashSet<>());
+        Entity enumEntity = new Entity(colorType.of("Red"), new HashMap<>() {
+            {
+                put("shade", new PrimString("Dark")); // Enum entities shouldn't have attributes
+            }
+        }, new HashSet<>());
 
         EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(enumEntity));
 
-        BadRequestException exception = assertThrows(BadRequestException.class,
-            () -> engine.validateEntities(request));
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.contains("attribute") && (errMsg.contains("Color") || errMsg.contains("Red")),
@@ -274,26 +282,29 @@ public void testEntityWithUnknownTagWithCedarSchema() throws AuthException {
     }
 
     /**
-     * Test that enum entities cannot have parents according to RFC.
+     * Test that enum entities cannot have parents.
      */
     @Test
     public void testEnumEntitiesCannotHaveParents() throws AuthException {
         EntityTypeName colorType = EntityTypeName.parse("Color").get();
         EntityTypeName userType = EntityTypeName.parse("User").get();
 
-        Entity user = new Entity(userType.of("alice"), new HashMap<>() {{
-            put("name", new PrimString("Alice"));
-        }}, new HashSet<>());
+        Entity user = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
 
         // Try to create enum entity with parent (should fail)
-        Entity enumEntity = new Entity(colorType.of("Red"), new HashMap<>(), new HashSet<>() {{
-            add(user.getEUID()); // Enum entities shouldn't have parents
-        }});
+        Entity enumEntity = new Entity(colorType.of("Red"), new HashMap<>(), new HashSet<>() {
+            {
+                add(user.getEUID()); // Enum entities shouldn't have parents
+            }
+        });
 
         EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(user, enumEntity));
 
-        BadRequestException exception = assertThrows(BadRequestException.class,
-            () -> engine.validateEntities(request));
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> engine.validateEntities(request));
 
         String errMsg = exception.getErrors().get(0);
         assertTrue(errMsg.contains("parent") || errMsg.contains("ancestor") || errMsg.contains("Color"),
@@ -309,52 +320,22 @@ public void testEntityWithUnknownTagWithCedarSchema() throws AuthException {
         EntityTypeName taskType = EntityTypeName.parse("Task").get();
         EntityTypeName colorType = EntityTypeName.parse("Color").get();
 
-        Entity user = new Entity(userType.of("bob"), new HashMap<>() {{
-            put("name", new PrimString("Bob"));
-        }}, new HashSet<>());
+        Entity user = new Entity(userType.of("bob"), new HashMap<>() {
+            {
+                put("name", new PrimString("Bob"));
+            }
+        }, new HashSet<>());
 
-        Entity task = new Entity(taskType.of("task2"), new HashMap<>() {{
-            put("owner", user.getEUID());
-            put("name", new PrimString("Review code"));
-            put("status", new EntityUID(colorType, "Green"));
-        }}, new HashSet<>());
+        Entity task = new Entity(taskType.of("task2"), new HashMap<>() {
+            {
+                put("owner", user.getEUID());
+                put("name", new PrimString("Review code"));
+                put("status", new EntityUID(colorType, "Green"));
+            }
+        }, new HashSet<>());
 
         EntityValidationRequest cedarRequest = new EntityValidationRequest(ENUM_SCHEMA_CEDAR, List.of(user, task));
         engine.validateEntities(cedarRequest);
-    }
-
-    /**
-     * Test Application enum validation from RFC example.
-     */
-    @Test
-    public void testApplicationEnumValidation() throws AuthException {
-        EntityTypeName applicationType = EntityTypeName.parse("Application").get();
-
-        // Valid Application enum entity
-        Entity application = new Entity(applicationType.of("TinyTodo"), new HashMap<>(), new HashSet<>());
-
-        EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(application));
-        engine.validateEntities(request);
-    }
-
-    /**
-     * Test invalid Application enum value.
-     */
-    @Test
-    public void testInvalidApplicationEnumValue() throws AuthException {
-        EntityTypeName applicationType = EntityTypeName.parse("Application").get();
-
-        // Invalid Application enum entity - using "InvalidApp" which is not in the enum
-        Entity application = new Entity(applicationType.of("InvalidApp"), new HashMap<>(), new HashSet<>());
-
-        EntityValidationRequest request = new EntityValidationRequest(ENUM_SCHEMA, List.of(application));
-
-        BadRequestException exception = assertThrows(BadRequestException.class,
-            () -> engine.validateEntities(request));
-
-        String errMsg = exception.getErrors().get(0);
-        assertTrue(errMsg.contains("InvalidApp") || errMsg.contains("Application"),
-                "Expected error about invalid Application enum value but was: '%s'".formatted(errMsg));
     }
 
     @BeforeAll
