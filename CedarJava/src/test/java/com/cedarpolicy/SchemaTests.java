@@ -18,6 +18,8 @@ package com.cedarpolicy;
 
 import java.util.Optional;
 
+import static com.cedarpolicy.TestUtil.loadSchemaResource;
+import static com.cedarpolicy.TestUtil.loadCedarSchemaResource;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -233,6 +235,122 @@ public class SchemaTests {
             String malformedCedar = "entty User";
             Schema malformedSchema = new Schema(JsonOrCedar.Cedar, Optional.empty(), Optional.of(malformedCedar));
             assertThrows(InternalException.class, malformedSchema::toJsonFormat);
+        }
+    }
+
+    @Nested
+    @DisplayName("Enum Schema Tests")
+    class EnumSchemaTests {
+
+        @Test
+        @DisplayName("Should parse JSON schema with enum entities")
+        void testParseJsonEnumSchema() {
+            assertDoesNotThrow(() -> {
+                Schema enumSchema = loadSchemaResource("/enum_schema.json");
+                assertNotNull(enumSchema, "Enum schema should not be null");
+            });
+        }
+
+        @Test
+        @DisplayName("Should parse Cedar schema with enum entities")
+        void testParseCedarEnumSchema() {
+            assertDoesNotThrow(() -> {
+                Schema enumSchema = loadCedarSchemaResource("/enum_schema.cedarschema");
+                assertNotNull(enumSchema, "Enum schema should not be null");
+            });
+        }
+
+        @Test
+        @DisplayName("Should parse inline enum entity definitions")
+        void testParseInlineEnumDefinitions() {
+            assertDoesNotThrow(() -> {
+                // Test Cedar format inline enum
+                Schema.parse(JsonOrCedar.Cedar, """
+                    entity Color enum ["Red", "Blue", "Green"];
+                    entity Application enum ["TinyTodo"];
+                    """);
+
+                // Test JSON format inline enum
+                Schema.parse(JsonOrCedar.Json, """
+                    {
+                        "": {
+                            "entityTypes": {
+                                "Color": {
+                                    "enum": ["Red", "Blue", "Green"]
+                                },
+                                "Application": {
+                                    "enum": ["TinyTodo"]
+                                }
+                            },
+                            "actions": {}
+                        }
+                    }
+                    """);
+            });
+        }
+
+        @Test
+        @DisplayName("Should reject empty enum definitions")
+        void testRejectEmptyEnums() {
+            // Test Cedar format empty enum
+            assertThrows(Exception.class, () -> {
+                Schema.parse(JsonOrCedar.Cedar, "entity Color enum [];");
+            });
+
+            // Test JSON format empty enum
+            assertThrows(Exception.class, () -> {
+                Schema.parse(JsonOrCedar.Json, """
+                    {
+                        "": {
+                            "entityTypes": {
+                                "Color": {
+                                    "enum": []
+                                }
+                            },
+                            "actions": {}
+                        }
+                    }
+                    """);
+            });
+        }
+
+        @Test
+        @DisplayName("Should convert enum schemas between JSON and Cedar formats")
+        void testEnumSchemaFormatConversion() throws Exception {
+            // Test Cedar to JSON conversion
+            Schema cedarEnumSchema = Schema.parse(JsonOrCedar.Cedar, """
+                entity Color enum ["Red", "Blue", "Green"];
+                entity User;
+                action view appliesTo { principal: [User], resource: [User] };
+                """);
+
+            JsonNode jsonResult = cedarEnumSchema.toJsonFormat();
+            assertNotNull(jsonResult, "JSON conversion result should not be null");
+
+            // Test JSON to Cedar conversion
+            String jsonEnumSchema = """
+                {
+                    "": {
+                        "entityTypes": {
+                            "Color": {
+                                "enum": ["Red", "Blue", "Green"]
+                            },
+                            "User": {}
+                        },
+                        "actions": {
+                            "view": {
+                                "appliesTo": {
+                                    "principalTypes": ["User"],
+                                    "resourceTypes": ["User"]
+                                }
+                            }
+                        }
+                    }
+                }
+                """;
+            Schema jsonSchemaObj = Schema.parse(JsonOrCedar.Json, jsonEnumSchema);
+            String cedarResult = jsonSchemaObj.toCedarFormat();
+            assertNotNull(cedarResult, "Cedar conversion result should not be null");
         }
     }
 }

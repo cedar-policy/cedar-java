@@ -1,0 +1,61 @@
+{
+  "": {
+    "entityTypes": {
+      "User": {
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "name": {
+              "type": "String",
+              "required": true
+            }
+          }
+        }
+      },
+      "Color": {
+        "enum": ["Red", "Blue", "Green"]
+      },
+      "Application": {
+        "enum": ["TinyTodo"]
+      },
+      "Status": {
+        "enum": ["Active", "Inactive", "Pending"]
+      },
+      "Task": {
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "owner": {
+              "type": "Entity",
+              "name": "User",
+              "required": true
+            },
+            "name": {
+              "type": "String",
+              "required": true
+            },
+            "status": {
+              "type": "Entity",
+              "name": "Color",
+              "required": true
+            }
+          }
+        }
+      }
+    },
+    "actions": {
+      "UpdateTask": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Task"]
+        }
+      },
+      "CreateList": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Application"]
+        }
+      }
+    }
+  }
+}

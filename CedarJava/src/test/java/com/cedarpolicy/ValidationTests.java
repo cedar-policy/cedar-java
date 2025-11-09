@@ -285,4 +285,157 @@ public class ValidationTests {
     private static final Schema PHOTOFLASH_SCHEMA = loadSchemaResource("/photoflash_schema.json");
     private static final Schema LIBRARY_SCHEMA = loadSchemaResource("/library_schema.json");
     private static final Schema LEVEL_SCHEMA = loadSchemaResource("/level_schema.json");
+    private static final Schema ENUM_SCHEMA = loadSchemaResource("/enum_schema.json");
+
+    /** Test enum entity validation with valid enum values. */
+    @Test
+    public void givenEnumSchemaAndValidEnumUsageReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal == User::\"alice\","
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource == Task::\"task1\""
+                        + ") when {"
+                        + "    resource.status == Color::\"Red\""
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
+    }
+
+    /** Test enum entity validation with invalid enum values. */
+    @Test
+    public void givenEnumSchemaAndInvalidEnumValueReturnsInvalid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal == User::\"alice\","
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource == Task::\"task1\""
+                        + ") when {"
+                        + "    resource.status != Color::\"Purple\""  // Invalid enum value
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsNotValid(levelResponse);
+    }
+
+    /** Test enum entity validation with case-sensitive enum values. */
+    @Test
+    public void givenEnumSchemaAndWrongCaseEnumValueReturnsInvalid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal == User::\"alice\","
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource == Task::\"task1\""
+                        + ") when {"
+                        + "    resource.status != Color::\"red\""  // Wrong case - should be "Red"
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsNotValid(levelResponse);
+    }
+
+    /** Test RFC example policy with enum entities. */
+    @Test
+    public void givenEnumSchemaAndRFCExamplePolicyReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        // This is the exact policy from the RFC
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal,"
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource"
+                        + ") when {"
+                        + "    principal == resource.owner &&"
+                        + "    resource.status != Color::\"Red\""
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
+    }
+
+    /** Test Application enum from RFC example. */
+    @Test
+    public void givenEnumSchemaAndApplicationEnumPolicyReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal,"
+                        + "    action == Action::\"CreateList\","
+                        + "    resource == Application::\"TinyTodo\""
+                        + ");");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
+    }
+
+    /** Test invalid Application enum usage. */
+    @Test
+    public void givenEnumSchemaAndInvalidApplicationEnumReturnsInvalid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal,"
+                        + "    action == Action::\"CreateList\","
+                        + "    resource == Application::\"TinyTODO\""  // Typo in enum value
+                        + ");");
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsNotValid(levelResponse);
+    }
+
+    /** Test multiple enum comparisons in policy. */
+    @Test
+    public void givenEnumSchemaAndMultipleEnumComparisonsReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "permit("
+                        + "    principal,"
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource"
+                        + ") when {"
+                        + "    resource.status == Color::\"Blue\" ||"
+                        + "    resource.status == Color::\"Green\""
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
+    }
+
+    /** Test forbid policy with enum entities. */
+    @Test
+    public void givenEnumSchemaAndForbidPolicyWithEnumsReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy(
+                "policy0",
+                "forbid("
+                        + "    principal,"
+                        + "    action == Action::\"UpdateTask\","
+                        + "    resource"
+                        + ") when {"
+                        + "    resource.status == Color::\"Red\" &&"
+                        + "    principal != resource.owner"
+                        + "};");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+        ValidationResponse levelResponse = whenLevelValidated(1);
+        thenIsValid(levelResponse);
+    }
 }

@@ -1,0 +1,21 @@
+entity User = {
+    name: String,
+};
+
+entity Color enum ["Red", "Blue", "Green"];
+
+entity Application enum ["TinyTodo"];
+
+entity Status enum ["Active", "Inactive", "Pending"];
+
+entity Task = {
+    owner: User,
+    name: String,
+    status: Color,
+};
+
+action UpdateTask
+    appliesTo { principal: [User], resource: [Task] };
+
+action CreateList
+    appliesTo { principal: [User], resource: [Application] };
