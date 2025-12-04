@@ -222,6 +222,26 @@ public class ValidationTests {
         thenIsNotValid(levelResponse);
     }
 
+    /** Test enum entity validation with valid enum values. */
+    @Test
+    public void givenEnumSchemaAndValidEnumUsageReturnsValid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy("policy0", "permit(" + "    principal == User::\"alice\"," + "    action == Action::\"UpdateTask\","
+                + "    resource == Task::\"task1\"" + ") when {" + "    resource.status == Color::\"Red\"" + "};");
+        ValidationResponse response = whenValidated();
+        thenIsValid(response);
+    }
+
+    /** Test enum entity validation with invalid enum values. */
+    @Test
+    public void givenEnumSchemaAndInvalidEnumValueReturnsInvalid() {
+        givenSchema(ENUM_SCHEMA);
+        givenPolicy("policy0", "permit(" + "    principal == User::\"alice\"," + "    action == Action::\"UpdateTask\","
+                + "    resource == Task::\"task1\"" + ") when {" + "    resource.status != Color::\"Purple\"" + "};");
+        ValidationResponse response = whenValidated();
+        thenIsNotValid(response);
+    }
+
     private void givenSchema(Schema testSchema) {
         this.schema = testSchema;
     }
@@ -285,4 +305,6 @@ public class ValidationTests {
     private static final Schema PHOTOFLASH_SCHEMA = loadSchemaResource("/photoflash_schema.json");
     private static final Schema LIBRARY_SCHEMA = loadSchemaResource("/library_schema.json");
     private static final Schema LEVEL_SCHEMA = loadSchemaResource("/level_schema.json");
+    private static final Schema ENUM_SCHEMA = loadSchemaResource("/enum_schema.json");
+
 }

@@ -1,0 +1,23 @@
+[
+  {
+    "uid": {"type": "User", "id": "alice"},
+    "attrs": {
+      "name": "Alice"
+    },
+    "parents": []
+  },
+  {
+    "uid": {"type": "Color", "id": "Purple"},
+    "attrs": {},
+    "parents": []
+  },
+  {
+    "uid": {"type": "Task", "id": "task1"},
+    "attrs": {
+      "owner": {"type": "User", "id": "alice"},
+      "name": "Complete project",
+      "status": {"type": "Color", "id": "Purple"}
+    },
+    "parents": []
+  }
+]

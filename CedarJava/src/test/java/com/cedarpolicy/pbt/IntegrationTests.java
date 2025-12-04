@@ -30,6 +30,7 @@ import com.cedarpolicy.model.policy.LinkValue;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.policy.TemplateLink;
+import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.value.DateTime;
 import com.cedarpolicy.value.Decimal;
 import com.cedarpolicy.value.Duration;
@@ -894,5 +895,243 @@ public class IntegrationTests {
                         Optional.of(loadSchemaResource("/schema_parsing_allow_schema.json")),
                         true);
         assertAllowed(request, policySet, entities);
+    }
+
+    private static final Schema ENUM_SCHEMA = loadSchemaResource("/enum_schema.json");
+
+    /**
+     * Build entities for enum authorization tests.
+     */
+    private Set<Entity> buildEntitiesForEnumTests() {
+        EntityTypeName userType = EntityTypeName.parse("User").get();
+        EntityTypeName taskType = EntityTypeName.parse("Task").get();
+        EntityTypeName colorType = EntityTypeName.parse("Color").get();
+        EntityTypeName actionType = EntityTypeName.parse("Action").get();
+        EntityTypeName applicationType = EntityTypeName.parse("Application").get();
+
+        Set<Entity> entities = new HashSet<>();
+
+        // Users
+        Entity alice = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
+
+        Entity bob = new Entity(userType.of("bob"), new HashMap<>() {
+            {
+                put("name", new PrimString("Bob"));
+            }
+        }, new HashSet<>());
+
+        // Tasks
+        Entity task1 = new Entity(taskType.of("task1"), new HashMap<>() {
+            {
+                put("owner", alice.getEUID());
+                put("name", new PrimString("Complete project"));
+                put("status", new EntityUID(colorType, "Red"));
+            }
+        }, new HashSet<>());
+
+        Entity task2 = new Entity(taskType.of("task2"), new HashMap<>() {
+            {
+                put("owner", bob.getEUID());
+                put("name", new PrimString("Review code"));
+                put("status", new EntityUID(colorType, "Green"));
+            }
+        }, new HashSet<>());
+
+        // Actions
+        Entity updateTaskAction = new Entity(actionType.of("UpdateTask"), new HashMap<>(), new HashSet<>());
+        Entity createListAction = new Entity(actionType.of("CreateList"), new HashMap<>(), new HashSet<>());
+
+        // Application enum entity
+        Entity tinyTodoApp = new Entity(applicationType.of("TinyTodo"), new HashMap<>(), new HashSet<>());
+
+        entities.add(alice);
+        entities.add(bob);
+        entities.add(task1);
+        entities.add(task2);
+        entities.add(updateTaskAction);
+        entities.add(createListAction);
+        entities.add(tinyTodoApp);
+
+        return entities;
+    }
+
+    /**
+     * Test authorization requests which results in Deny due to enum type
+     */
+    @Test
+    public void testValidEnumAuthorizationDeny() {
+        EntityUID principal = new EntityUID(EntityTypeName.parse("User").get(), "alice");
+        EntityUID action = new EntityUID(EntityTypeName.parse("Action").get(), "UpdateTask");
+        EntityUID resource = new EntityUID(EntityTypeName.parse("Task").get(), "task2"); // task2 has Green status
+
+        Set<Entity> entities = buildEntitiesForEnumTests();
+
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("""
+                permit(
+                    principal,
+                    action == Action::"UpdateTask",
+                    resource
+                ) when {
+                    resource.status != Color::"Green"
+                };
+                """, "notGreenPolicy"));
+
+        var policySet = new PolicySet(policies);
+        AuthorizationRequest request = new AuthorizationRequest(principal, action, resource, new HashMap<>());
+
+        assertNotAllowed(request, policySet, entities);
+    }
+
+    /**
+     * Test authorization requests which results in Permit due to enum type
+     */
+    @Test
+    public void testValidEnumAuthorizationAllow() {
+        EntityUID principal = new EntityUID(EntityTypeName.parse("User").get(), "bob");
+        EntityUID action = new EntityUID(EntityTypeName.parse("Action").get(), "UpdateTask");
+        EntityUID resource = new EntityUID(EntityTypeName.parse("Task").get(), "task2"); // task2 has Green status
+
+        Set<Entity> entities = buildEntitiesForEnumTests();
+
+        // Policy: allow if status is exactly Green
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("""
+                permit(
+                    principal == User::"bob",
+                    action == Action::"UpdateTask",
+                    resource
+                ) when {
+                    resource.status == Color::"Green"
+                };
+                """, "greenPolicy"));
+
+        var policySet = new PolicySet(policies);
+        AuthorizationRequest request = new AuthorizationRequest(principal, action, resource, new HashMap<>());
+
+        assertAllowed(request, policySet, entities);
+    }
+
+    /**
+     * Test authorization requests where policy references multiple enums
+     */
+    @Test
+    public void testEnumAuthorizationMultipleValues() {
+        EntityUID principal = new EntityUID(EntityTypeName.parse("User").get(), "bob");
+        EntityUID action = new EntityUID(EntityTypeName.parse("Action").get(), "UpdateTask");
+        EntityUID resource = new EntityUID(EntityTypeName.parse("Task").get(), "task2"); // Green status
+
+        Set<Entity> entities = buildEntitiesForEnumTests();
+
+        // Policy: allow if status is Blue OR Green
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("""
+                permit(
+                    principal,
+                    action == Action::"UpdateTask",
+                    resource
+                ) when {
+                    resource.status == Color::"Blue" ||
+                    resource.status == Color::"Green"
+                };
+                """, "multiEnumPolicy"));
+
+        var policySet = new PolicySet(policies);
+        AuthorizationRequest request = new AuthorizationRequest(principal, action, resource, new HashMap<>());
+
+        assertAllowed(request, policySet, entities);
+    }
+
+    /**
+     * Test authorization with schema validation - positive case with valid enum entities.
+     */
+    @Test
+    public void testValidEnumAuthorizationWithValidation() {
+        EntityTypeName userType = EntityTypeName.parse("User").get();
+        EntityTypeName actionType = EntityTypeName.parse("Action").get();
+        EntityTypeName applicationType = EntityTypeName.parse("Application").get();
+
+        // Create valid entities
+        Entity principalEntity = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
+
+        Entity actionEntity = new Entity(actionType.of("CreateList"), new HashMap<>(), new HashSet<>());
+        Entity resourceEntity = new Entity(applicationType.of("TinyTodo"), new HashMap<>(), new HashSet<>());
+
+        Set<Entity> entities = new HashSet<>();
+        entities.add(principalEntity);
+        entities.add(actionEntity);
+        entities.add(resourceEntity);
+
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("""
+                permit(
+                    principal,
+                    action == Action::"CreateList",
+                    resource == Application::"TinyTodo"
+                );
+                """, "validEnumPolicy"));
+
+        var policySet = new PolicySet(policies);
+
+        // Create authorization request with schema validation enabled
+        AuthorizationRequest request = new AuthorizationRequest(principalEntity, actionEntity, resourceEntity,
+                Optional.of(new HashMap<>()), Optional.of(ENUM_SCHEMA), true
+        );
+
+        assertAllowed(request, policySet, entities);
+    }
+
+    /**
+     * Test authorization with schema validation - negative case with invalid enum entity.
+     */
+    @Test
+    public void testInvalidEnumAuthorizationWithValidation() {
+        EntityTypeName userType = EntityTypeName.parse("User").get();
+        EntityTypeName actionType = EntityTypeName.parse("Action").get();
+        EntityTypeName applicationType = EntityTypeName.parse("Application").get();
+
+        // Create entities with invalid enum value
+        Entity principalEntity = new Entity(userType.of("alice"), new HashMap<>() {
+            {
+                put("name", new PrimString("Alice"));
+            }
+        }, new HashSet<>());
+
+        Entity actionEntity = new Entity(actionType.of("CreateList"), new HashMap<>(), new HashSet<>());
+        // Use INVALID enum value - "InvalidApp" is not in the Application enum
+        Entity resourceEntity = new Entity(applicationType.of("InvalidApp"), new HashMap<>(), new HashSet<>());
+
+        Set<Entity> entities = new HashSet<>();
+        entities.add(principalEntity);
+        entities.add(actionEntity);
+        entities.add(resourceEntity);
+
+        var policies = new HashSet<Policy>();
+        policies.add(new Policy("""
+                permit(
+                    principal,
+                    action == Action::"CreateList",
+                    resource == Application::"InvalidApp"
+                );
+                """, "invalidEnumPolicy"));
+
+        var policySet = new PolicySet(policies);
+
+        // Create authorization request with schema validation enabled
+        AuthorizationRequest request = new AuthorizationRequest(principalEntity, actionEntity, resourceEntity,
+                Optional.of(new HashMap<>()), Optional.of(ENUM_SCHEMA), true // Enable request validation - this should
+                                                                             // catch the invalid enum
+        );
+
+        // Should return failure response due to invalid enum value when schema validation is enabled
+        assertFailure(request, policySet, entities);
     }
 }
