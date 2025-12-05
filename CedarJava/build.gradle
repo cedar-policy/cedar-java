@@ -322,7 +322,7 @@ publishing {
     }
     repositories {
         maven {
-            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            url = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
             // To publish, uncomment these lines and ensure you have them set in `gradle.properties`
             // credentials {
             //     username ossrhUsername

@@ -31,8 +31,26 @@ syntax:
 Debugging calls across the JNI boundary is a bit tricky (as ever a bit more so on a Mac), but can be done by attaching
 both a Java and native debugger (such as GDB/LLDB) to the program.
 
-## Unsupported Features
-You can see a list of features not yet supported in CedarJava at [Differences from Rust](DIFFERENCES_FROM_RUST.md).
+## Windows Support
+
+Windows is not officially supported, but you can build CedarJava manually for Windows targets using the following workaround:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/cedar-policy/cedar-java
+   cd cedar-java/CedarJavaFFI
+   ```
+
+2. Build the native library for your target ABI:
+   ```bash
+   # For GNU ABI (MinGW)
+   cargo build --features partial-eval --release --target x86_64-pc-windows-gnu
+
+   # For MSVC ABI (Visual Studio)
+   cargo build --features partial-eval --release --target x86_64-pc-windows-msvc
+   ```
+
+3. Set the `CEDAR_JAVA_FFI_LIB` environment variable to point to the generated DLL.
 
 ## Security
 
