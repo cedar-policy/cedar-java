@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## 4.8.0
+* Pinned to `cedar-policy 4.8.2`
 * Added Schema conversion APIs [#325](https://github.com/cedar-policy/cedar-java/pull/325)
 * Added Level Validation [#327](https://github.com/cedar-policy/cedar-java/pull/327)
 * Added DateTime extension support [#328](https://github.com/cedar-policy/cedar-java/pull/328)
