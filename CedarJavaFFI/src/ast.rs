@@ -1,4 +1,7 @@
-use cedar_policy_core::{ast::{self, ExprVisitor}, parser};
+use cedar_policy_core::{
+    ast::{self, ExprVisitor},
+    parser,
+};
 use smol_str::SmolStr;
 struct TestVisitor;
 
@@ -13,7 +16,10 @@ fn serialise_loc(loc: Option<&parser::Loc>) -> String {
         let offset = loc.unwrap().span.offset();
         let len = loc.unwrap().span.len();
         // let file = std::sync::Arc::clone(&loc.unwrap().snippet());
-        return format!(", \"source\": {{ \"offset\": {}, \"len\": {} }}", offset, len);
+        return format!(
+            ", \"source\": {{ \"offset\": {}, \"len\": {} }}",
+            offset, len
+        );
     }
 
     String::new()
@@ -24,7 +30,12 @@ impl ast::ExprVisitor for TestVisitor {
 
     fn visit_var(&mut self, var: ast::Var, loc: Option<&parser::Loc>) -> Option<Self::Output> {
         let src_loc = serialise_loc(loc);
-        let fmt = |var: &str| Some(format!("{{ \"type\": \"var\", \"ref\": \"{}\"{} }}", var, src_loc));
+        let fmt = |var: &str| {
+            Some(format!(
+                "{{ \"type\": \"var\", \"ref\": \"{}\"{} }}",
+                var, src_loc
+            ))
+        };
 
         match var {
             ast::Var::Principal => fmt("principal"),
@@ -34,7 +45,6 @@ impl ast::ExprVisitor for TestVisitor {
         }
     }
 
-
     fn visit_literal(
         &mut self,
         lit: &ast::Literal,
@@ -42,20 +52,37 @@ impl ast::ExprVisitor for TestVisitor {
     ) -> Option<Self::Output> {
         let src_loc = serialise_loc(loc);
 
-        let fmt = |ty: &str, val: &str| Some(format!("{{ \"type\": \"{}\", \"value\": {}{} }}", ty, val, src_loc));
+        let fmt = |ty: &str, val: &str| {
+            Some(format!(
+                "{{ \"type\": \"{}\", \"value\": {}{} }}",
+                ty, val, src_loc
+            ))
+        };
 
         match lit {
             ast::Literal::Bool(b) => fmt("bool", b.to_string().as_str()),
             ast::Literal::Long(l) => fmt("long", l.to_string().as_str()),
             ast::Literal::String(s) => fmt("str", format!("\"{}\"", s).as_str()),
-            ast::Literal::EntityUID(uid) => fmt("euid", format!("\"{}\"", str::replace(uid.to_string().as_str(), "\"", "\\\"")).as_str()),
+            ast::Literal::EntityUID(uid) => fmt(
+                "euid",
+                format!(
+                    "\"{}\"",
+                    str::replace(uid.to_string().as_str(), "\"", "\\\"")
+                )
+                .as_str(),
+            ),
         }
     }
 
     /// Visits a slot reference in a policy template.
     fn visit_slot(&mut self, slot: ast::SlotId, loc: Option<&parser::Loc>) -> Option<Self::Output> {
         let src_loc = serialise_loc(loc);
-        let fmt = |val: &str| Some(format!("{{ \"type\": \"slot\", \"value\": {}{} }}", val, src_loc));
+        let fmt = |val: &str| {
+            Some(format!(
+                "{{ \"type\": \"slot\", \"value\": {}{} }}",
+                val, src_loc
+            ))
+        };
 
         if slot.is_principal() {
             fmt("principal")
@@ -65,11 +92,15 @@ impl ast::ExprVisitor for TestVisitor {
     }
 
     /// Visits an unknown value for partial evaluation
-    fn visit_unknown(&mut self, _unknown: &ast::Unknown, _loc: Option<&parser::Loc>) -> Option<Self::Output> {
+    fn visit_unknown(
+        &mut self,
+        _unknown: &ast::Unknown,
+        _loc: Option<&parser::Loc>,
+    ) -> Option<Self::Output> {
         None
     }
 
-        /// Visits an if-then-else conditional expression.
+    /// Visits an if-then-else conditional expression.
     ///
     /// Recursively visits the condition, then branch, and else branch.
     fn visit_if(
@@ -79,12 +110,14 @@ impl ast::ExprVisitor for TestVisitor {
         else_expr: &std::sync::Arc<ast::Expr>,
         loc: Option<&parser::Loc>,
     ) -> Option<Self::Output> {
-
-        let condition= self.visit_expr(test_expr)?;
+        let condition = self.visit_expr(test_expr)?;
         let then = self.visit_expr(then_expr)?;
         let els = self.visit_expr(else_expr)?;
         let src_loc = serialise_loc(loc);
-        Some(format!("{{ \"type\": \"cond\", \"condition\": {}, \"then\": {}, \"else\": {}{} }}", condition, then, els, src_loc))
+        Some(format!(
+            "{{ \"type\": \"cond\", \"condition\": {}, \"then\": {}, \"else\": {}{} }}",
+            condition, then, els, src_loc
+        ))
     }
 
     /// Visits a logical AND expression.
@@ -96,15 +129,17 @@ impl ast::ExprVisitor for TestVisitor {
         right: &std::sync::Arc<ast::Expr>,
         loc: Option<&parser::Loc>,
     ) -> Option<Self::Output> {
-
-        let one= self.visit_expr(left)?;
+        let one = self.visit_expr(left)?;
         let o = format!("{}", one);
         let two = self.visit_expr(right)?;
         let t = format!("{}", two);
 
         let src_loc = serialise_loc(loc);
 
-        Some(format!("{{ \"type\": \"binary\", \"op\": \"and\", \"left\": {}, \"right\": {}{} }}", one, two, src_loc))
+        Some(format!(
+            "{{ \"type\": \"binary\", \"op\": \"and\", \"left\": {}, \"right\": {}{} }}",
+            one, two, src_loc
+        ))
     }
 
     /// Visits a logical OR expression.
@@ -116,12 +151,14 @@ impl ast::ExprVisitor for TestVisitor {
         right: &std::sync::Arc<ast::Expr>,
         loc: Option<&parser::Loc>,
     ) -> Option<Self::Output> {
-
-        let one= self.visit_expr(left)?;
+        let one = self.visit_expr(left)?;
         let two = self.visit_expr(right)?;
         let src_loc = serialise_loc(loc);
 
-        Some(format!("{{ \"type\": \"binary\", \"op\": \"or\", \"left\": {}, \"right\": {}{} }}", one, two, src_loc))
+        Some(format!(
+            "{{ \"type\": \"binary\", \"op\": \"or\", \"left\": {}, \"right\": {}{} }}",
+            one, two, src_loc
+        ))
     }
 
     /// Visits a unary operation (like negation).
@@ -133,17 +170,24 @@ impl ast::ExprVisitor for TestVisitor {
         arg: &std::sync::Arc<ast::Expr>,
         loc: Option<&parser::Loc>,
     ) -> Option<Self::Output> {
-
         let src_loc = serialise_loc(loc);
         let expr = self.visit_expr(arg)?;
         let exp_str = expr.as_str();
 
-        let fmt = |op: &str, val: &str| Some(format!("{{ \"type\": \"unary\", \"op\": {}, \"expr\": {}{} }}", op, val, src_loc));
+        let fmt = |op: &str, val: &str| {
+            Some(format!(
+                "{{ \"type\": \"unary\", \"op\": {}, \"expr\": {}{} }}",
+                op, val, src_loc
+            ))
+        };
 
         match op {
-            ast::UnaryOp::IsEmpty => Some(format!("{{ \"type\": \"call\", \"self\": {}, \"func\": \"isEmpty\", \"args\": []{} }}", exp_str, src_loc)),
+            ast::UnaryOp::IsEmpty => Some(format!(
+                "{{ \"type\": \"call\", \"self\": {}, \"func\": \"isEmpty\", \"args\": []{} }}",
+                exp_str, src_loc
+            )),
             ast::UnaryOp::Neg => fmt("neg", exp_str),
-            ast::UnaryOp::Not => fmt("neg", exp_str)
+            ast::UnaryOp::Not => fmt("neg", exp_str),
         }
     }
 
@@ -157,12 +201,22 @@ impl ast::ExprVisitor for TestVisitor {
         arg2: &std::sync::Arc<ast::Expr>,
         loc: Option<&parser::Loc>,
     ) -> Option<Self::Output> {
-        let one= self.visit_expr(arg1)?;
+        let one = self.visit_expr(arg1)?;
         let two = self.visit_expr(arg2)?;
         let src_loc = serialise_loc(loc);
 
-        let fmt_bin = |op: &str| Some(format!("{{ \"type\": \"binary\", \"op\": \"{}\", \"left\": {}, \"right\": {}{} }}", op, one, two, src_loc));
-        let fmt_call = |func: &str| Some(format!("{{ \"type\": \"call\", \"self\": \"{}\", \"func\": {}, \"args\": [{}]{} }}", one, func, two, src_loc));
+        let fmt_bin = |op: &str| {
+            Some(format!(
+                "{{ \"type\": \"binary\", \"op\": \"{}\", \"left\": {}, \"right\": {}{} }}",
+                op, one, two, src_loc
+            ))
+        };
+        let fmt_call = |func: &str| {
+            Some(format!(
+                "{{ \"type\": \"call\", \"self\": \"{}\", \"func\": {}, \"args\": [{}]{} }}",
+                one, func, two, src_loc
+            ))
+        };
 
         match op {
             ast::BinaryOp::Eq => fmt_bin("eq"),
@@ -209,8 +263,10 @@ impl ast::ExprVisitor for TestVisitor {
         let obj = self.visit_expr(expr)?;
         let src_loc = serialise_loc(loc);
 
-        Some(format!("{{ \"type\": \"prop\", \"obj\": {}, \"prop\": \"{}\"{} }}", obj, attr, src_loc))
-
+        Some(format!(
+            "{{ \"type\": \"prop\", \"obj\": {}, \"prop\": \"{}\"{} }}",
+            obj, attr, src_loc
+        ))
     }
 
     /// Visits an attribute existence check (e.g., `expr has attr`).
@@ -225,8 +281,10 @@ impl ast::ExprVisitor for TestVisitor {
         let obj = self.visit_expr(expr)?;
         let src_loc = serialise_loc(loc);
 
-        Some(format!("{{ \"type\": \"binary\", \"op\": \"has\", \"left\": {}, \"right\": \"{}\"{} }}", obj, attr, src_loc))
-
+        Some(format!(
+            "{{ \"type\": \"binary\", \"op\": \"has\", \"left\": {}, \"right\": \"{}\"{} }}",
+            obj, attr, src_loc
+        ))
     }
 
     /// Visits a pattern-matching expression (e.g., `expr like "pat"`).
@@ -241,7 +299,10 @@ impl ast::ExprVisitor for TestVisitor {
         let obj = self.visit_expr(expr)?;
         let src_loc = serialise_loc(loc);
 
-        Some(format!("{{ \"type\": \"binary\", \"op\": \"like\", \"left\": {}, \"right\": \"{}\"{} }}", obj, pattern, src_loc))
+        Some(format!(
+            "{{ \"type\": \"binary\", \"op\": \"like\", \"left\": {}, \"right\": \"{}\"{} }}",
+            obj, pattern, src_loc
+        ))
     }
 
     /// Visits a type-checking expression (e.g., `principal is User`).
@@ -262,7 +323,11 @@ impl ast::ExprVisitor for TestVisitor {
     /// Visits a set literal expression (e.g., `[1, 2, 3]`).
     ///
     /// Recursively visits each element in the set.
-    fn visit_set(&mut self, elements: &std::sync::Arc<Vec<ast::Expr>>, loc: Option<&parser::Loc>) -> Option<Self::Output> {
+    fn visit_set(
+        &mut self,
+        elements: &std::sync::Arc<Vec<ast::Expr>>,
+        loc: Option<&parser::Loc>,
+    ) -> Option<Self::Output> {
         let mut elems = String::new();
         let mut sep = "";
         let src_loc = serialise_loc(loc);
@@ -274,8 +339,10 @@ impl ast::ExprVisitor for TestVisitor {
                 sep = ", ";
             }
         }
-        Some(format!("{{ \"type\": \"set\", \"elements\": [{}]{} }}", elems, src_loc))
-
+        Some(format!(
+            "{{ \"type\": \"set\", \"elements\": [{}]{} }}",
+            elems, src_loc
+        ))
     }
 
     /// Visits a record literal expression (e.g., `{ "key": value }`).
@@ -301,7 +368,10 @@ impl ast::ExprVisitor for TestVisitor {
                 sep = ", ";
             }
         }
-        Some(format!("{{ \"type\": \"record\", \"props\": {{ {} }}{} }}", props, src_loc))
+        Some(format!(
+            "{{ \"type\": \"record\", \"props\": {{ {} }}{} }}",
+            props, src_loc
+        ))
     }
 }
 
@@ -326,7 +396,9 @@ fn serialise_annotations(policy: &ast::Policy) -> String {
     return result;
 }
 
-pub fn parse_policy_set_to_ast(text: &str) -> std::result::Result<String, parser::err::ParseErrors> {
+pub fn parse_policy_set_to_ast(
+    text: &str,
+) -> std::result::Result<String, parser::err::ParseErrors> {
     let ast: ast::PolicySet = parser::parse_policyset(&text)?;
 
     let mut result = String::new();
@@ -343,10 +415,15 @@ pub fn parse_policy_set_to_ast(text: &str) -> std::result::Result<String, parser
         let annotations = serialise_annotations(policy);
 
         let source = serialise_loc(policy.loc());
-        
-        result.push_str(&format!("{{ \"effect\": \"{}\", \"condition\": {}{}{} }}", policy.effect(), condition, annotations, source));
-        sep = ", ";
 
+        result.push_str(&format!(
+            "{{ \"effect\": \"{}\", \"condition\": {}{}{} }}",
+            policy.effect(),
+            condition,
+            annotations,
+            source
+        ));
+        sep = ", ";
     }
     result.push(']');
 
@@ -357,49 +434,56 @@ pub fn parse_policy_set_to_ast(text: &str) -> std::result::Result<String, parser
 mod tests {
     use crate::ast::*;
 
-        #[test]
-        fn test_permit_all() {
-            let result = parse_policy_set_to_ast("permit (principal, action, resource);");
-            assert!(
-                result.is_ok(),
-                "Expected parse_policy_set_to_ast to succeed: {:?}",
-                result
-            );
-        }
+    #[test]
+    fn test_permit_all() {
+        let result = parse_policy_set_to_ast("permit (principal, action, resource);");
+        assert!(
+            result.is_ok(),
+            "Expected parse_policy_set_to_ast to succeed: {:?}",
+            result
+        );
+    }
 
-        #[test]
-        fn test_with_euid() {
-            let result = parse_policy_set_to_ast(r#"permit (
+    #[test]
+    fn test_with_euid() {
+        let result = parse_policy_set_to_ast(
+            r#"permit (
                 principal,
                 action,
                 resource
             )
-            when { principal == Namespace::Nested::"euid" };"#);
-            assert!(
-                result.is_ok(),
-                "Expected parse_policy_set_to_ast to succeed: {:?}",
-                result
-            );
+            when { principal == Namespace::Nested::"euid" };"#,
+        );
+        assert!(
+            result.is_ok(),
+            "Expected parse_policy_set_to_ast to succeed: {:?}",
+            result
+        );
 
-            assert!(result.unwrap().as_str().contains("\"value\": \"Namespace::Nested::\\\"euid\\\"\""));
-        }
+        assert!(result
+            .unwrap()
+            .as_str()
+            .contains("\"value\": \"Namespace::Nested::\\\"euid\\\"\""));
+    }
 
-        #[test]
-        fn test_annotations() {
-            let result = parse_policy_set_to_ast(r#"
+    #[test]
+    fn test_annotations() {
+        let result = parse_policy_set_to_ast(
+            r#"
             @annotation_name("annotation value")
             @second_annotation("valuable info")
             permit (
                 principal,
                 action,
                 resource
-            );"#);
-            assert!(
-                result.is_ok(),
-                "Expected parse_policy_set_to_ast to succeed: {:?}",
-                result
-            );
+            );"#,
+        );
+        assert!(
+            result.is_ok(),
+            "Expected parse_policy_set_to_ast to succeed: {:?}",
+            result
+        );
 
-            assert!(result.unwrap().as_str().contains("\"annotations\": { \"annotation_name\": \"annotation value\", \"second_annotation\": \"valuable info\" }"));
-        }
+        assert!(result.unwrap().as_str().contains("\"annotations\": { \"annotation_name\": \"annotation value\", \"second_annotation\": \"valuable info\" }"));
+    }
 }

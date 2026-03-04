@@ -16,6 +16,7 @@
 
 #![forbid(unsafe_code)]
 mod answer;
+mod ast;
 mod helpers;
 mod interface;
 mod jlist;
@@ -25,5 +26,4 @@ mod jvm_test_utils;
 mod objects;
 mod tests;
 mod utils;
-mod ast;
 pub use interface::*;

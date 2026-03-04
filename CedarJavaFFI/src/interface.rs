@@ -22,8 +22,8 @@ use cedar_policy::ffi::{
 };
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
-    Entities, EntityUid, Policy, PolicySet, Schema, Template, 
-    schema_str_to_json_with_resolved_types
+    schema_str_to_json_with_resolved_types, Entities, EntityUid, Policy, PolicySet, Schema,
+    Template,
 };
 use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use jni::{
@@ -220,13 +220,16 @@ pub fn parseCedarSchemaJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JStr
 }
 
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
-pub fn parseResolvedCedarSchemaToJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, schema_jstr: JString<'a>) -> jvalue {
+pub fn parseResolvedCedarSchemaToJsonJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    schema_jstr: JString<'a>,
+) -> jvalue {
     match parse_resolved_cedar_schema_to_json_internal(&mut env, schema_jstr) {
         Ok(v) => v.as_jni(),
         Err(e) => jni_failed(&mut env, e.as_ref()),
     }
 }
-
 
 fn parse_json_schema_internal<'a>(
     env: &mut JNIEnv<'a>,
@@ -275,7 +278,7 @@ fn parse_resolved_cedar_schema_to_json_internal<'a>(
                 let json_value: serde_json::Value = json.into();
                 let json_str = serde_json::to_string(&json_value).unwrap();
                 Ok(JValueGen::Object(env.new_string(json_str)?.into()))
-            },
+            }
         }
     }
 }
@@ -308,7 +311,11 @@ fn parse_policy_internal<'a>(
 }
 
 #[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
-pub fn parsePoliciesToJsonAst<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
+pub fn parsePoliciesToJsonAst<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_jstr: JString<'a>,
+) -> jvalue {
     match policy_set_to_ast_internal(&mut env, policies_jstr) {
         Err(e) => jni_failed(&mut env, e.as_ref()),
         Ok(policies_set) => policies_set.as_jni(),
@@ -324,7 +331,8 @@ fn policy_set_to_ast_internal<'a>(
     } else {
         let policy_set_jstring = env.get_string(&policy_set_jstr)?;
         let policy_set_string = String::from(policy_set_jstring);
-        let policy_set_json = crate::ast::parse_policy_set_to_ast(&policy_set_string.as_str()).map_err(|err| format!("Error parsing policy set: {:?}", err))?;
+        let policy_set_json = crate::ast::parse_policy_set_to_ast(&policy_set_string.as_str())
+            .map_err(|err| format!("Error parsing policy set: {:?}", err))?;
         Ok(JValueGen::Object(env.new_string(&policy_set_json)?.into()))
     }
 }
@@ -1030,7 +1038,7 @@ pub(crate) mod jvm_based_tests {
             );
         }
 
-                #[test]
+        #[test]
         fn policy_set_to_ast_internal_success_multiple() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input = r#"permit (
