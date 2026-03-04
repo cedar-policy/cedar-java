@@ -15,18 +15,11 @@ env:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-26]
-        include:
-          - os: ubuntu-latest
-            name: Build on Linux
-            zigInstall: wget https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_PATH
-          - os: macos-26
-            name: Build on macOS
-            zigInstall: wget https://ziglang.org/download/0.11.0/zig-macos-aarch64-0.11.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-macos-aarch64-0.11.0" >> $GITHUB_PATH
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    name: Build & Deploy
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout Cedar Java
         uses: actions/checkout@v4
@@ -50,7 +43,7 @@ jobs:
         working-directory: CedarJavaFFI
         run: cargo test --all-features
       - name: Install Zig
-        run: ${{ matrix.zigInstall }}
+        run: wget https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz -O - | tar xJ && echo "$(pwd)/zig-linux-x86_64-0.11.0" >> $GITHUB_PATH
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
@@ -63,6 +56,8 @@ jobs:
       - name: Generate Java Documentation
         working-directory: CedarJava
         run: ./gradlew javadoc
-      - name: Deploy uber JAR to GitHub Packages
+      - name: Deploy to GitHub Packages
         working-directory: CedarJava
         run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
