@@ -187,7 +187,7 @@ impl ast::ExprVisitor for TestVisitor {
                 exp_str, src_loc
             )),
             ast::UnaryOp::Neg => fmt("neg", exp_str),
-            ast::UnaryOp::Not => fmt("neg", exp_str),
+            ast::UnaryOp::Not => fmt("not", exp_str),
         }
     }
 
