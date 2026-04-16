@@ -85,68 +85,47 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                 }
                 return myNode;
             } else if (node.isObject()) {
-                Iterator<Map.Entry<String, JsonNode>> iter = node.fields();
-                // Do two passes, one to check if it is an escaped entity or extension and a second to
-                // write into a map
-                EscapeType escapeType = EscapeType.UNRECOGNIZED;
-                int count = 0;
-                while (iter.hasNext()) {
-                    count++;
-                    Map.Entry<String, JsonNode> entry = iter.next();
-                    if (entry.getKey().equals(ENTITY_ESCAPE_SEQ)) {
-                        escapeType = EscapeType.ENTITY;
-                    } else if (entry.getKey().equals(EXTENSION_ESCAPE_SEQ)) {
-                        escapeType = EscapeType.EXTENSION;
-                    }
-                }
-                if (escapeType != EscapeType.UNRECOGNIZED) {
-                    if (count == 1) {
-                        if (escapeType == EscapeType.ENTITY) {
-                            JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
-                            if (val.isObject() && val.has("id") && val.has("type")) {
-                                int numFields = 0;
-                                for (Iterator<String> it = val.fieldNames(); it.hasNext(); it.next()) {
-                                    numFields++;
-                                }
-                                if (numFields == 2) {
-                                    EntityIdentifier id = new EntityIdentifier(val.get("id").textValue());
-                                    Optional<EntityTypeName> type = EntityTypeName.parse(val.get("type").textValue());
-                                    if (type.isPresent()) {
-                                        return new EntityUID(type.get(), id);
-                                    } else {
-                                        String msg = "Invalid Entity Type" + val.get("type").textValue();
-                                        throw new InvalidValueDeserializationException(parser, msg, node.asToken(), Map.class);
-                                    }
-                                }
-                            }
-                            throw new InvalidValueDeserializationException(parser,
-                                    "Not textual node: " + node.toString(), node.asToken(), Map.class);
-                        } else {
-                            JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
-                            JsonNode fn = val.get("fn");
-                            if (!fn.isTextual()) {
-                                throw new InvalidValueDeserializationException(parser,
-                                        "Not textual node: " + fn.toString(), node.asToken(), Map.class);
-                            }
-
-                            String fnName = fn.textValue();
-
-                            if (MULTI_ARG_FN.contains(fnName)) {
-                                return deserializeMultiArgFunction(fnName, val, mapper, parser, node);
-                            } else if (SINGLE_ARG_FN.contains(fnName)) {
-                                return deserializeSingleArgFunction(fnName, val, parser, node);
+                // Single-pass: check for escape sequences via direct lookup, avoiding full iteration
+                if (node.size() == 1) {
+                    if (node.has(ENTITY_ESCAPE_SEQ)) {
+                        JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
+                        if (val.isObject() && val.has("id") && val.has("type") && val.size() == 2) {
+                            EntityIdentifier id = new EntityIdentifier(val.get("id").textValue());
+                            Optional<EntityTypeName> type = EntityTypeName.parse(val.get("type").textValue());
+                            if (type.isPresent()) {
+                                return new EntityUID(type.get(), id);
                             } else {
-                                throw new InvalidValueDeserializationException(parser,
-                                        "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
+                                String msg = "Invalid Entity Type" + val.get("type").textValue();
+                                throw new InvalidValueDeserializationException(parser, msg, node.asToken(), Map.class);
                             }
                         }
-                    } else {
                         throw new InvalidValueDeserializationException(parser,
-                                "More than one K,V pair with {__entity, __extn}: " + node.toString(), node.asToken(), Map.class);
+                                "Not textual node: " + node.toString(), node.asToken(), Map.class);
+                    } else if (node.has(EXTENSION_ESCAPE_SEQ)) {
+                        JsonNode val = node.get(EXTENSION_ESCAPE_SEQ);
+                        JsonNode fn = val.get("fn");
+                        if (!fn.isTextual()) {
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Not textual node: " + fn.toString(), node.asToken(), Map.class);
+                        }
+
+                        String fnName = fn.textValue();
+
+                        if (MULTI_ARG_FN.contains(fnName)) {
+                            return deserializeMultiArgFunction(fnName, val, mapper, parser, node);
+                        } else if (SINGLE_ARG_FN.contains(fnName)) {
+                            return deserializeSingleArgFunction(fnName, val, parser, node);
+                        } else {
+                            throw new InvalidValueDeserializationException(parser,
+                                    "Invalid function type: " + fn.toString(), node.asToken(), Map.class);
+                        }
                     }
+                } else if (node.size() > 1 && (node.has(ENTITY_ESCAPE_SEQ) || node.has(EXTENSION_ESCAPE_SEQ))) {
+                    throw new InvalidValueDeserializationException(parser,
+                            "More than one K,V pair with {__entity, __extn}: " + node.toString(), node.asToken(), Map.class);
                 }
                 CedarMap myMap = new CedarMap();
-                iter = node.fields();
+                Iterator<Map.Entry<String, JsonNode>> iter = node.fields();
                 while (iter.hasNext()) {
                     Map.Entry<String, JsonNode> entry = iter.next();
                     myMap.put(entry.getKey(), mapper.treeToValue(entry.getValue(), Value.class));

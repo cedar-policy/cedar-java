@@ -42,7 +42,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -50,6 +49,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class BasicAuthorizationEngine implements AuthorizationEngine {
     static {
         LibraryLoader.loadLibrary();
+        String jniVersion = getCedarJNIVersion();
+        String langVersion = AuthorizationEngine.getCedarLangVersion();
+        if (!jniVersion.equals(langVersion)) {
+            throw new ExceptionInInitializerError(
+                    "Error, Java Cedar Language version is " + langVersion
+                            + " but JNI Cedar Language version is " + jniVersion);
+        }
     }
 
     /** Construct a basic authorization engine. */
@@ -123,21 +129,11 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     private static <REQ, RESP> RESP call(String operation, Class<RESP> responseClass, REQ request)
             throws AuthException {
         try {
-            final String cedarJNIVersion = getCedarJNIVersion();
-            if (!cedarJNIVersion.equals(AuthorizationEngine.getCedarLangVersion())) {
-                throw new AuthException(
-                        "Error, Java Cedar Language version is "
-                                + AuthorizationEngine.getCedarLangVersion()
-                                + " but JNI Cedar Language version is "
-                                + cedarJNIVersion);
-            }
-            // Convert the request POJO to a JSON string
             final String fullRequest = objectWriter().writeValueAsString(request);
 
             final String response = callCedarJNI(operation, fullRequest);
 
-            final JsonNode responseNode = objectReader().readTree(response);
-            return objectReader().readValue(responseNode, responseClass);
+            return objectReader().readValue(response, responseClass);
         } catch (JsonProcessingException e) {
             throw new AuthException("JSON Serialization Error", e);
         } catch (IllegalArgumentException e) {

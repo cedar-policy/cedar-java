@@ -75,6 +75,15 @@ configurations {
     testCompileOnly.extendsFrom compileOnly
 }
 
+sourceSets {
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+        resources.srcDirs = ['src/test/resources']
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
 dependencies {
     def junitVersion = '6.0.0'
 
@@ -93,6 +102,9 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:${junitVersion}"
+
+    jmhImplementation 'org.openjdk.jmh:jmh-core:1.37'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
 }
 
 def ffiDir = '../CedarJavaFFI'
@@ -259,6 +271,27 @@ test {
 compileTestJava {
     sourceCompatibility = "17"
     targetCompatibility = "17"
+}
+
+compileJmhJava {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
+
+tasks.register('jmh', JavaExec) {
+    group 'Benchmark'
+    description 'Runs JMH benchmarks for JNI performance.'
+
+    dependsOn('compileFFI')
+    dependsOn('jmhClasses')
+
+    mainClass = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + files(layout.buildDirectory.dir(compiledLibDir))
+
+    // Pass through any -Pjmh.args="..." to JMH (e.g., -Pjmh.args="-f 0 -i 1 -wi 1")
+    if (project.hasProperty('jmh.args')) {
+        args((project.property('jmh.args') as String).split('\\s+'))
+    }
 }
 
 compileJava {

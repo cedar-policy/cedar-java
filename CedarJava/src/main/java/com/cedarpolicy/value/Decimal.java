@@ -36,9 +36,6 @@ public class Decimal extends Value {
                 return false;
             }
             d = d.trim();
-            if (d.length() > 21) {
-                return false; // 19digits, decimal point and - sign
-            }
             try {
                 Matcher matcher = DECIMAL_PATTERN.matcher(d);
                 return matcher.matches();
