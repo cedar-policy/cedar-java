@@ -67,6 +67,12 @@ spotbugs {
     ignoreFailures.set(false)
 }
 
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    if (name == 'spotbugsJmh') {
+        excludeFilter = file('config/spotbugs/jmh-exclude.xml')
+    }
+}
+
 repositories {
     mavenCentral()
 }

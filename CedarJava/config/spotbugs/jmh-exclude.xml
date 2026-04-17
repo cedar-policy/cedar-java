@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude JMH-generated code: padding fields and dead stores are intentional for cache-line isolation -->
+    <Match>
+        <Package name="~com\.cedarpolicy\.jmh_generated.*"/>
+    </Match>
+</FindBugsFilter>
