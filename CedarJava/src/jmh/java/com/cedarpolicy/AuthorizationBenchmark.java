@@ -173,17 +173,17 @@ public class AuthorizationBenchmark {
     }
 
     @Benchmark
-    public AuthorizationResponse isAuthorized_small() throws AuthException {
+    public AuthorizationResponse isAuthorizedSmall() throws AuthException {
         return engine.isAuthorized(smallRequest, smallPolicySet, smallEntities);
     }
 
     @Benchmark
-    public AuthorizationResponse isAuthorized_medium() throws AuthException {
+    public AuthorizationResponse isAuthorizedMedium() throws AuthException {
         return engine.isAuthorized(mediumRequest, mediumPolicySet, mediumEntities);
     }
 
     @Benchmark
-    public ValidationResponse validate_small() throws AuthException {
+    public ValidationResponse validateSmall() throws AuthException {
         return engine.validate(validationRequest);
     }
 }
