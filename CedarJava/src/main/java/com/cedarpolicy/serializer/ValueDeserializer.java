@@ -59,12 +59,6 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
     private static final Set<String> MULTI_ARG_FN = Set.of(FN_OFFSET);
     private static final Set<String> SINGLE_ARG_FN = Set.of(FN_IP, FN_DECIMAL, FN_UNKNOWN, FN_DATETIME, FN_DURATION);
 
-    private enum EscapeType {
-        ENTITY,
-        EXTENSION,
-        UNRECOGNIZED
-    }
-
     /** Deserialize Json to Value. */
     @Override
     public Value deserialize(JsonParser parser, DeserializationContext context) throws IOException {
@@ -89,7 +83,7 @@ public class ValueDeserializer extends JsonDeserializer<Value> {
                 if (node.size() == 1) {
                     if (node.has(ENTITY_ESCAPE_SEQ)) {
                         JsonNode val = node.get(ENTITY_ESCAPE_SEQ);
-                        if (val.isObject() && val.has("id") && val.has("type") && val.size() == 2) {
+                        if (val.has("id") && val.has("type") && val.size() == 2) {
                             EntityIdentifier id = new EntityIdentifier(val.get("id").textValue());
                             Optional<EntityTypeName> type = EntityTypeName.parse(val.get("type").textValue());
                             if (type.isPresent()) {

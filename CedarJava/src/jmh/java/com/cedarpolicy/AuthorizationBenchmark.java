@@ -20,14 +20,13 @@ import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
+import com.cedarpolicy.model.entity.Entities;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
-import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 import com.cedarpolicy.value.EntityTypeName;
-import com.cedarpolicy.value.EntityUID;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -45,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -87,87 +85,43 @@ public class AuthorizationBenchmark {
         setUpValidationScenario();
     }
 
-    private void setUpSmallScenario() {
+    private static String readResource(String resourcePath) throws Exception {
+        return new String(
+                Files.readAllBytes(Paths.get(
+                        AuthorizationBenchmark.class.getResource(resourcePath).toURI())),
+                StandardCharsets.UTF_8);
+    }
+
+    private void setUpSmallScenario() throws Exception {
         EntityTypeName userType = EntityTypeName.parse("User").get();
         EntityTypeName actionType = EntityTypeName.parse("Action").get();
         EntityTypeName resourceType = EntityTypeName.parse("Resource").get();
 
-        EntityUID principal = userType.of("alice");
-        EntityUID action = actionType.of("view");
-        EntityUID resource = resourceType.of("doc1");
+        smallRequest = new AuthorizationRequest(
+                userType.of("alice"), actionType.of("view"), resourceType.of("doc1"), new HashMap<>());
 
-        smallRequest = new AuthorizationRequest(principal, action, resource, new HashMap<>());
-
-        Set<Policy> policies = new HashSet<>();
-        policies.add(new Policy("permit(principal, action, resource);", "policy0"));
-        smallPolicySet = new PolicySet(policies);
-
-        smallEntities = new HashSet<>();
-        smallEntities.add(new Entity(principal, new HashMap<>(), new HashSet<>()));
-        smallEntities.add(new Entity(action, new HashMap<>(), new HashSet<>()));
-        smallEntities.add(new Entity(resource, new HashMap<>(), new HashSet<>()));
+        smallPolicySet = PolicySet.parsePolicies(readResource("/small_policies.cedar"));
+        smallEntities = Entities.parse(readResource("/small_entities.json")).getEntities();
     }
 
     private void setUpMediumScenario() throws Exception {
         EntityTypeName userType = EntityTypeName.parse("User").get();
         EntityTypeName actionType = EntityTypeName.parse("Action").get();
         EntityTypeName photoType = EntityTypeName.parse("Photo").get();
-        EntityTypeName albumType = EntityTypeName.parse("Album").get();
-        EntityTypeName accountType = EntityTypeName.parse("Account").get();
 
-        EntityUID principal = userType.of("alice");
-        EntityUID action = actionType.of("View_Photo");
-        EntityUID resource = photoType.of("pic01");
+        mediumRequest = new AuthorizationRequest(
+                userType.of("alice"), actionType.of("View_Photo"), photoType.of("pic01"), new HashMap<>());
 
-        mediumRequest = new AuthorizationRequest(principal, action, resource, new HashMap<>());
-
-        Set<Policy> policies = new HashSet<>();
-        policies.add(new Policy(
-                "permit(principal == User::\"alice\", action == Action::\"View_Photo\", resource);", "p0"));
-        policies.add(new Policy(
-                "permit(principal, action == Action::\"View_Photo\", resource in Album::\"vacation\");", "p1"));
-        policies.add(new Policy(
-                "forbid(principal, action, resource) when { resource.private };", "p2"));
-        policies.add(new Policy(
-                "permit(principal, action == Action::\"Edit_Photo\", resource) "
-                        + "when { principal == resource.owner };",
-                "p3"));
-        policies.add(new Policy(
-                "permit(principal, action == Action::\"Delete_Photo\", resource) "
-                        + "when { principal == resource.owner };",
-                "p4"));
-        mediumPolicySet = new PolicySet(policies);
-
-        // Build entity graph
-        mediumEntities = new HashSet<>();
-
-        EntityUID albumId = albumType.of("vacation");
-        EntityUID accountId = accountType.of("account1");
-
-        Set<EntityUID> photoParents = new HashSet<>();
-        photoParents.add(albumId);
-
-        Set<EntityUID> albumParents = new HashSet<>();
-        albumParents.add(accountId);
-
-        mediumEntities.add(new Entity(principal, new HashMap<>(), new HashSet<>()));
-        mediumEntities.add(new Entity(action, new HashMap<>(), new HashSet<>()));
-        mediumEntities.add(new Entity(resource, new HashMap<>(), photoParents));
-        mediumEntities.add(new Entity(albumId, new HashMap<>(), albumParents));
-        mediumEntities.add(new Entity(accountId, new HashMap<>(), new HashSet<>()));
+        mediumPolicySet = PolicySet.parsePolicies(readResource("/medium_policies.cedar"));
+        mediumEntities = Entities.parse(readResource("/medium_entities.json")).getEntities();
     }
 
     private void setUpValidationScenario() throws Exception {
-        String schemaText = new String(
-                Files.readAllBytes(Paths.get(
-                        AuthorizationBenchmark.class.getResource("/photoflash_schema.json").toURI())),
-                StandardCharsets.UTF_8);
+        String schemaText = readResource("/photoflash_schema.json");
         Schema schema = new Schema(JsonOrCedar.Json, Optional.of(schemaText), Optional.empty());
 
-        Set<Policy> policies = new HashSet<>();
-        policies.add(new Policy(
-                "permit(principal == User::\"alice\", action == Action::\"View_Photo\", resource);", "p0"));
-        PolicySet policySet = new PolicySet(policies);
+        PolicySet policySet = PolicySet.parsePolicies(
+                "permit(principal == User::\"alice\", action == Action::\"View_Photo\", resource);");
 
         validationRequest = new ValidationRequest(schema, policySet);
     }
