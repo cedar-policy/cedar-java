@@ -145,7 +145,7 @@ tasks.register('installCargoZigbuild', Exec) {
     group 'Build'
     description 'Installs Cargo Zigbuild for Rust compilation.'
 
-    commandLine 'cargo', '+' + RustVersion, 'install', 'cargo-zigbuild@0.22.1'
+    commandLine 'cargo', '+' + RustVersion, 'install', '--locked', 'cargo-zigbuild@0.22.1'
 }
 
 def ZigVersion = '0.11'

@@ -148,8 +148,8 @@ public final class Schema {
      * @return JsonNode representing the schema in JSON format
      * @throws InternalException       If conversion from Cedar to JSON format fails
      * @throws IllegalStateException   If schema content is missing
-     * @throws JsonMappingException    If invalid JSON 
-     * @throws JsonProcessingException If invalid JSON 
+     * @throws JsonMappingException    If invalid JSON
+     * @throws JsonProcessingException If invalid JSON
      * @throws NullPointerException
      */
     public JsonNode toJsonFormat()

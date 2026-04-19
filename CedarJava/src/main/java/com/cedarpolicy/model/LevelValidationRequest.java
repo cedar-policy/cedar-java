@@ -28,7 +28,7 @@ import java.util.Objects;
 public final class LevelValidationRequest {
     private final Schema schema;
     private final PolicySet policies;
-    private final long maxDerefLevel; // Must be non-negative (>=0)  
+    private final long maxDerefLevel; // Must be non-negative (>=0)
 
     /**
      * Construct a validation request.
@@ -77,7 +77,7 @@ public final class LevelValidationRequest {
 
     /**
      * Get the maximum deref level.
-     * 
+     *
      * @return The maximum deref level value for validation
      */
     public long getMaxDerefLevel() {

@@ -127,7 +127,7 @@ public final class AuthorizationSuccessResponse {
 
         @Override
         public String toString() {
-            return String.format("AuthorizationError{policyId=%s, error=%s}", policyId, error);   
+            return String.format("AuthorizationError{policyId=%s, error=%s}", policyId, error);
         }
     }
 
