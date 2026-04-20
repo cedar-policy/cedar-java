@@ -84,7 +84,7 @@ configurations {
 sourceSets {
     jmh {
         java.srcDirs = ['src/jmh/java']
-        resources.srcDirs = ['src/test/resources']
+        resources.srcDirs = ['src/jmh/resources', 'src/test/resources']
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }

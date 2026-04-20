@@ -32,6 +32,9 @@ public class DecimalTests {
         assertDoesNotThrow(() -> new Decimal("0.0000"));
         assertDoesNotThrow(() -> new Decimal("123.456"));
         assertDoesNotThrow(() -> new Decimal("-123.456"));
+        // Negative zero is valid
+        assertDoesNotThrow(() -> new Decimal("-0.0"));
+        assertDoesNotThrow(() -> new Decimal("-0.0000"));
     }
 
     @Test
@@ -75,6 +78,33 @@ public class DecimalTests {
         assertThrows(IllegalArgumentException.class, () -> new Decimal("1"));
         assertThrows(IllegalArgumentException.class, () -> new Decimal("1.00000"));
         assertThrows(IllegalArgumentException.class, () -> new Decimal(null));
+    }
+
+    @Test
+    public void testEdgeCaseFormats() {
+        // Missing integer part before dot
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("."));
+        assertThrows(IllegalArgumentException.class, () -> new Decimal(".1"));
+        // Missing fractional part after dot
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("1."));
+        // Negative zero with no fractional digits
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("-.0"));
+        // Multiple dots
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("1.2.3"));
+        // Consecutive dots
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("-.."));
+        // Explicit plus sign
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("+1.0"));
+        // Double negative
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("--1.0"));
+        // Scientific notation
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("1.0e2"));
+        // Whitespace in the middle
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("1 .0"));
+        // Leading/trailing whitespace
+        assertThrows(IllegalArgumentException.class, () -> new Decimal(" 1.0"));
+        assertThrows(IllegalArgumentException.class, () -> new Decimal("1.0 "));
+        assertThrows(IllegalArgumentException.class, () -> new Decimal(" 1.0 "));
     }
 
     @Test
