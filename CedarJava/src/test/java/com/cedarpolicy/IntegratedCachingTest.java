@@ -143,4 +143,38 @@ public class IntegratedCachingTest {
             // ps goes out of scope — Cleaner frees the Rust cache entry
         }
     }
+
+    @Test
+    public void cacheFullThrowsCacheException() throws AuthException, CacheException {
+        // Temporarily set a small cache limit
+        PolicySet.setCacheMaxPolicySets(3);
+        try {
+            // Hold strong references so GC cannot free them
+            PolicySet[] held = new PolicySet[4];
+            CacheException thrown = null;
+            int cached = 0;
+            for (int i = 0; i < held.length; i++) {
+                held[i] = permitAll();
+                try {
+                    held[i].cache();
+                    cached++;
+                } catch (CacheException e) {
+                    thrown = e;
+                    break;
+                }
+            }
+            assertNotNull(thrown, "Expected CacheException when cache is full");
+            assertTrue(thrown.getCause().getMessage().contains("cache is full"),
+                    "Expected 'cache is full' in cause, got: " + thrown.getCause().getMessage());
+
+            // Authorization still works via uncached path for the entry that didn't cache
+            var engine = new BasicAuthorizationEngine();
+            AuthorizationResponse resp = engine.isAuthorized(request(), held[cached], emptyEntities());
+            assertEquals(SuccessOrFailure.Success, resp.type);
+            assertTrue(resp.success.get().isAllowed());
+        } finally {
+            // Restore default limit
+            PolicySet.setCacheMaxPolicySets(1024);
+        }
+    }
 }

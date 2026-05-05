@@ -222,5 +222,10 @@ public class PolicySet {
     private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
     private static native void preparsePolicySetJni(String id, String policiesJson) throws InternalException;
     private static native void removeCachedPolicySetJni(String id);
-    private static native void setCacheMaxPolicySets(int max);
+    /**
+     * Set the maximum number of cached policy sets. Values less than 1 are ignored.
+     *
+     * @param max the maximum number of entries allowed in the policy set cache
+     */
+    public static native void setCacheMaxPolicySets(int max);
 }
