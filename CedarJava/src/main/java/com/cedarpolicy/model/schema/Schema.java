@@ -17,8 +17,11 @@
 package com.cedarpolicy.model.schema;
 
 import java.util.Optional;
+import java.util.UUID;
 
+import com.cedarpolicy.SharedCedarInternals;
 import com.cedarpolicy.loader.LibraryLoader;
+import com.cedarpolicy.model.exception.CacheException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -28,9 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /** Represents a schema. */
 public final class Schema {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String PROP_MAX_CACHED = "cedar.cache.maxSchemas";
+    private static final int DEFAULT_MAX_CACHED = 1024;
 
     static {
         LibraryLoader.loadLibrary();
+        String maxProp = System.getProperty(PROP_MAX_CACHED);
+        setCacheMaxSchemas(maxProp != null ? Integer.parseInt(maxProp) : DEFAULT_MAX_CACHED);
     }
 
     /** Is this schema in the JSON or Cedar format */
@@ -180,9 +187,88 @@ public final class Schema {
         Cedar
     }
 
+    // --- Caching support ---
+
+    private volatile String cacheId;
+
+    /**
+     * Mark this schema for caching on the Rust side. The schema is pre-parsed
+     * immediately and reused on subsequent authorization calls. The cached data
+     * is automatically freed when this object is garbage collected.
+     *
+     * <p>If called again after mutation, the cache is updated with the current
+     * state. If the content has not changed, calling this method again is a
+     * no-op from a correctness standpoint (the schema is re-parsed on the
+     * Rust side).
+     *
+     * <p>For the cached path to be used during authorization, both the schema
+     * and the policy set must be cached. If the policy set is cached but the
+     * schema is not, authorization will fall back to the uncached path.
+     *
+     * @throws CacheException if the schema fails to parse during caching.
+     */
+    public synchronized void cache() throws CacheException {
+        String oldId = cacheId;
+        String id = (oldId != null) ? oldId : UUID.randomUUID().toString();
+        preparseOnRustSide(id);
+        if (oldId == null) {
+            cacheId = id;
+            SharedCedarInternals.registerCleanup(this, new SchemaCacheCleanup(id));
+        }
+    }
+
+    /**
+     * Get the cache key for this schema, if cached.
+     *
+     * @return The cache key if cached, or empty if not cached.
+     */
+    public Optional<String> cacheKey() {
+        String id = cacheId;
+        if (id == null) {
+            return Optional.empty();
+        }
+        return Optional.of(id);
+    }
+
+    private void preparseOnRustSide(String id) throws CacheException {
+        try {
+            String schemaValue;
+            if (type == JsonOrCedar.Cedar && schemaText.isPresent()) {
+                schemaValue = schemaText.get();
+            } else if (type == JsonOrCedar.Json && schemaJson.isPresent()) {
+                schemaValue = schemaJson.get().toString();
+            } else {
+                throw new CacheException("No schema content available");
+            }
+            boolean isCedar = (type == JsonOrCedar.Cedar);
+            preparseSchemaJni(id, schemaValue, isCedar);
+        } catch (InternalException e) {
+            throw new CacheException("Failed to cache schema", e);
+        }
+    }
+
+    private static final class SchemaCacheCleanup implements Runnable {
+        private final String id;
+
+        SchemaCacheCleanup(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            removeCachedSchemaJni(id);
+        }
+    }
+
     private static native String parseJsonSchemaJni(String schemaJson) throws InternalException, NullPointerException;
 
     private static native String parseCedarSchemaJni(String schemaText) throws InternalException, NullPointerException;
+
+    private static native void preparseSchemaJni(String id, String schemaValue, boolean isCedar) throws InternalException;
+
+    private static native void removeCachedSchemaJni(String id);
+
+    private static native void setCacheMaxSchemas(int max);
 
     private static native String jsonToCedarJni(String json) throws InternalException, NullPointerException;
 

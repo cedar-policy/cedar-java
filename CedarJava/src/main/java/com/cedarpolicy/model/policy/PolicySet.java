@@ -17,14 +17,18 @@
 package com.cedarpolicy.model.policy;
 
 import static com.cedarpolicy.CedarJson.objectWriter;
+import com.cedarpolicy.SharedCedarInternals;
 import com.cedarpolicy.loader.LibraryLoader;
+import com.cedarpolicy.model.exception.CacheException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,8 +36,13 @@ import java.nio.file.Path;
 
 /** Policy set containing policies in the Cedar language. */
 public class PolicySet {
+    private static final String PROP_MAX_CACHED = "cedar.cache.maxPolicySets";
+    private static final int DEFAULT_MAX_CACHED = 1024;
+
     static {
         LibraryLoader.loadLibrary();
+        String maxProp = System.getProperty(PROP_MAX_CACHED);
+        setCacheMaxPolicySets(maxProp != null ? Integer.parseInt(maxProp) : DEFAULT_MAX_CACHED);
     }
 
     /** Static policies */
@@ -142,6 +151,81 @@ public class PolicySet {
         return policySet;
     }
 
+    // --- Caching support ---
+
+    private volatile String cacheId;
+
+    /**
+     * Mark this policy set for caching on the Rust side. The policies are
+     * pre-parsed immediately and reused on subsequent authorization calls.
+     * The cached data is automatically freed when this object is garbage collected.
+     *
+     * <p>If called again after mutation, the cache is updated with the current
+     * state. If the content has not changed, calling this method again is a
+     * no-op from a correctness standpoint (the policies are re-parsed on the
+     * Rust side).
+     *
+     * <p>For the cached path to be used during authorization, both the policy set
+     * and any associated schema must be cached. If only the policy set is cached
+     * but the schema is not, authorization will fall back to the uncached path.
+     *
+     * @throws CacheException if the policies fail to parse during caching.
+     */
+    public synchronized void cache() throws CacheException {
+        String oldId = cacheId;
+        String id = (oldId != null) ? oldId : UUID.randomUUID().toString();
+        preparseOnRustSide(id);
+        if (oldId == null) {
+            cacheId = id;
+            SharedCedarInternals.registerCleanup(this, new PolicySetCacheCleanup(id));
+        }
+    }
+
+    /**
+     * Get the cache key for this policy set, if cached.
+     *
+     * @return The cache key if cached, or empty if not cached.
+     */
+    public Optional<String> cacheKey() {
+        String id = cacheId;
+        if (id == null) {
+            return Optional.empty();
+        }
+        return Optional.of(id);
+    }
+
+    private void preparseOnRustSide(String id) throws CacheException {
+        try {
+            String policiesJson = objectWriter().writeValueAsString(this);
+            preparsePolicySetJni(id, policiesJson);
+        } catch (JsonProcessingException e) {
+            throw new CacheException("JSON Serialization Error", e);
+        } catch (InternalException e) {
+            throw new CacheException("Failed to cache policy set", e);
+        }
+    }
+
+    private static final class PolicySetCacheCleanup implements Runnable {
+        private final String id;
+
+        PolicySetCacheCleanup(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public void run() {
+            removeCachedPolicySetJni(id);
+        }
+    }
+
     private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
     private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
+    private static native void preparsePolicySetJni(String id, String policiesJson) throws InternalException;
+    private static native void removeCachedPolicySetJni(String id);
+    /**
+     * Set the maximum number of cached policy sets. Values less than 1 are ignored.
+     *
+     * @param max the maximum number of entries allowed in the policy set cache
+     */
+    public static native void setCacheMaxPolicySets(int max);
 }

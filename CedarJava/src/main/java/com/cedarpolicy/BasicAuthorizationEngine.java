@@ -21,6 +21,8 @@ import static com.cedarpolicy.CedarJson.objectWriter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.cedarpolicy.loader.LibraryLoader;
@@ -37,6 +39,7 @@ import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -65,6 +68,27 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
             PolicySet policySet, Set<Entity> entities) throws AuthException {
+        // Use the stateful (cached) path only if the policy set is cached AND
+        // any provided schema is also cached. Fall back to the uncached path
+        // otherwise to avoid silently skipping schema validation.
+        Optional<String> policySetKey = policySet.cacheKey();
+        if (policySetKey.isPresent()) {
+            boolean hasSchema = q.schema.isPresent();
+            Optional<String> schemaKey = hasSchema ? q.schema.get().cacheKey() : Optional.empty();
+            if (!hasSchema || schemaKey.isPresent()) {
+                StatefulAuthRequest statefulReq = new StatefulAuthRequest(
+                        q, policySetKey.get(), schemaKey.orElse(null), entities);
+                try {
+                    return call("StatefulAuthorizationOperation", AuthorizationResponse.class, statefulReq);
+                } catch (AuthException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("not found")) {
+                        // Cache entry was evicted; fall back to uncached path
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+        }
         final AuthorizationRequest request = new AuthorizationRequest(q, policySet, entities);
         return call("AuthorizationOperation", AuthorizationResponse.class, request);
     }
@@ -208,6 +232,30 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.schema,
                     request.enableRequestValidation);
             this.policies = policySet;
+            this.entities = entities;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    private static final class StatefulAuthRequest {
+        @JsonProperty final Object principal;
+        @JsonProperty final Object action;
+        @JsonProperty final Object resource;
+        @JsonProperty final Optional<Map<String, Value>> context;
+        @JsonProperty final String preparsedPolicySetId;
+        @JsonProperty final String preparsedSchemaName;
+        @JsonProperty final boolean validateRequest;
+        @JsonProperty final Set<Entity> entities;
+
+        StatefulAuthRequest(com.cedarpolicy.model.AuthorizationRequest request,
+                String policySetId, String schemaName, Set<Entity> entities) {
+            this.principal = request.principalEUID;
+            this.action = request.actionEUID;
+            this.resource = request.resourceEUID;
+            this.context = request.context;
+            this.preparsedPolicySetId = policySetId;
+            this.preparsedSchemaName = schemaName;
+            this.validateRequest = request.enableRequestValidation;
             this.entities = entities;
         }
     }
