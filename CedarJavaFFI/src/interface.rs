@@ -136,11 +136,23 @@ pub fn preparsePolicySetJni(
 ) {
     let id: String = match env.get_string(&j_id) {
         Ok(s) => s.into(),
-        Err(_) => return,
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read policy set cache ID: {e}"),
+            );
+            return;
+        }
     };
     let policies_json: String = match env.get_string(&j_policies_json) {
         Ok(s) => s.into(),
-        Err(_) => return,
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read policy set JSON: {e}"),
+            );
+            return;
+        }
     };
     let policy_set_ffi: PolicySetFFI = match serde_json::from_str(&policies_json) {
         Ok(ps) => ps,
@@ -183,9 +195,17 @@ pub fn preparsePolicySetJni(
 /// Direct JNI entry point to remove a cached policy set by ID.
 #[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
 pub fn removeCachedPolicySetJni(mut env: JNIEnv<'_>, _class: JClass<'_>, j_id: JString<'_>) {
-    if let Ok(id_str) = env.get_string(&j_id) {
-        let id: String = id_str.into();
-        CACHED_POLICY_SETS.remove(&id);
+    match env.get_string(&j_id) {
+        Ok(id_str) => {
+            let id: String = id_str.into();
+            CACHED_POLICY_SETS.remove(&id);
+        }
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read cache ID for removal: {e}"),
+            );
+        }
     }
 }
 
@@ -200,11 +220,23 @@ pub fn preparseSchemaJni(
 ) {
     let id: String = match env.get_string(&j_id) {
         Ok(s) => s.into(),
-        Err(_) => return,
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read schema cache ID: {e}"),
+            );
+            return;
+        }
     };
     let schema_str: String = match env.get_string(&j_schema) {
         Ok(s) => s.into(),
-        Err(_) => return,
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read schema value: {e}"),
+            );
+            return;
+        }
     };
     let parse_result: std::result::Result<Schema, miette::Report> = if is_cedar != 0 {
         Schema::from_cedarschema_str(&schema_str)
@@ -246,9 +278,17 @@ pub fn preparseSchemaJni(
 /// Direct JNI entry point to remove a cached schema by ID.
 #[jni_fn("com.cedarpolicy.model.schema.Schema")]
 pub fn removeCachedSchemaJni(mut env: JNIEnv<'_>, _class: JClass<'_>, j_id: JString<'_>) {
-    if let Ok(id_str) = env.get_string(&j_id) {
-        let id: String = id_str.into();
-        CACHED_SCHEMAS.remove(&id);
+    match env.get_string(&j_id) {
+        Ok(id_str) => {
+            let id: String = id_str.into();
+            CACHED_SCHEMAS.remove(&id);
+        }
+        Err(e) => {
+            let _ = env.throw_new(
+                "com/cedarpolicy/model/exception/InternalException",
+                format!("Failed to read cache ID for removal: {e}"),
+            );
+        }
     }
 }
 

@@ -27,6 +27,7 @@ import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationResponse.SuccessOrFailure;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.CacheException;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.EntityTypeName;
@@ -61,7 +62,7 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void cachedPolicySetAllows() throws AuthException {
+    public void cachedPolicySetAllows() throws AuthException, CacheException {
         PolicySet ps = permitAll();
         ps.cache();
         var engine = new BasicAuthorizationEngine();
@@ -71,7 +72,7 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void cachedPolicySetDenies() throws AuthException {
+    public void cachedPolicySetDenies() throws AuthException, CacheException {
         PolicySet ps = denyAll();
         ps.cache();
         var engine = new BasicAuthorizationEngine();
@@ -81,7 +82,7 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void uncachedPolicySetStillWorks() throws AuthException {
+    public void uncachedPolicySetStillWorks() throws AuthException, CacheException {
         PolicySet ps = permitAll();
         var engine = new BasicAuthorizationEngine();
         AuthorizationResponse resp = engine.isAuthorized(request(), ps, emptyEntities());
@@ -96,14 +97,14 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void cacheKeyPresentWhenCached() throws AuthException {
+    public void cacheKeyPresentWhenCached() throws AuthException, CacheException {
         PolicySet ps = permitAll();
         ps.cache();
         assertTrue(ps.cacheKey().isPresent());
     }
 
     @Test
-    public void cacheIsIdempotent() throws AuthException {
+    public void cacheIsIdempotent() throws AuthException, CacheException {
         PolicySet ps = permitAll();
         ps.cache();
         String key1 = ps.cacheKey().get();
@@ -113,7 +114,7 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void multipleCachedPolicySets() throws AuthException {
+    public void multipleCachedPolicySets() throws AuthException, CacheException {
         PolicySet permit = permitAll();
         PolicySet deny = denyAll();
         permit.cache();
@@ -131,7 +132,7 @@ public class IntegratedCachingTest {
     }
 
     @Test
-    public void stressCacheMany() throws AuthException {
+    public void stressCacheMany() throws AuthException, CacheException {
         var engine = new BasicAuthorizationEngine();
         for (int i = 0; i < 500; i++) {
             PolicySet ps = permitAll();

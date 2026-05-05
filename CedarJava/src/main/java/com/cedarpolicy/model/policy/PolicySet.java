@@ -19,7 +19,7 @@ package com.cedarpolicy.model.policy;
 import static com.cedarpolicy.CedarJson.objectWriter;
 import com.cedarpolicy.SharedCedarInternals;
 import com.cedarpolicy.loader.LibraryLoader;
-import com.cedarpolicy.model.exception.AuthException;
+import com.cedarpolicy.model.exception.CacheException;
 import com.cedarpolicy.model.exception.InternalException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -42,9 +42,7 @@ public class PolicySet {
     static {
         LibraryLoader.loadLibrary();
         String maxProp = System.getProperty(PROP_MAX_CACHED);
-        if (maxProp != null) {
-            setCacheMaxPolicySets(Integer.parseInt(maxProp));
-        }
+        setCacheMaxPolicySets(maxProp != null ? Integer.parseInt(maxProp) : DEFAULT_MAX_CACHED);
     }
 
     /** Static policies */
@@ -162,29 +160,22 @@ public class PolicySet {
      * pre-parsed immediately and reused on subsequent authorization calls.
      * The cached data is automatically freed when this object is garbage collected.
      *
-     * <p>Caching is a one-way operation. To use a different policy set, create a
-     * new {@code PolicySet} instance.
-     *
-     * <p><b>Important:</b> Do not mutate the {@code policies}, {@code templates},
-     * or {@code templateLinks} fields after calling this method. The cached
-     * representation is a snapshot taken at the time of this call; subsequent
-     * mutations will not be reflected in authorization results that use the
-     * cached path.
+     * <p>If called again after mutation, the cache is updated with the current
+     * state. If the content has not changed, calling this method again is a
+     * no-op from a correctness standpoint (the policies are re-parsed on the
+     * Rust side).
      *
      * <p>For the cached path to be used during authorization, both the policy set
      * and any associated schema must be cached. If only the policy set is cached
      * but the schema is not, authorization will fall back to the uncached path.
      *
-     * <p>This method is idempotent — calling it multiple times has no effect.
-     *
-     * @throws AuthException if the policies fail to parse during caching.
+     * @throws CacheException if the policies fail to parse during caching.
      */
-    public synchronized void cache() throws AuthException {
-        if (cacheId != null) {
-            return;
-        }
-        String id = UUID.randomUUID().toString();
-        if (preparseOnRustSide(id)) {
+    public synchronized void cache() throws CacheException {
+        String oldId = cacheId;
+        String id = (oldId != null) ? oldId : UUID.randomUUID().toString();
+        preparseOnRustSide(id);
+        if (oldId == null) {
             cacheId = id;
             SharedCedarInternals.registerCleanup(this, new PolicySetCacheCleanup(id));
         }
@@ -203,18 +194,14 @@ public class PolicySet {
         return Optional.of(id);
     }
 
-    private boolean preparseOnRustSide(String id) throws AuthException {
+    private void preparseOnRustSide(String id) throws CacheException {
         try {
             String policiesJson = objectWriter().writeValueAsString(this);
             preparsePolicySetJni(id, policiesJson);
-            return true;
         } catch (JsonProcessingException e) {
-            throw new AuthException("JSON Serialization Error", e);
+            throw new CacheException("JSON Serialization Error", e);
         } catch (InternalException e) {
-            if (e.getMessage() != null && e.getMessage().contains("cache is full")) {
-                return false;
-            }
-            throw new AuthException("Failed to cache policy set", e);
+            throw new CacheException("Failed to cache policy set", e);
         }
     }
 
