@@ -34,6 +34,13 @@ public final class CedarMap extends Value implements Map<String, Value> {
      * @param source map to copy from
      */
     public CedarMap(java.util.Map<String, Value> source) {
+        for (String key : source.keySet()) {
+            if ("__entity".equals(key) || "__extn".equals(key)) {
+                throw new IllegalArgumentException(
+                        "Key \"" + key + "\" is reserved by the Cedar JSON protocol"
+                                + " and cannot be used as a record key.");
+            }
+        }
         this.map = new HashMap<>(source);
     }
 
@@ -110,6 +117,10 @@ public final class CedarMap extends Value implements Map<String, Value> {
         return map.keySet();
     }
 
+    /** Reserved keys in the Cedar JSON protocol that cannot be used as record keys. */
+    private static final String ENTITY_ESCAPE_SEQ = "__entity";
+    private static final String EXTENSION_ESCAPE_SEQ = "__extn";
+
     @Override
     public Value put(String k, Value v) throws NullPointerException {
         if (k == null) {
@@ -118,12 +129,24 @@ public final class CedarMap extends Value implements Map<String, Value> {
         if (v == null) {
             throw new NullPointerException("Attempt to put null value in CedarMap");
         }
+        if (ENTITY_ESCAPE_SEQ.equals(k) || EXTENSION_ESCAPE_SEQ.equals(k)) {
+            throw new IllegalArgumentException(
+                    "Key \"" + k + "\" is reserved by the Cedar JSON protocol"
+                            + " and cannot be used as a record key.");
+        }
 
         return map.put(k, v);
     }
 
     @Override
     public void putAll(Map<? extends String, ? extends Value> m) {
+        for (String key : m.keySet()) {
+            if (ENTITY_ESCAPE_SEQ.equals(key) || EXTENSION_ESCAPE_SEQ.equals(key)) {
+                throw new IllegalArgumentException(
+                        "Key \"" + key + "\" is reserved by the Cedar JSON protocol"
+                                + " and cannot be used as a record key.");
+            }
+        }
         map.putAll(m);
     }
 
