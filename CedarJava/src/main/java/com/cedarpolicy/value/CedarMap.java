@@ -66,7 +66,7 @@ public final class CedarMap extends Value implements Map<String, Value> {
     public String toCedarExpr() {
         return "{"
                 + map.entrySet().stream()
-                        .map(e -> '\"' + e.getKey() + "\": " + e.getValue().toCedarExpr())
+                        .map(e -> '\"' + PrimString.escapeCedarString(e.getKey()) + "\": " + e.getValue().toCedarExpr())
                         .collect(Collectors.joining(", "))
                 + "}";
     }
