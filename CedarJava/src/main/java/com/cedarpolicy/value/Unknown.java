@@ -49,7 +49,7 @@ public class Unknown extends Value {
      */
     @Override
     public String toCedarExpr() {
-        return "Unknown(\"" + PrimString.escapeCedarString(arg) + "\")";
+        return "Unknown(\"" + CedarStrings.escape(arg) + "\")";
     }
 
     /**

@@ -60,41 +60,6 @@ public final class PrimString extends Value {
     /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     public String toCedarExpr() {
-        return "\"" + escapeCedarString(value) + "\"";
-    }
-
-    /**
-     * Escape a string for use in Cedar source code. Escapes backslashes, double quotes,
-     * and control characters that Cedar recognizes as escape sequences.
-     */
-    static String escapeCedarString(String s) {
-        StringBuilder sb = new StringBuilder(s.length());
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '\\':
-                    sb.append("\\\\");
-                    break;
-                case '"':
-                    sb.append("\\\"");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                case '\0':
-                    sb.append("\\0");
-                    break;
-                default:
-                    sb.append(c);
-                    break;
-            }
-        }
-        return sb.toString();
+        return "\"" + CedarStrings.escape(value) + "\"";
     }
 }

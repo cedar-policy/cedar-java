@@ -25,6 +25,10 @@ import java.util.stream.Collectors;
 
 /** Represents a Cedar Map value. Maps support mapping strings to arbitrary values. */
 public final class CedarMap extends Value implements Map<String, Value> {
+    /** Reserved keys in the Cedar JSON protocol that cannot be used as record keys. */
+    private static final String ENTITY_ESCAPE_SEQ = "__entity";
+    private static final String EXTENSION_ESCAPE_SEQ = "__extn";
+
     /** Internal map data. */
     private final java.util.Map<String, Value> map;
 
@@ -35,7 +39,7 @@ public final class CedarMap extends Value implements Map<String, Value> {
      */
     public CedarMap(java.util.Map<String, Value> source) {
         for (String key : source.keySet()) {
-            if ("__entity".equals(key) || "__extn".equals(key)) {
+            if (ENTITY_ESCAPE_SEQ.equals(key) || EXTENSION_ESCAPE_SEQ.equals(key)) {
                 throw new IllegalArgumentException(
                         "Key \"" + key + "\" is reserved by the Cedar JSON protocol"
                                 + " and cannot be used as a record key.");
@@ -73,7 +77,7 @@ public final class CedarMap extends Value implements Map<String, Value> {
     public String toCedarExpr() {
         return "{"
                 + map.entrySet().stream()
-                        .map(e -> '\"' + PrimString.escapeCedarString(e.getKey()) + "\": " + e.getValue().toCedarExpr())
+                        .map(e -> '\"' + CedarStrings.escape(e.getKey()) + "\": " + e.getValue().toCedarExpr())
                         .collect(Collectors.joining(", "))
                 + "}";
     }
@@ -116,10 +120,6 @@ public final class CedarMap extends Value implements Map<String, Value> {
     public Set<String> keySet() {
         return map.keySet();
     }
-
-    /** Reserved keys in the Cedar JSON protocol that cannot be used as record keys. */
-    private static final String ENTITY_ESCAPE_SEQ = "__entity";
-    private static final String EXTENSION_ESCAPE_SEQ = "__extn";
 
     @Override
     public Value put(String k, Value v) throws NullPointerException {
