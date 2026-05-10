@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -156,12 +155,12 @@ public class PartialAuthorizationRequest {
          * @return The builder.
          */
         public Builder context(Map<String, Value> context) {
-            this.context = Optional.of(ImmutableMap.copyOf(context));
+            this.context = Optional.of(Map.copyOf(context));
             return this;
         }
 
         public Builder context(Context context) {
-            this.context = Optional.of(ImmutableMap.copyOf(context.getContext()));
+            this.context = Optional.of(Map.copyOf(context.getContext()));
             return this;
         }
 

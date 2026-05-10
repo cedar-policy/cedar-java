@@ -18,7 +18,6 @@ package com.cedarpolicy.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,10 +39,10 @@ public class DetailedError {
     public final Optional<Severity> severity;
     /** Source labels (ranges) */
     @JsonProperty("sourceLocations")
-    public final ImmutableList<SourceLabel> sourceLocations;
+    public final List<SourceLabel> sourceLocations;
     /** Related errors */
     @JsonProperty("related")
-    public final ImmutableList<DetailedError> related;
+    public final List<DetailedError> related;
 
     @JsonCreator
     public DetailedError(
@@ -61,14 +60,14 @@ public class DetailedError {
         this.url = url;
         this.severity = severity;
         if (sourceLocations.isPresent()) {
-            this.sourceLocations = ImmutableList.copyOf(sourceLocations.get());
+            this.sourceLocations = List.copyOf(sourceLocations.get());
         } else {
-            this.sourceLocations = ImmutableList.of(); // empty
+            this.sourceLocations = List.of(); // empty
         }
         if (related.isPresent()) {
-            this.related = ImmutableList.copyOf(related.get());
+            this.related = List.copyOf(related.get());
         } else {
-            this.related = ImmutableList.of(); // empty
+            this.related = List.of(); // empty
         }
     }
 
