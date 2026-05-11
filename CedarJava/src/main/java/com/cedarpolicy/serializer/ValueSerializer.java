@@ -72,7 +72,13 @@ public class ValueSerializer extends JsonSerializer<Value> {
         } else if (value instanceof CedarMap) {
             jsonGenerator.writeStartObject();
             for (Map.Entry<String, Value> entry : ((CedarMap) value).entrySet()) {
-                jsonGenerator.writeObjectField(entry.getKey(), entry.getValue());
+                String key = entry.getKey();
+                if (ENTITY_ESCAPE_SEQ.equals(key) || EXTENSION_ESCAPE_SEQ.equals(key)) {
+                    throw new InvalidValueSerializationException(
+                            "CedarMap key \"" + key + "\" is reserved by the Cedar JSON protocol"
+                                    + " and cannot be used as a record key.");
+                }
+                jsonGenerator.writeObjectField(key, entry.getValue());
             }
             jsonGenerator.writeEndObject();
         } else if (value instanceof IpAddress) {

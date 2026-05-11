@@ -60,6 +60,6 @@ public final class PrimString extends Value {
     /** To Cedar expr that can be used in a Cedar policy. */
     @Override
     public String toCedarExpr() {
-        return "\"" + value + "\"";
+        return "\"" + CedarStrings.escape(value) + "\"";
     }
 }
