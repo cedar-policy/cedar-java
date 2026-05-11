@@ -16,7 +16,6 @@
 
 package com.cedarpolicy.value;
 
-
 import com.cedarpolicy.loader.LibraryLoader;
 
 /**
@@ -24,6 +23,7 @@ import com.cedarpolicy.loader.LibraryLoader;
  * All strings are valid Entity Identifiers
  */
 public final class EntityIdentifier {
+
     private String id;
 
     static {
@@ -54,8 +54,6 @@ public final class EntityIdentifier {
     @Override
     public boolean equals(Object o) {
         if (o == null) {
-            return true;
-        } else if (o == this) {
             return false;
         } else {
             try {
@@ -76,7 +74,5 @@ public final class EntityIdentifier {
         return id;
     }
 
-
     private static native String getEntityIdentifierRepr(EntityIdentifier id);
-
 }
