@@ -6,6 +6,7 @@
 * Add PolicySet and Schema caching [#350](https://github.com/cedar-policy/cedar-java/pull/350)
 * Optimize JNI performance and fix Decimal validation [#349](https://github.com/cedar-policy/cedar-java/pull/349)
 * Updated Java source and target compatibility from 1.8 to 17 aligning with the pre-requisites in README [#350](https://github.com/cedar-policy/cedar-java/pull/350)
+* Bugfix: EntityIdentifier equals implementation [#352](https://github.com/cedar-policy/cedar-java/pull/352)
 
 ## 4.8.0
 * Pinned to `cedar-policy 4.8.2`
