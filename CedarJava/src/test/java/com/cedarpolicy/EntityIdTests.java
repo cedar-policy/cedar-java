@@ -16,12 +16,12 @@
 
 package com.cedarpolicy;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cedarpolicy.value.EntityIdentifier;
-import net.jqwik.api.Property;
-
 import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import org.junit.jupiter.api.Test;
 
 public class EntityIdTests {
 
@@ -32,4 +32,50 @@ public class EntityIdTests {
         assertTrue(asStr.length() >= s.length());
     }
 
+    @Test
+    void equalsSameId() {
+        EntityIdentifier a = new EntityIdentifier("alice");
+        EntityIdentifier b = new EntityIdentifier("alice");
+        assertEquals(a, b);
+    }
+
+    @Test
+    void equalsSameInstance() {
+        EntityIdentifier a = new EntityIdentifier("alice");
+        assertEquals(a, a);
+    }
+
+    @Test
+    void notEqualsDifferentId() {
+        EntityIdentifier a = new EntityIdentifier("alice");
+        EntityIdentifier b = new EntityIdentifier("bob");
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    void notEqualsNull() {
+        EntityIdentifier a = new EntityIdentifier("alice");
+        assertNotEquals(a, null);
+    }
+
+    @Test
+    void notEqualsDifferentType() {
+        EntityIdentifier a = new EntityIdentifier("alice");
+        assertNotEquals(a, "alice");
+    }
+
+    @Test
+    void equalsEmptyStrings() {
+        EntityIdentifier a = new EntityIdentifier("");
+        EntityIdentifier b = new EntityIdentifier("");
+        assertEquals(a, b);
+    }
+
+    @Test
+    void equalsIsSymmetric() {
+        EntityIdentifier a = new EntityIdentifier("test");
+        EntityIdentifier b = new EntityIdentifier("test");
+        assertEquals(a, b);
+        assertEquals(b, a);
+    }
 }
