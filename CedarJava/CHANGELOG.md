@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 4.9.0
+* Pinned to `cedar-policy 4.9.1`
+* Improve toCedarExpr() correctness and add CedarStrings utility [#351](https://github.com/cedar-policy/cedar-java/pull/351)
+* Add PolicySet and Schema caching [#350](https://github.com/cedar-policy/cedar-java/pull/350)
+* Optimize JNI performance and fix Decimal validation [#349](https://github.com/cedar-policy/cedar-java/pull/349)
+* Updated Java source and target compatibility from 1.8 to 17 aligning with the pre-requisites in README [#350](https://github.com/cedar-policy/cedar-java/pull/350)
+* Bugfix: EntityIdentifier equals implementation [#352](https://github.com/cedar-policy/cedar-java/pull/352)
+
+## 4.8.0
+* Pinned to `cedar-policy 4.8.2`
 * Added Schema conversion APIs [#325](https://github.com/cedar-policy/cedar-java/pull/325)
 * Added Level Validation [#327](https://github.com/cedar-policy/cedar-java/pull/327)
 * Added DateTime extension support [#328](https://github.com/cedar-policy/cedar-java/pull/328)
