@@ -152,7 +152,7 @@ def ZigVersion = '0.11'
 tasks.register('validateZigVersion') {
     group = 'Build'
     description = 'Validates that the correct zig version is installed'
-    
+
     doLast {
         def output = new ByteArrayOutputStream()
         exec {
@@ -162,7 +162,7 @@ tasks.register('validateZigVersion') {
         def version = output.toString().trim()
         println "Detected Zig version: ${version}"
         if (!version.startsWith(ZigVersion)) {
-            throw new GradleException("Zig version must be ${ZigVersion} but found: ${version}")        
+            throw new GradleException("Zig version must be ${ZigVersion} but found: ${version}")
         }
         println "Zig version validation successful"
     }
@@ -324,7 +324,7 @@ publishing {
             from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '3.1.2'
+            version = '4.10.0'
 
             artifacts {
                 jar
