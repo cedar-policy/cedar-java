@@ -206,6 +206,16 @@ tasks.named('test') {
     classpath += files(layout.buildDirectory.dir(compiledLibDir))
 }
 
+compileTestJava {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
+
+compileJava {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
+
 test {
     //environment "CEDAR_INTEGRATION_TESTS_ROOT", ''set to absolute path of `cedar-integration-tests`'
     testLogging {
