@@ -14,8 +14,7 @@ if [ "$(uname)" == "Darwin" ]; then
 else
     ffi_lib_str="    environment 'CEDAR_JAVA_FFI_LIB', '"$parent_dir"/CedarJavaFFI/target/debug/libcedar_java_ffi.so'"
 fi
-sed "101s;.*;$ffi_lib_str;" "build.gradle" > new_build.gradle
-mv new_build.gradle build.gradle
+sed -i.bak "s|.*environment 'CEDAR_JAVA_FFI_LIB'.*|$ffi_lib_str|" "build.gradle" && rm -f build.gradle.bak
 
 # In CI, we need to pull the latest cedar-policy to match the latest cedar-integration-tests
 # We require that integration tests be run
@@ -23,8 +22,7 @@ mv new_build.gradle build.gradle
 # If you call this script with `run_int_tests`, we assume you have `cedar` checkout out in the `cedar-java` dir
 if [ "$#" -ne 0 ] && [ "$1" == "run_int_tests" ]; then
     integration_tests_str="    environment 'CEDAR_INTEGRATION_TESTS_ROOT', '"$parent_dir"/cedar/cedar-integration-tests'"
-    sed "100s;.*;$integration_tests_str;" "build.gradle" > new_build.gradle
-    mv new_build.gradle build.gradle
+    sed -i.bak "s|.*environment.*CEDAR_INTEGRATION_TESTS_ROOT.*|$integration_tests_str|" "build.gradle" && rm -f build.gradle.bak
 
     export MUST_RUN_CEDAR_INTEGRATION_TESTS=1
 
