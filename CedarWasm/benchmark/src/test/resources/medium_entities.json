@@ -1,0 +1,7 @@
+[
+    {"uid": {"type": "User", "id": "alice"}, "attrs": {}, "parents": []},
+    {"uid": {"type": "Action", "id": "View_Photo"}, "attrs": {}, "parents": []},
+    {"uid": {"type": "Photo", "id": "pic01"}, "attrs": {}, "parents": [{"type": "Album", "id": "vacation"}]},
+    {"uid": {"type": "Album", "id": "vacation"}, "attrs": {}, "parents": [{"type": "Account", "id": "account1"}]},
+    {"uid": {"type": "Account", "id": "account1"}, "attrs": {}, "parents": []}
+]

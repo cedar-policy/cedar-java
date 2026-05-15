@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.cedarpolicy</groupId>
+    <artifactId>cedar-wasm-parent</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>cedar-benchmark</artifactId>
+  <name>Cedar JNI vs Wasm Benchmark</name>
+
+  <dependencies>
+    <!-- Wasm implementation -->
+    <dependency>
+      <groupId>com.cedarpolicy</groupId>
+      <artifactId>cedar-wasm</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- JNI implementation (uber jar from Gradle build) -->
+    <dependency>
+      <groupId>com.cedarpolicy</groupId>
+      <artifactId>cedar-java</artifactId>
+      <version>3.1.2</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/../../CedarJava/build/libs/CedarJava-uber.jar</systemPath>
+    </dependency>
+    <!-- JNI runtime dependencies -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jdk8</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fizzed</groupId>
+      <artifactId>jne</artifactId>
+      <version>4.5.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>33.5.0-jre</version>
+    </dependency>
+    <!-- JMH -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>${jmh.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>${jmh.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.openjdk.jmh</groupId>
+              <artifactId>jmh-generator-annprocess</artifactId>
+              <version>${jmh.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration>
+          <classpathScope>test</classpathScope>
+          <mainClass>org.openjdk.jmh.Main</mainClass>
+          <arguments>
+            <argument>-f</argument>
+            <argument>0</argument>
+            <argument>-i</argument>
+            <argument>3</argument>
+            <argument>-wi</argument>
+            <argument>3</argument>
+            <argument>-r</argument>
+            <argument>1</argument>
+            <argument>-w</argument>
+            <argument>1</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,372 @@
+{
+  "": {
+    "entityTypes": {
+      "User": {
+        "memberOfTypes": ["UserGroup", "Team", "Department"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "email": { "type": "String" },
+            "role": { "type": "String" },
+            "mfaEnabled": { "type": "Boolean" },
+            "loginCount": { "type": "Long" },
+            "lastLoginIp": { "type": "Extension", "name": "ipaddr" }
+          }
+        }
+      },
+      "UserGroup": {
+        "memberOfTypes": ["UserGroup"]
+      },
+      "Team": {
+        "memberOfTypes": ["Department"]
+      },
+      "Department": {
+        "memberOfTypes": ["Organization"]
+      },
+      "Organization": {},
+      "ServiceAccount": {
+        "memberOfTypes": ["ServiceRole"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "owner": { "type": "Entity", "name": "User" },
+            "scopes": { "type": "Set", "element": { "type": "String" } }
+          }
+        }
+      },
+      "ServiceRole": {},
+      "Document": {
+        "memberOfTypes": ["Folder", "Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "owner": { "type": "Entity", "name": "User" },
+            "classification": { "type": "String" },
+            "createdAt": { "type": "Long" },
+            "tags": { "type": "Set", "element": { "type": "String" } }
+          }
+        }
+      },
+      "Folder": {
+        "memberOfTypes": ["Folder", "Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "owner": { "type": "Entity", "name": "User" }
+          }
+        }
+      },
+      "Project": {
+        "memberOfTypes": ["Organization"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "visibility": { "type": "String" },
+            "archived": { "type": "Boolean" }
+          }
+        }
+      },
+      "Comment": {
+        "memberOfTypes": ["Document"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "author": { "type": "Entity", "name": "User" }
+          }
+        }
+      },
+      "Webhook": {
+        "memberOfTypes": ["Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "url": { "type": "String" },
+            "active": { "type": "Boolean" }
+          }
+        }
+      },
+      "ApiKey": {
+        "memberOfTypes": ["ServiceAccount"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "expiresAt": { "type": "Long" }
+          }
+        }
+      },
+      "AuditLog": {
+        "memberOfTypes": ["Organization"]
+      },
+      "Setting": {
+        "memberOfTypes": ["Project", "Organization"]
+      },
+      "Integration": {
+        "memberOfTypes": ["Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "provider": { "type": "String" },
+            "enabled": { "type": "Boolean" }
+          }
+        }
+      },
+      "Pipeline": {
+        "memberOfTypes": ["Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "status": { "type": "String" }
+          }
+        }
+      },
+      "Environment": {
+        "memberOfTypes": ["Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "tier": { "type": "String" },
+            "locked": { "type": "Boolean" }
+          }
+        }
+      },
+      "Secret": {
+        "memberOfTypes": ["Environment", "Project"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "rotatedAt": { "type": "Long" }
+          }
+        }
+      },
+      "Deployment": {
+        "memberOfTypes": ["Environment"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "version": { "type": "String" },
+            "deployer": { "type": "Entity", "name": "User" }
+          }
+        }
+      }
+    },
+    "actions": {
+      "ViewDocument": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Document"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "requestId": { "type": "String" }
+            }
+          }
+        }
+      },
+      "EditDocument": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Document"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "requestId": { "type": "String" }
+            }
+          }
+        }
+      },
+      "DeleteDocument": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Document"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "requestId": { "type": "String" }
+            }
+          }
+        }
+      },
+      "ShareDocument": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Document"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "shareWith": { "type": "Entity", "name": "User" }
+            }
+          }
+        }
+      },
+      "CreateDocument": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Folder", "Project"]
+        }
+      },
+      "CreateFolder": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Folder", "Project"]
+        }
+      },
+      "DeleteFolder": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Folder"]
+        }
+      },
+      "ViewProject": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Project"]
+        }
+      },
+      "EditProject": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Project"]
+        }
+      },
+      "DeleteProject": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Project"]
+        }
+      },
+      "CreateComment": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Document"]
+        }
+      },
+      "DeleteComment": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Comment"]
+        }
+      },
+      "ManageWebhook": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Webhook"]
+        }
+      },
+      "CreateApiKey": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["ServiceAccount"]
+        }
+      },
+      "RevokeApiKey": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["ApiKey"]
+        }
+      },
+      "ViewAuditLog": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["AuditLog"]
+        }
+      },
+      "EditSetting": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Setting"]
+        }
+      },
+      "ViewSetting": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Setting"]
+        }
+      },
+      "ManageIntegration": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Integration"]
+        }
+      },
+      "TriggerPipeline": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Pipeline"]
+        }
+      },
+      "CancelPipeline": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Pipeline"]
+        }
+      },
+      "ViewPipeline": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Pipeline"]
+        }
+      },
+      "Deploy": {
+        "appliesTo": {
+          "principalTypes": ["User", "ServiceAccount"],
+          "resourceTypes": ["Environment"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "version": { "type": "String" },
+              "sourceIp": { "type": "Extension", "name": "ipaddr" }
+            }
+          }
+        }
+      },
+      "Rollback": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Deployment"]
+        }
+      },
+      "ViewSecret": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Secret"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "reason": { "type": "String" }
+            }
+          }
+        }
+      },
+      "EditSecret": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Secret"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "sourceIp": { "type": "Extension", "name": "ipaddr" },
+              "reason": { "type": "String" }
+            }
+          }
+        }
+      },
+      "ManageMembers": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Team", "Department", "Organization"]
+        }
+      },
+      "TransferOwnership": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Project", "Document"]
+        }
+      }
+    }
+  }
+}
