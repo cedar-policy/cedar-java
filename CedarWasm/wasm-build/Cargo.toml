@@ -1,0 +1,33 @@
+[package]
+name = "cedar-wasm"
+license = "Apache-2.0"
+description = "Cedar policy engine compiled to WebAssembly."
+edition = "2021"
+version = "4.0.0"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+miette = "7.6.0"
+itertools = "0.14"
+
+[features]
+partial-eval = ["cedar-policy/partial-eval"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies.cedar-policy]
+version = "4.0.0"
+git = "https://github.com/cedar-policy/cedar"
+branch = "main"
+
+[dependencies.cedar-policy-formatter]
+version = "4.0.0"
+git = "https://github.com/cedar-policy/cedar"
+branch = "main"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

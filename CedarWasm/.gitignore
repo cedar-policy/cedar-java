@@ -1,0 +1,3 @@
+wasm-build/target/
+core/target/
+benchmark/target/
