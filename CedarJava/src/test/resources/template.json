@@ -1,0 +1,53 @@
+{
+  "staticPolicies": {
+    "Policy #1": {
+      "effect": "permit",
+      "principal": {
+        "op": "in",
+        "entity": { "type": "UserGroup", "id": "friends" }
+      },
+      "action": {
+        "op": "==",
+        "entity": { "type": "Action", "id": "view" }
+      },
+      "resource": {
+        "op": "==",
+        "entity": { "type": "Photo", "id": "Husky.jpg" }
+      },
+      "conditions": []
+    },
+    "Policy #2": {
+      "effect": "forbid",
+      "principal": {
+        "op": "==",
+        "entity": { "type": "User", "id": "Matt" }
+      },
+      "action": {
+        "op": "All"
+      },
+      "resource": {
+        "op": "==",
+        "entity": { "type": "Photo", "id": "Husky.jpg" }
+      },
+      "conditions": []
+    }
+  },
+  "templates": {
+    "Template #1": {
+      "effect": "permit",
+      "principal": {
+        "op": "==",
+        "slot": "?principal"
+      },
+      "action": {
+        "op": "All"
+      },
+      "resource": {
+        "op": "in",
+        "slot": "?resource"
+      },
+      "conditions": []
+    }
+  },
+  "templateLinks": []
+}

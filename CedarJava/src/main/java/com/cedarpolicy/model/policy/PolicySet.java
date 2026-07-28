@@ -151,6 +151,46 @@ public class PolicySet {
         return policySet;
     }
 
+    /**
+     * Parse multiple policies and templates from a JSON file into a PolicySet.
+     *
+     * <p>The file is expected to contain the JSON (EST) representation of a policy set, e.g.
+     * <pre>{@code
+     * {
+     *   "staticPolicies": { "policy0": { ... } },
+     *   "templates": { "template0": { ... } },
+     *   "templateLinks": [ ... ]
+     * }
+     * }</pre>
+     *
+     * @param filePath the path to the JSON file containing the policies
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException
+     * @throws IOException
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePoliciesJson(Path filePath) throws InternalException, IOException {
+        // Read the file contents into a String
+        String policiesJsonString = Files.readString(filePath);
+        return parsePoliciesJson(policiesJsonString);
+    }
+
+    /**
+     * Parse a JSON string containing multiple policies and templates into a PolicySet.
+     *
+     * <p>The string is expected to be the JSON (EST) representation of a policy set. See
+     * {@link #parsePoliciesJson(Path)} for the expected shape.
+     *
+     * @param policiesJsonString the JSON string containing the policies
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePoliciesJson(String policiesJsonString) throws InternalException {
+        PolicySet policySet = parsePoliciesJsonJni(policiesJsonString);
+        return policySet;
+    }
+
     // --- Caching support ---
 
     private volatile String cacheId;
@@ -219,6 +259,8 @@ public class PolicySet {
     }
 
     private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
+    private static native PolicySet parsePoliciesJsonJni(String policiesJsonStr)
+            throws InternalException, NullPointerException;
     private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
     private static native void preparsePolicySetJni(String id, String policiesJson) throws InternalException;
     private static native void removeCachedPolicySetJni(String id);

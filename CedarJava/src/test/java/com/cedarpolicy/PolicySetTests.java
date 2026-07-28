@@ -80,6 +80,57 @@ public class PolicySetTests {
     }
 
     @Test
+    public void parsePoliciesJsonTests() throws InternalException, IOException {
+        PolicySet policySet = PolicySet.parsePoliciesJson(Path.of(TEST_RESOURCES_DIR + "policies.json"));
+        for (Policy p: policySet.policies) {
+            assertNotNull(p.policySrc);
+        }
+        // Make sure the policy IDs are unique as Policies are made
+        assertEquals(2, policySet.policies.stream().map(p -> p.policyID).distinct().count());
+        assertEquals(2, policySet.policies.size());
+        assertEquals(0, policySet.templates.size());
+    }
+
+    @Test
+    public void parsePoliciesJsonStringTests() throws InternalException {
+        String json = "{\"staticPolicies\":{\"policy0\":{\"effect\":\"permit\","
+                + "\"principal\":{\"op\":\"All\"},\"action\":{\"op\":\"All\"},"
+                + "\"resource\":{\"op\":\"All\"},\"conditions\":[]}},"
+                + "\"templates\":{},\"templateLinks\":[]}";
+        PolicySet policySet = PolicySet.parsePoliciesJson(json);
+        for (Policy p: policySet.policies) {
+            assertNotNull(p.policySrc);
+        }
+        assertEquals(1, policySet.policies.size());
+        assertEquals(0, policySet.templates.size());
+    }
+
+    @Test
+    public void parseTemplatesJsonTests() throws InternalException, IOException {
+        PolicySet policySet = PolicySet.parsePoliciesJson(Path.of(TEST_RESOURCES_DIR + "template.json"));
+        for (Policy p: policySet.policies) {
+            assertNotNull(p.policySrc);
+        }
+        assertEquals(2, policySet.policies.size());
+
+        for (Policy p: policySet.templates) {
+            assertNotNull(p.policySrc);
+        }
+        assertEquals(1, policySet.templates.size());
+    }
+
+    @Test
+    public void parsePoliciesJsonExceptionTests() throws InternalException, IOException {
+        assertThrows(IOException.class, () -> {
+            PolicySet.parsePoliciesJson(Path.of("nonExistentFilePath.json"));
+        });
+        // Cedar policy text, not JSON, should fail to parse as JSON
+        assertThrows(InternalException.class, () -> {
+            PolicySet.parsePoliciesJson("permit(principal, action, resource);");
+        });
+    }
+
+    @Test
     public void parsePoliciesExceptionTests() throws InternalException, IOException {
         assertThrows(IOException.class, () -> {
             PolicySet.parsePolicies(Path.of("nonExistentFilePath.cedar"));

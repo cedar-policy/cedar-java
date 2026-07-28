@@ -704,6 +704,65 @@ fn parse_policies_internal<'a>(
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
+pub fn parsePoliciesJsonJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_json_jstr: JString<'a>,
+) -> jvalue {
+    match parse_policies_json_internal(&mut env, policies_json_jstr) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policies_set) => policies_set.as_jni(),
+    }
+}
+
+fn parse_policies_json_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    policies_json_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if policies_json_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        // Parse the JSON string into the Rust PolicySet
+        let policies_json_jstring = env.get_string(&policies_json_jstr)?;
+        let policies_json_string = String::from(policies_json_jstring);
+        let policy_set = PolicySet::from_json_str(&policies_json_string)?;
+
+        // Enumerate over the parsed policies
+        let mut policies_java_hash_set = Set::new(env)?;
+        for policy in policy_set.policies() {
+            let policy_id = format!("{}", policy.id());
+            let policy_text = format!("{}", policy);
+            let java_policy_object = JPolicy::new(
+                env,
+                &env.new_string(&policy_text)?,
+                &env.new_string(&policy_id)?,
+            )?;
+            let _ = policies_java_hash_set.add(env, java_policy_object);
+        }
+
+        let mut templates_java_hash_set = Set::new(env)?;
+        for template in policy_set.templates() {
+            let policy_id = format!("{}", template.id());
+            let policy_text = format!("{}", template);
+            let java_policy_object = JPolicy::new(
+                env,
+                &env.new_string(&policy_text)?,
+                &env.new_string(&policy_id)?,
+            )?;
+            let _ = templates_java_hash_set.add(env, java_policy_object);
+        }
+
+        let java_policy_set = create_java_policy_set(
+            env,
+            policies_java_hash_set.as_ref(),
+            templates_java_hash_set.as_ref(),
+        );
+
+        Ok(JValueGen::Object(java_policy_set))
+    }
+}
+
 fn create_java_policy_set<'a>(
     env: &mut JNIEnv<'a>,
     policies_java_hash_set: &JObject<'a>,
