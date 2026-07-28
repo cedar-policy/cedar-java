@@ -22,7 +22,8 @@ use cedar_policy::ffi::{
 };
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
-    Authorizer, Entities as CedarEntities, EntityUid, Policy, PolicySet, Request, Schema, Template,
+    Authorizer, Entities as CedarEntities, EntityUid, Policy, PolicySet, Request, Schema, SlotId,
+    Template,
 };
 use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use dashmap::DashMap;
@@ -34,15 +35,17 @@ use jni::{
 use jni_fn::jni_fn;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::LazyLock;
 use std::{error::Error, panic, str::FromStr};
 
 use crate::{
     answer::Answer,
+    jlist::List,
     jmap::Map,
     jset::Set,
-    objects::{JEntityId, JEntityTypeName, JEntityUID, JPolicy, Object},
+    objects::{JEntityId, JEntityTypeName, JEntityUID, JLinkValue, JPolicy, JTemplateLink, Object},
     utils::raise_npe,
 };
 use crate::{helpers::validate_with_level_json_str, objects::JFormatterConfig};
@@ -669,38 +672,7 @@ fn parse_policies_internal<'a>(
         let policies_string = String::from(policies_jstring);
         let policy_set = PolicySet::from_str(&policies_string)?;
 
-        // Enumerate over the parsed policies
-        let mut policies_java_hash_set = Set::new(env)?;
-        for policy in policy_set.policies() {
-            let policy_id = format!("{}", policy.id());
-            let policy_text = format!("{}", policy);
-            let java_policy_object = JPolicy::new(
-                env,
-                &env.new_string(&policy_text)?,
-                &env.new_string(&policy_id)?,
-            )?;
-            let _ = policies_java_hash_set.add(env, java_policy_object);
-        }
-
-        let mut templates_java_hash_set = Set::new(env)?;
-        for template in policy_set.templates() {
-            let policy_id = format!("{}", template.id());
-            let policy_text = format!("{}", template);
-            let java_policy_object = JPolicy::new(
-                env,
-                &env.new_string(&policy_text)?,
-                &env.new_string(&policy_id)?,
-            )?;
-            let _ = templates_java_hash_set.add(env, java_policy_object);
-        }
-
-        let java_policy_set = create_java_policy_set(
-            env,
-            policies_java_hash_set.as_ref(),
-            templates_java_hash_set.as_ref(),
-        );
-
-        Ok(JValueGen::Object(java_policy_set))
+        policy_set_to_java(env, &policy_set)
     }
 }
 
@@ -728,52 +700,122 @@ fn parse_policies_json_internal<'a>(
         let policies_json_string = String::from(policies_json_jstring);
         let policy_set = PolicySet::from_json_str(&policies_json_string)?;
 
-        // Enumerate over the parsed policies
-        let mut policies_java_hash_set = Set::new(env)?;
-        for policy in policy_set.policies() {
-            let policy_id = format!("{}", policy.id());
-            let policy_text = format!("{}", policy);
-            let java_policy_object = JPolicy::new(
-                env,
-                &env.new_string(&policy_text)?,
-                &env.new_string(&policy_id)?,
-            )?;
-            let _ = policies_java_hash_set.add(env, java_policy_object);
-        }
-
-        let mut templates_java_hash_set = Set::new(env)?;
-        for template in policy_set.templates() {
-            let policy_id = format!("{}", template.id());
-            let policy_text = format!("{}", template);
-            let java_policy_object = JPolicy::new(
-                env,
-                &env.new_string(&policy_text)?,
-                &env.new_string(&policy_id)?,
-            )?;
-            let _ = templates_java_hash_set.add(env, java_policy_object);
-        }
-
-        let java_policy_set = create_java_policy_set(
-            env,
-            policies_java_hash_set.as_ref(),
-            templates_java_hash_set.as_ref(),
-        );
-
-        Ok(JValueGen::Object(java_policy_set))
+        policy_set_to_java(env, &policy_set)
     }
+}
+
+/// Build a Java `LinkValue` from a slot id and the entity UID linked to it.
+fn create_java_link_value<'a>(
+    env: &mut JNIEnv<'a>,
+    slot_id: &SlotId,
+    euid: &EntityUid,
+) -> Result<JLinkValue<'a>> {
+    let slot_jstring = env.new_string(format!("{}", slot_id))?;
+    let entity_type = JEntityTypeName::try_from(env, euid.type_name())?;
+    let entity_id = JEntityId::try_from(env, euid.id())?;
+    let java_euid = JEntityUID::new(env, entity_type, entity_id)?;
+
+    JLinkValue::new(env, slot_jstring, java_euid)
+}
+
+/// Build a Java `TemplateLink` describing a template-linked policy.
+fn create_java_template_link<'a>(
+    env: &mut JNIEnv<'a>,
+    template_id: &str,
+    result_policy_id: &str,
+    link_values: &HashMap<SlotId, EntityUid>,
+) -> Result<JTemplateLink<'a>> {
+    let mut link_values_list: List<'a, JLinkValue<'a>> = List::new(env)?;
+    // Sort by slot id so the resulting list has a deterministic order
+    let mut sorted_values: Vec<(&SlotId, &EntityUid)> = link_values.iter().collect();
+    sorted_values.sort_by_key(|(slot_id, _)| format!("{}", slot_id));
+    for (slot_id, euid) in sorted_values {
+        let link_value = create_java_link_value(env, slot_id, euid)?;
+        link_values_list.add(env, link_value)?;
+    }
+
+    let template_id_jstring = env.new_string(template_id)?;
+    let result_policy_id_jstring = env.new_string(result_policy_id)?;
+    JTemplateLink::new(
+        env,
+        template_id_jstring,
+        result_policy_id_jstring,
+        link_values_list,
+    )
+}
+
+/// Convert a Rust `PolicySet` into the equivalent Java `PolicySet` object.
+///
+/// Static policies land in `policies`, templates in `templates`, and each
+/// template-linked policy contributes a `TemplateLink` to `templateLinks`.
+/// Note that `PolicySet::policies()` yields both static and template-linked
+/// policies, so linked policies are separated out by `template_id()`.
+fn policy_set_to_java<'a>(env: &mut JNIEnv<'a>, policy_set: &PolicySet) -> Result<JValueOwned<'a>> {
+    let mut policies_java_hash_set = Set::new(env)?;
+    let mut template_links_java_list: List<'a, JTemplateLink<'a>> = List::new(env)?;
+
+    for policy in policy_set.policies() {
+        let policy_id = format!("{}", policy.id());
+        match (policy.template_id(), policy.template_links()) {
+            // A template-linked policy: record the link instead of treating it
+            // as a static policy.
+            (Some(template_id), Some(link_values)) => {
+                let java_template_link = create_java_template_link(
+                    env,
+                    &format!("{}", template_id),
+                    &policy_id,
+                    &link_values,
+                )?;
+                template_links_java_list.add(env, java_template_link)?;
+            }
+            // A static policy.
+            _ => {
+                let policy_text = format!("{}", policy);
+                let java_policy_object = JPolicy::new(
+                    env,
+                    &env.new_string(&policy_text)?,
+                    &env.new_string(&policy_id)?,
+                )?;
+                let _ = policies_java_hash_set.add(env, java_policy_object);
+            }
+        }
+    }
+
+    let mut templates_java_hash_set = Set::new(env)?;
+    for template in policy_set.templates() {
+        let policy_id = format!("{}", template.id());
+        let policy_text = format!("{}", template);
+        let java_policy_object = JPolicy::new(
+            env,
+            &env.new_string(&policy_text)?,
+            &env.new_string(&policy_id)?,
+        )?;
+        let _ = templates_java_hash_set.add(env, java_policy_object);
+    }
+
+    let java_policy_set = create_java_policy_set(
+        env,
+        policies_java_hash_set.as_ref(),
+        templates_java_hash_set.as_ref(),
+        template_links_java_list.as_ref(),
+    );
+
+    Ok(JValueGen::Object(java_policy_set))
 }
 
 fn create_java_policy_set<'a>(
     env: &mut JNIEnv<'a>,
     policies_java_hash_set: &JObject<'a>,
     templates_java_hash_set: &JObject<'a>,
+    template_links_java_list: &JObject<'a>,
 ) -> JObject<'a> {
     env.new_object(
         "com/cedarpolicy/model/policy/PolicySet",
-        "(Ljava/util/Set;Ljava/util/Set;)V",
+        "(Ljava/util/Set;Ljava/util/Set;Ljava/util/List;)V",
         &[
             JValueGen::Object(policies_java_hash_set),
             JValueGen::Object(templates_java_hash_set),
+            JValueGen::Object(template_links_java_list),
         ],
     )
     .expect("Failed to create new PolicySet object")

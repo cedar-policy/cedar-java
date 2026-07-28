@@ -49,5 +49,14 @@
       "conditions": []
     }
   },
-  "templateLinks": []
+  "templateLinks": [
+    {
+      "newId": "Link #1",
+      "templateId": "Template #1",
+      "values": {
+        "?principal": { "type": "User", "id": "Matt" },
+        "?resource": { "type": "Album", "id": "Vacation" }
+      }
+    }
+  ]
 }

@@ -370,6 +370,78 @@ impl<'a> AsRef<JObject<'a>> for JPolicy<'a> {
     }
 }
 
+/// Typed wrapper for LinkValue objects
+/// (com.cedarpolicy.model.policy.LinkValue)
+pub struct JLinkValue<'a> {
+    obj: JObject<'a>,
+}
+
+impl<'a> JLinkValue<'a> {
+    /// Construct a new LinkValue object from a slot name and the entity UID
+    /// filling that slot
+    pub fn new(env: &mut JNIEnv<'a>, slot: JString<'a>, value: JEntityUID<'a>) -> Result<Self> {
+        let obj = env.new_object(
+            "com/cedarpolicy/model/policy/LinkValue",
+            "(Ljava/lang/String;Lcom/cedarpolicy/value/EntityUID;)V",
+            &[JValueGen::Object(&slot), JValueGen::Object(value.as_ref())],
+        )?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> Object<'a> for JLinkValue<'a> {
+    fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
+        assert_is_class(env, &obj, "com/cedarpolicy/model/policy/LinkValue")?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> AsRef<JObject<'a>> for JLinkValue<'a> {
+    fn as_ref(&self) -> &JObject<'a> {
+        &self.obj
+    }
+}
+
+/// Typed wrapper for TemplateLink objects
+/// (com.cedarpolicy.model.policy.TemplateLink)
+pub struct JTemplateLink<'a> {
+    obj: JObject<'a>,
+}
+
+impl<'a> JTemplateLink<'a> {
+    /// Construct a new TemplateLink object
+    pub fn new(
+        env: &mut JNIEnv<'a>,
+        template_id: JString<'a>,
+        result_policy_id: JString<'a>,
+        link_values: List<'a, JLinkValue<'a>>,
+    ) -> Result<Self> {
+        let obj = env.new_object(
+            "com/cedarpolicy/model/policy/TemplateLink",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V",
+            &[
+                JValueGen::Object(&template_id),
+                JValueGen::Object(&result_policy_id),
+                JValueGen::Object(link_values.as_ref()),
+            ],
+        )?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> Object<'a> for JTemplateLink<'a> {
+    fn cast(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> Result<Self> {
+        assert_is_class(env, &obj, "com/cedarpolicy/model/policy/TemplateLink")?;
+        Ok(Self { obj })
+    }
+}
+
+impl<'a> AsRef<JObject<'a>> for JTemplateLink<'a> {
+    fn as_ref(&self) -> &JObject<'a> {
+        &self.obj
+    }
+}
+
 pub struct JFormatterConfig<'a> {
     obj: JObject<'a>,
     formatter_config: Config,
