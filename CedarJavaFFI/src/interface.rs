@@ -755,15 +755,15 @@ fn policy_set_to_java<'a>(env: &mut JNIEnv<'a>, policy_set: &PolicySet) -> Resul
     let mut template_links_java_list: List<'a, JTemplateLink<'a>> = List::new(env)?;
 
     for policy in policy_set.policies() {
-        let policy_id = format!("{}", policy.id());
+        let policy_id: &str = policy.id().as_ref();
         match (policy.template_id(), policy.template_links()) {
             // A template-linked policy: record the link instead of treating it
             // as a static policy.
             (Some(template_id), Some(link_values)) => {
                 let java_template_link = create_java_template_link(
                     env,
-                    &format!("{}", template_id),
-                    &policy_id,
+                    template_id.as_ref(),
+                    policy_id,
                     &link_values,
                 )?;
                 template_links_java_list.add(env, java_template_link)?;
@@ -774,7 +774,7 @@ fn policy_set_to_java<'a>(env: &mut JNIEnv<'a>, policy_set: &PolicySet) -> Resul
                 let java_policy_object = JPolicy::new(
                     env,
                     &env.new_string(&policy_text)?,
-                    &env.new_string(&policy_id)?,
+                    &env.new_string(policy_id)?,
                 )?;
                 let _ = policies_java_hash_set.add(env, java_policy_object);
             }
@@ -783,12 +783,12 @@ fn policy_set_to_java<'a>(env: &mut JNIEnv<'a>, policy_set: &PolicySet) -> Resul
 
     let mut templates_java_hash_set = Set::new(env)?;
     for template in policy_set.templates() {
-        let policy_id = format!("{}", template.id());
+        let policy_id: &str = template.id().as_ref();
         let policy_text = format!("{}", template);
         let java_policy_object = JPolicy::new(
             env,
             &env.new_string(&policy_text)?,
-            &env.new_string(&policy_id)?,
+            &env.new_string(policy_id)?,
         )?;
         let _ = templates_java_hash_set.add(env, java_policy_object);
     }
