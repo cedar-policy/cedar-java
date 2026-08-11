@@ -123,9 +123,8 @@ public class SharedIntegrationTests {
         public String entities;
 
         /**
-         * File name of the schema file. Path is relative to the integration tests root. Note: This
-         * field is currently unused by these tests. The tests should be updated to take advantage
-         * of it once there is a Java interface to the validator.
+         * File name of the schema file. Path is relative to the integration tests root. Used both
+         * to validate the policy set and to validate each request.
          */
         public String schema;
 
