@@ -38,6 +38,7 @@ import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.serializer.JsonEUID;
 import com.cedarpolicy.value.Value;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -87,6 +88,16 @@ public class SharedIntegrationTests {
         }
     }
 
+    /** The format a policy set or schema file is written in. */
+    private enum JsonOrCedarFormat {
+        /** The Cedar (human-readable) format. */
+        @JsonProperty("cedar")
+        Cedar,
+        /** The JSON format. */
+        @JsonProperty("json")
+        Json,
+    }
+
     /**
      * Directly corresponds to the structure of the JSON formatted tests files. The fields are
      * populated by Jackson when the test files are deserialized.
@@ -100,6 +111,12 @@ public class SharedIntegrationTests {
         public String policies;
 
         /**
+         * Format of the policy set file. Defaults to Cedar, matching the integration test format,
+         * for files that don't specify it.
+         */
+        public JsonOrCedarFormat policyFormat = JsonOrCedarFormat.Cedar;
+
+        /**
          * File name of the file containing entities. Path is relative to the integration tests
          * root.
          */
@@ -111,6 +128,12 @@ public class SharedIntegrationTests {
          * of it once there is a Java interface to the validator.
          */
         public String schema;
+
+        /**
+         * Format of the schema file. Defaults to Cedar, matching the integration test format, for
+         * files that don't specify it.
+         */
+        public JsonOrCedarFormat schemaFormat = JsonOrCedarFormat.Cedar;
 
         /**
          * Whether the given policies are expected to pass the validator with this schema, or not
@@ -193,6 +216,7 @@ public class SharedIntegrationTests {
        "tests/decimal/2.json",
        "tests/example_use_cases/1a.json",
        "tests/example_use_cases/2a.json",
+       "tests/example_use_cases/2a_json_schema.json",
        "tests/example_use_cases/2b.json",
        "tests/example_use_cases/2c.json",
        "tests/example_use_cases/3a.json",
@@ -263,8 +287,8 @@ public class SharedIntegrationTests {
             test = OBJECT_MAPPER.reader().readValue(jsonIn, JsonTest.class);
         }
         Set<Entity> entities = loadEntities(test.entities);
-        PolicySet policySet = PolicySet.parsePolicies(resolveIntegrationTestPath(test.policies));
-        Schema schema = loadSchema(test.schema);
+        PolicySet policySet = loadPolicySet(test.policies, test.policyFormat);
+        Schema schema = loadSchema(test.schema, test.schemaFormat);
 
         return DynamicContainer.dynamicContainer(
                 jsonFile,
@@ -284,12 +308,27 @@ public class SharedIntegrationTests {
                                                                 schema)))));
     }
 
-    /** Load the schema file. */
-    private Schema loadSchema(String schemaFile) throws IOException {
+    /**
+     * Load the policy set file. Only the Cedar policy format is supported; there is not yet a Java
+     * interface for parsing a policy set from its JSON (EST) representation.
+     */
+    private PolicySet loadPolicySet(String policiesFile, JsonOrCedarFormat format)
+            throws InternalException, IOException {
+        if (format == JsonOrCedarFormat.Json) {
+            throw new UnsupportedOperationException(
+                    "The JSON policy format is not supported by these tests yet: " + policiesFile);
+        }
+        return PolicySet.parsePolicies(resolveIntegrationTestPath(policiesFile));
+    }
+
+    /** Load the schema file, in either the Cedar or JSON schema format. */
+    private Schema loadSchema(String schemaFile, JsonOrCedarFormat format) throws IOException {
         try (InputStream schemaStream =
                 new FileInputStream(resolveIntegrationTestPath(schemaFile).toFile())) {
             String schemaText = new String(schemaStream.readAllBytes(), StandardCharsets.UTF_8);
-            return new Schema(schemaText);
+            return format == JsonOrCedarFormat.Json
+                    ? new Schema(OBJECT_MAPPER.readTree(schemaText))
+                    : new Schema(schemaText);
         }
     }
 
