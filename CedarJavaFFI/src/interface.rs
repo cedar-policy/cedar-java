@@ -760,12 +760,8 @@ fn policy_set_to_java<'a>(env: &mut JNIEnv<'a>, policy_set: &PolicySet) -> Resul
             // A template-linked policy: record the link instead of treating it
             // as a static policy.
             (Some(template_id), Some(link_values)) => {
-                let java_template_link = create_java_template_link(
-                    env,
-                    template_id.as_ref(),
-                    policy_id,
-                    &link_values,
-                )?;
+                let java_template_link =
+                    create_java_template_link(env, template_id.as_ref(), policy_id, &link_values)?;
                 template_links_java_list.add(env, java_template_link)?;
             }
             // A static policy.
