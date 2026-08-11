@@ -216,6 +216,7 @@ public class SharedIntegrationTests {
        "tests/decimal/2.json",
        "tests/example_use_cases/1a.json",
        "tests/example_use_cases/2a.json",
+       "tests/example_use_cases/2a_json_policy.json",
        "tests/example_use_cases/2a_json_schema.json",
        "tests/example_use_cases/2b.json",
        "tests/example_use_cases/2c.json",
@@ -308,17 +309,13 @@ public class SharedIntegrationTests {
                                                                 schema)))));
     }
 
-    /**
-     * Load the policy set file. Only the Cedar policy format is supported; there is not yet a Java
-     * interface for parsing a policy set from its JSON (EST) representation.
-     */
+    /** Load the policy set file, in either the Cedar or JSON policy format. */
     private PolicySet loadPolicySet(String policiesFile, JsonOrCedarFormat format)
             throws InternalException, IOException {
-        if (format == JsonOrCedarFormat.Json) {
-            throw new UnsupportedOperationException(
-                    "The JSON policy format is not supported by these tests yet: " + policiesFile);
-        }
-        return PolicySet.parsePolicies(resolveIntegrationTestPath(policiesFile));
+        final Path policiesPath = resolveIntegrationTestPath(policiesFile);
+        return format == JsonOrCedarFormat.Json
+                ? PolicySet.parsePoliciesJson(policiesPath)
+                : PolicySet.parsePolicies(policiesPath);
     }
 
     /** Load the schema file, in either the Cedar or JSON schema format. */
