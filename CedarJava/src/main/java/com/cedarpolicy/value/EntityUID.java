@@ -17,12 +17,12 @@
 package com.cedarpolicy.value;
 
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.serializer.JsonEUID;
-import com.google.common.base.Suppliers;
 
 /**
  * Represents a Cedar Entity UID. An entity UID contains both the entity type and a unique
@@ -45,7 +45,16 @@ public final class EntityUID extends Value {
     public EntityUID(EntityTypeName type, EntityIdentifier id) {
         this.type = type;
         this.id = id;
-        this.euidRepr = Suppliers.memoize(() -> getEUIDRepr(type, id));
+        this.euidRepr = new Supplier<String>() {
+
+            private ConcurrentHashMap<String, String> localMap = new ConcurrentHashMap<>();
+
+            @Override
+            public String get() {
+                return localMap.computeIfAbsent("euidRepr", k -> EntityUID.getEUIDRepr(type, id));
+            }
+            
+        };
     }
 
     /**
