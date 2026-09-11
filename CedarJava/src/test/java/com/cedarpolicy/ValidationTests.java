@@ -80,7 +80,7 @@ public class ValidationTests {
 
     /** Test. */
     @Test
-    public void givenExampleSchemaAndIncorrectPolicyReturnsValid() {
+    public void givenExampleSchemaAndImpossiblePolicyReturnsWarning() {
         givenSchema(PHOTOFLASH_SCHEMA);
         givenPolicy(
                 "policy0",
@@ -90,9 +90,9 @@ public class ValidationTests {
                         + "    resource == User::\"bob\""
                         + ");");
         ValidationResponse response = whenValidated();
-        thenIsNotValid(response);
+        thenHasWarnings(response);
         ValidationResponse levelResponse = whenLevelValidated(1);
-        thenIsNotValid(levelResponse);
+        thenHasWarnings(levelResponse);
     }
 
     /** Test. */
@@ -169,16 +169,16 @@ public class ValidationTests {
         thenValidationFailed(levelResponse3);
 
 
-        // validation returns an error if we provide a link with the wrong type
+        // validation warns if we provide a link with the wrong type
         LinkValue badLink1 = new LinkValue("?resource", EntityUID.parse("Library::User::\"Victor\"").get());
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template1", "policy", List.of(badLink1))));
         ValidationResponse response4 = whenValidated();
-        thenIsNotValid(response4);
+        thenHasWarnings(response4);
         ValidationResponse levelResponse4 = whenLevelValidated(1);
-        thenIsNotValid(levelResponse4);
+        thenHasWarnings(levelResponse4);
 
-        // validation returns an error if we provide a link with an invalid type
+        // validation returns an error if we provide a link with an unrecognized type
         LinkValue badLink2 = new LinkValue("?resource", EntityUID.parse("Library::BOOK::\"The black Swan\"").get());
         this.policies = new PolicySet(new HashSet<>(), templates,
                 List.of(new TemplateLink("template1", "policy", List.of(badLink2))));
@@ -282,6 +282,22 @@ public class ValidationTests {
                 () -> {
                     return "Expected validation errors but did not find any";
                 });
+    }
+
+    private void thenHasWarnings(ValidationResponse response) {
+        assertEquals(response.type, SuccessOrFailure.Success);
+        final ValidationSuccessResponse success = assertDoesNotThrow(() -> response.success.get());
+        assertTrue(
+                success.validationErrors.isEmpty(),
+                () -> {
+                    String errors = response.success.get().validationErrors.stream()
+                            .map(note -> String.format("in policy %s: %s", note.getPolicyId(), note.getError()))
+                            .collect(Collectors.joining("\n"));
+                    return "Expected no validation errors but got:\n" + errors;
+                });
+        assertFalse(
+                success.validationWarnings.isEmpty(),
+                () -> "Expected validation warnings but did not find any");
     }
 
     private void thenValidationFailed(ValidationResponse response) {

@@ -1201,7 +1201,7 @@ pub fn get_cedar_schema_internal<'a>(
     let cedar_format = schema_to_text(schema);
 
     match cedar_format {
-        SchemaToTextAnswer::Success { text, warnings } => {
+        SchemaToTextAnswer::Success { text, .. } => {
             let jstr = env.new_string(&text)?;
             Ok(JValueGen::Object(JObject::from(jstr)).into())
         }
