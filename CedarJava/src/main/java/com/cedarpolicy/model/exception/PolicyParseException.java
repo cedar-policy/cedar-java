@@ -19,6 +19,7 @@ package com.cedarpolicy.model.exception;
 import com.cedarpolicy.CedarJson;
 import com.cedarpolicy.model.DetailedError;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,12 +34,15 @@ import java.util.List;
  * error after the first was discarded. {@link #getDetailedErrors()} returns the full set,
  * one {@link DetailedError} per parse error, in the order Cedar reported them.
  *
- * <p>Extends {@link InternalException} so existing {@code catch} blocks are unaffected.
- * Two message details differ from the generic error path, deliberately: the
- * {@code "Internal JNI Error: "} prefix is dropped, because it describes the binding rather
- * than the policy and reads as a library fault rather than a typo in the caller's input;
- * and {@link #getErrors()} carries one entry per parse error rather than a single entry for
- * the whole document, which is what its plural contract always implied.
+ * <p>Extends {@link InternalException} so existing {@code catch} blocks are unaffected, and
+ * {@link #getMessage()} is byte-for-byte what the generic error path produced: callers are
+ * known to branch on that string and to match it with anchored regexes, so it is treated as
+ * part of the API and left alone. The new detail is reached through the accessors instead.
+ *
+ * <p>{@link #getErrors()} does change: it now carries one entry per parse error rather than
+ * a single entry for the whole document, which is what its plural contract always implied,
+ * and each entry is the bare Cedar message without the {@code "Internal JNI Error: "}
+ * prefix, which described the binding rather than any one error.
  */
 public class PolicyParseException extends InternalException {
 
@@ -50,14 +54,16 @@ public class PolicyParseException extends InternalException {
     /**
      * Construct from the JSON array of {@code DetailedError} the native layer serialises.
      *
+     * @param message the message, which the native layer builds exactly as the generic
+     *     error path does so that {@link #getMessage()} is unchanged
      * @param messages one message per parse error, for {@link #getErrors()}
      * @param detailedErrorsJson JSON array of {@code DetailedError}; if it cannot be read,
-     *     the exception still carries {@code messages} and {@link #getDetailedErrors()}
-     *     returns empty, so a serialisation change can never turn a parse error into a
-     *     different failure
+     *     the exception still carries {@code message} and {@code messages}, and
+     *     {@link #getDetailedErrors()} returns empty, so a serialisation change can never
+     *     turn a parse error into a different failure
      */
-    public PolicyParseException(String[] messages, String detailedErrorsJson) {
-        super(messages);
+    public PolicyParseException(String message, String[] messages, String detailedErrorsJson) {
+        super(message, Arrays.asList(messages));
         this.detailedErrors = readDetailedErrors(detailedErrorsJson);
     }
 

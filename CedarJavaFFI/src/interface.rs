@@ -545,10 +545,11 @@ struct JavaInterfaceCall {
 /// converted to `DetailedError` (the same representation the validation path already
 /// returns) and handed to Java intact.
 ///
-/// The `"Internal JNI Error: "` prefix is dropped for these: it describes the binding
-/// rather than the policy, and reading "Internal error" for an ordinary typo suggests a
-/// library fault rather than something the caller can fix. `getErrors()` likewise carries
-/// one entry per parse error instead of a single entry for the whole document.
+/// The message is deliberately left as `jni_failed` would have written it, prefix and all:
+/// callers are known to branch on `getMessage()` and to match it with anchored regexes, so
+/// it is part of the API. `getErrors()` does gain one entry per parse error instead of a
+/// single entry for the whole document, and those entries carry the bare Cedar message,
+/// since the prefix describes the binding rather than any one error.
 fn throw_parse_errors(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
     if env.exception_check().unwrap_or_default() {
         return; // An exception is already in flight; let it propagate.
@@ -556,10 +557,11 @@ fn throw_parse_errors(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
     let details: Vec<DetailedError> = errs.iter().map(DetailedError::from).collect();
     let messages: Vec<String> = details.iter().map(|d| d.message.clone()).collect();
     let details_json = serde_json::to_string(&details).unwrap_or_default();
+    let message = internal_error_message(errs);
 
     // Fall back to the generic path if any part of building the richer exception fails, so
     // a parse error is never silently turned into a different kind of failure.
-    match build_parse_exception(env, &messages, &details_json) {
+    match build_parse_exception(env, &message, &messages, &details_json) {
         Ok(exception) => {
             if env.throw(exception).is_err() {
                 throw_internal(env, errs);
@@ -569,9 +571,10 @@ fn throw_parse_errors(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
     }
 }
 
-/// Build `PolicyParseException(String[] messages, String detailedErrorsJson)`.
+/// Build `PolicyParseException(String message, String[] messages, String detailedErrorsJson)`.
 fn build_parse_exception<'a>(
     env: &mut JNIEnv<'a>,
+    message: &str,
     messages: &[String],
     details_json: &str,
 ) -> Result<JThrowable<'a>> {
@@ -582,16 +585,24 @@ fn build_parse_exception<'a>(
         let jmessage = env.new_string(message)?;
         env.set_object_array_element(&messages_array, i as i32, jmessage)?;
     }
+    let jmessage = env.new_string(message)?;
     let jdetails = env.new_string(details_json)?;
     let exception = env.new_object(
         "com/cedarpolicy/model/exception/PolicyParseException",
-        "([Ljava/lang/String;Ljava/lang/String;)V",
+        "(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)V",
         &[
+            JValueGen::Object(&jmessage),
             JValueGen::Object(&messages_array),
             JValueGen::Object(&jdetails),
         ],
     )?;
     Ok(JThrowable::from(exception))
+}
+
+/// The message `jni_failed` writes for `errs`. The sole definition of that string, so the
+/// richer exception and the fallback below can never drift apart.
+fn internal_error_message(errs: &ParseErrors) -> String {
+    format!("Internal JNI Error: {errs}")
 }
 
 /// Throw a plain `InternalException`, exactly as `jni_failed` would have.
@@ -600,7 +611,7 @@ fn throw_internal(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
     // If we don't have the heap space to create an exception, the only valid move is ending the process
     env.throw_new(
         "com/cedarpolicy/model/exception/InternalException",
-        format!("Internal JNI Error: {errs}"),
+        internal_error_message(errs),
     )
     .unwrap();
 }

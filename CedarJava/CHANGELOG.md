@@ -8,6 +8,7 @@
 * Added Offset function support [#331](https://github.com/cedar-policy/cedar-java/pull/331)
 * Added PolicySet to JSON conversion API [#329](https://github.com/cedar-policy/cedar-java/pull/329)
 * Added Cedar Schema support for Entity Validation [#332](https://github.com/cedar-policy/cedar-java/pull/332)
+* Added `PolicyParseException`, thrown by `PolicySet.parsePolicies` when policy text fails to parse. It is a subclass of `InternalException`, so existing `catch` blocks and `getMessage()` are unaffected, and adds `getDetailedErrors()` returning Cedar's structured diagnostics - source span, expected tokens, and help text - for each error. `getErrors()` now carries one entry per parse error rather than a single entry for the whole document [#367](https://github.com/cedar-policy/cedar-java/pull/367)
 
 ## 4.3.1
 ### Added

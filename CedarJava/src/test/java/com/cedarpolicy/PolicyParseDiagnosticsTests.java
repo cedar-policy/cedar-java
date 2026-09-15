@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -63,16 +64,22 @@ public class PolicyParseDiagnosticsTests {
 
         assertEquals(2, e.getDetailedErrors().size());
         assertEquals(2, e.getErrors().size());
+        // The message stays what Display gave it - the first error alone - so populating the
+        // list cannot widen the string that existing callers match on.
+        assertEquals("Internal error: Internal JNI Error: " + e.getErrors().get(0), e.getMessage());
     }
 
     @Test
-    public void messagesDropTheInternalJniErrorPrefix() {
-        // That prefix describes the binding, not the policy: reading "Internal JNI Error"
-        // for an ordinary typo suggests a library fault rather than a fixable mistake.
+    public void messageIsUnchangedForBackCompat() {
+        // Callers branch on getMessage() and match it with anchored regexes, so the string
+        // stays exactly as the generic error path wrote it, "Internal JNI Error: " and all.
+        // The added detail is reached through the accessors instead.
         PolicyParseException e = assertThrows(PolicyParseException.class,
                 () -> PolicySet.parsePolicies("forbid(principal, Foo::Action::\"Read\", resource);"));
 
-        assertEquals("Internal error: unexpected token `::`", e.getMessage());
+        assertEquals("Internal error: Internal JNI Error: unexpected token `::`", e.getMessage());
+        // getErrors() entries are the bare Cedar messages: the prefix described the binding
+        // rather than any one error, and is meaningless once the list is per-error.
         assertEquals(List.of("unexpected token `::`"), e.getErrors());
     }
 
@@ -96,7 +103,6 @@ public class PolicyParseDiagnosticsTests {
 
     @Test
     public void validPolicySetStillParses() {
-        org.junit.jupiter.api.Assertions.assertDoesNotThrow(
-                () -> PolicySet.parsePolicies("permit(principal, action, resource);"));
+        assertDoesNotThrow(() -> PolicySet.parsePolicies("permit(principal, action, resource);"));
     }
 }
