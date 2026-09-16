@@ -1,0 +1,15 @@
+entity Group;
+
+entity User in [Group] {
+  department?: String,
+} tags String;
+
+entity Photo;
+
+action view appliesTo {
+  principal: [User],
+  resource: [Photo],
+  context: {
+    authenticated?: Bool,
+  }
+};

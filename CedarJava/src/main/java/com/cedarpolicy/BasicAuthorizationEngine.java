@@ -37,7 +37,6 @@ import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
-import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -110,11 +109,7 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, policySet, entities);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
         } catch (InternalException e) {
-            if (e.getMessage().contains("AuthorizationPartialOperation")) {
-                throw new MissingExperimentalFeatureException(ExperimentalFeature.PARTIAL_EVALUATION);
-            } else {
-                throw e;
-            }
+            throw ExperimentalFeature.PARTIAL_EVALUATION.translateIfDisabled(e);
         }
     }
 

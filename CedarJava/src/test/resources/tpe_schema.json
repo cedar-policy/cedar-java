@@ -1,0 +1,32 @@
+{
+  "": {
+    "entityTypes": {
+      "Group": {},
+      "User": {
+        "memberOfTypes": ["Group"],
+        "shape": {
+          "type": "Record",
+          "attributes": {
+            "department": { "type": "String", "required": false }
+          }
+        },
+        "tags": { "type": "String" }
+      },
+      "Photo": {}
+    },
+    "actions": {
+      "view": {
+        "appliesTo": {
+          "principalTypes": ["User"],
+          "resourceTypes": ["Photo"],
+          "context": {
+            "type": "Record",
+            "attributes": {
+              "authenticated": { "type": "Boolean", "required": false }
+            }
+          }
+        }
+      }
+    }
+  }
+}
