@@ -27,35 +27,36 @@ import java.util.List;
  * Thrown when Cedar policy text fails to parse, carrying the structured diagnostics Cedar
  * produced for each error.
  *
- * <p>Cedar reports parse failures as {@code miette} diagnostics: a message, the source span
- * of the offending token, the tokens the parser expected there, and often help text. Prior
- * to this type those were flattened to a single {@code Display} string, so callers saw
- * "unexpected token `::`" with no indication of where in the policy it occurred, and every
- * error after the first was discarded. {@link #getDetailedErrors()} returns the full set,
- * one {@link DetailedError} per parse error, in the order Cedar reported them.
+ * <p>Cedar reports a parse failure as one or more {@code miette} diagnostics: a message, the
+ * source span of the offending token, the tokens the parser expected there, and often help
+ * text. A single document may fail in several places, and every failure is reported.
  *
- * <p>Extends {@link InternalException} so existing {@code catch} blocks are unaffected, and
- * {@link #getMessage()} is byte-for-byte what the generic error path produced: callers are
- * known to branch on that string and to match it with anchored regexes, so it is treated as
- * part of the API and left alone. The new detail is reached through the accessors instead.
+ * <p>Three accessors describe the same failure at increasing fidelity:
  *
- * <p>{@link #getErrors()} does change: it now carries one entry per parse error rather than
- * a single entry for the whole document, which is what its plural contract always implied,
- * and each entry is the bare Cedar message without the {@code "Internal JNI Error: "}
- * prefix, which described the binding rather than any one error.
+ * <ul>
+ *   <li>{@link #getMessage()} - one human-readable line, describing the first error only. Its
+ *       wording is treated as part of this class's compatibility surface, so it is the least
+ *       informative of the three and the safest to match on.
+ *   <li>{@link #getErrors()} - one message per parse error, in the order Cedar reported them.
+ *       These are Cedar's messages alone, without the prefix {@link #getMessage()} carries.
+ *   <li>{@link #getDetailedErrors()} - the full diagnostic for each error, and the only
+ *       accessor that reports where in the source the error occurred. See {@link DetailedError}.
+ * </ul>
+ *
+ * <p>Extends {@link InternalException}, so callers that catch the general parse-or-evaluate
+ * failure are unaffected and need not know this type exists.
  */
 public class PolicyParseException extends InternalException {
 
     private static final TypeReference<List<DetailedError>> ERROR_LIST =
-            new TypeReference<List<DetailedError>>() {};
+            new TypeReference<List<DetailedError>>() { };
 
     private final transient List<DetailedError> detailedErrors;
 
     /**
      * Construct from the JSON array of {@code DetailedError} the native layer serialises.
      *
-     * @param message the message, which the native layer builds exactly as the generic
-     *     error path does so that {@link #getMessage()} is unchanged
+     * @param message the value {@link #getMessage()} reports
      * @param messages one message per parse error, for {@link #getErrors()}
      * @param detailedErrorsJson JSON array of {@code DetailedError}; if it cannot be read,
      *     the exception still carries {@code message} and {@code messages}, and

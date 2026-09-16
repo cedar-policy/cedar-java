@@ -45,9 +45,9 @@ public class InternalException extends AuthException {
      * Internal exception whose message is not derived from its error list.
      *
      * <p>The other constructors build the message by joining {@code errors}, which ties the
-     * two together: a more finely split list necessarily changes the message. Subclasses that
-     * report each underlying error separately while keeping the message they have always
-     * produced use this constructor to set the two independently.
+     * two together: splitting the list more finely necessarily changes the message. Subclasses
+     * that report each underlying error separately, but summarise them differently in the
+     * message, use this constructor to set the two independently.
      *
      * @param error the message, prefixed as in {@link #InternalException(String)}
      * @param errors the individual error messages, for {@link #getErrors()}
