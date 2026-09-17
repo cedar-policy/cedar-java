@@ -18,6 +18,7 @@ package com.cedarpolicy.model.exception;
 
 import com.cedarpolicy.CedarJson;
 import com.cedarpolicy.model.DetailedError;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,7 +47,7 @@ import java.util.List;
  * <p>Extends {@link InternalException}, so callers that catch the general parse-or-evaluate
  * failure are unaffected and need not know this type exists.
  */
-public class PolicyParseException extends InternalException {
+public final class PolicyParseException extends InternalException {
 
     private static final TypeReference<List<DetailedError>> ERROR_LIST =
             new TypeReference<List<DetailedError>>() { };
@@ -75,7 +76,7 @@ public class PolicyParseException extends InternalException {
         try {
             List<DetailedError> parsed = CedarJson.objectReader().forType(ERROR_LIST).readValue(json);
             return parsed == null ? List.of() : List.copyOf(parsed);
-        } catch (Exception e) {
+        } catch (JsonProcessingException | RuntimeException e) {
             return List.of();
         }
     }
