@@ -203,6 +203,39 @@ public class PartialEntitiesTests {
         assertTrue(nullFields.getAttrs().isEmpty());
         assertTrue(nullFields.getParents().isEmpty());
         assertTrue(nullFields.getTags().isEmpty());
+
+        // A field encoded as present but empty is the opposite claim: the entity is known to have none of them, so it
+        // must come back present-and-empty rather than unknown.
+        ObjectNode emptyFieldsJson = JsonNodeFactory.instance.objectNode();
+        emptyFieldsJson.set("uid", buildUidObject("User", "alice"));
+        emptyFieldsJson.set("attrs", JsonNodeFactory.instance.objectNode());
+        emptyFieldsJson.set("parents", JsonNodeFactory.instance.arrayNode());
+        emptyFieldsJson.set("tags", JsonNodeFactory.instance.objectNode());
+        var emptyFields = PartialEntities
+                .fromJson(JsonNodeFactory.instance.arrayNode().add(emptyFieldsJson), TPE_SCHEMA)
+                .getEntities()
+                .iterator()
+                .next();
+        assertEquals(Map.of(), emptyFields.getAttrs().orElseThrow());
+        assertEquals(Set.of(), emptyFields.getParents().orElseThrow());
+        assertEquals(Map.of(), emptyFields.getTags().orElseThrow());
+    }
+
+    @Test
+    public void testFromJsonRejectsDuplicateUid() {
+        // The same rule as `testRejectsDuplicateUid`, reached through the JSON encoding. Worth covering separately
+        // because a JSON array can carry two entries with the same uid, whereas a `Set` relies on the elements
+        // differing to keep both.
+        ObjectNode first = JsonNodeFactory.instance.objectNode();
+        first.set("uid", buildUidObject("User", "alice"));
+        ObjectNode second = JsonNodeFactory.instance.objectNode();
+        second.set("uid", buildUidObject("User", "alice"));
+        second.set("attrs", JsonNodeFactory.instance.objectNode());
+        ArrayNode json = JsonNodeFactory.instance.arrayNode().add(first).add(second);
+
+        InternalException e =
+                assertThrows(InternalException.class, () -> PartialEntities.fromJson(json, TPE_SCHEMA));
+        assertMessageContains(e, "duplicate entity entry", "User::\"alice\"");
     }
 
     @Test

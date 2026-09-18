@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import static com.cedarpolicy.TestUtil.assertJSONEqual;
 import static com.cedarpolicy.TestUtil.assertMessageContains;
 import static com.cedarpolicy.TestUtil.buildUidObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests for {@link PartialEntity}, an entity whose attributes, parents, and tags may be unknown. */
@@ -116,6 +117,35 @@ public class PartialEntityTests {
 
         assertJSONEqual(n, entity);
         assertJSONEqual(n, new PartialEntity(entity, TPE_SCHEMA));
+    }
+
+    @Test
+    public void testToStringLabelsUnknownFieldsAndOmitsEmptyOnes() throws InternalException {
+        var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
+        var admins = new EntityUID(EntityTypeName.parse("Group").get(), "admins");
+
+        // A fully known entity renders like its concrete counterpart, so compare against one.
+        var known = new PartialEntity(alice, Optional.of(Map.of("department", new PrimString("eng"))),
+                Optional.of(Set.of(admins)), Optional.of(Map.of("stage", new PrimString("beta"))), TPE_SCHEMA);
+        assertEquals(new Entity(alice, Map.of("department", new PrimString("eng")), Set.of(admins),
+                Map.of("stage", new PrimString("beta"))).toString(), known.toString());
+        assertEquals("User::\"alice\""
+                + "\n\tparents:\n\t\tGroup::\"admins\""
+                + "\n\tattrs:\n\t\tdepartment: eng"
+                + "\n\ttags:\n\t\tstage: beta", known.toString());
+
+        // An unknown field is labelled, which is the one thing a concrete entity cannot express.
+        var unknown = new PartialEntity(alice, Optional.empty(), Optional.empty(), Optional.empty(), TPE_SCHEMA);
+        assertEquals("User::\"alice\""
+                + "\n\tparents: unknown"
+                + "\n\tattrs: unknown"
+                + "\n\ttags: unknown", unknown.toString());
+
+        // A field known to be empty is omitted rather than labelled, matching a concrete entity with nothing set.
+        var empty = new PartialEntity(alice, Optional.of(Map.of()), Optional.of(Set.of()), Optional.of(Map.of()),
+                TPE_SCHEMA);
+        assertEquals("User::\"alice\"", empty.toString());
+        assertEquals(new Entity(alice).toString(), empty.toString());
     }
 
     @Test

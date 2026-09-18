@@ -88,8 +88,8 @@ public final class PartialEntities {
     }
 
     /**
-     * Constructs a collection from concrete entities, each of which is fully known. Mirrors
-     * {@code PartialEntities::from_concrete}.
+     * Constructs a collection from concrete entities. Each one is fully known, so its attributes, parents, and tags all
+     * come across as present rather than unknown.
      *
      * @param entities The concrete entities.
      * @param schema   The schema to check the entities against.
