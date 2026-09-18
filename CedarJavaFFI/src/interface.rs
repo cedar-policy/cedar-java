@@ -607,6 +607,19 @@ fn internal_error_message(errs: &ParseErrors) -> String {
 
 /// Throw a plain `InternalException`, exactly as `jni_failed` would have.
 fn throw_internal(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
+    // Guard on a pending exception exactly as `jni_failed` does. This is not only for safety
+    // but is also the more useful behaviour: whatever the JVM already threw (an
+    // `OutOfMemoryError`, or a `NoClassDefFoundError` from a `.jar` that predates the `.so`)
+    // says far more about the failure than an `InternalException` naming a parse error would,
+    // and it propagates to the caller when this native method returns.
+    //
+    // The guard is also what makes the `unwrap` below sound. jni-rs refuses to make JNI calls
+    // while an exception is pending, so `throw_new` would fail its internal `find_class` and
+    // return `Error::JavaException`; unwrapping that panics, and unwinding out of the
+    // `extern "C"` boundary that `jni_fn` generates would abort the JVM.
+    if env.exception_check().unwrap_or_default() {
+        return;
+    }
     // We have to unwrap here as we're doing exception handling
     // If we don't have the heap space to create an exception, the only valid move is ending the process
     env.throw_new(
