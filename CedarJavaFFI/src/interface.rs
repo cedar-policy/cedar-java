@@ -46,6 +46,7 @@ use crate::{
     jmap::Map,
     jset::Set,
     objects::{JEntityId, JEntityTypeName, JEntityUID, JLinkValue, JPolicy, JTemplateLink, Object},
+    tpe::{validate_partial_entities, validate_partial_entity},
     utils::raise_npe,
 };
 use crate::{helpers::validate_with_level_json_str, objects::JFormatterConfig};
@@ -1250,6 +1251,64 @@ pub fn get_json_schema_internal<'a>(
     }
 }
 
+/// Public string-based JSON interface to validate a partial entity against a schema
+#[jni_fn("com.cedarpolicy.model.entity.PartialEntity")]
+pub fn validatePartialEntityJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    entity_jstr: JString<'a>,
+    schema_jstr: JString<'a>,
+) -> jvalue {
+    match validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn validate_partial_entity_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    entity_jstr: JString<'a>,
+    schema_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if entity_jstr.is_null() || schema_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let entity_json = String::from(env.get_string(&entity_jstr)?);
+        let schema_json = String::from(env.get_string(&schema_jstr)?);
+        validate_partial_entity(&entity_json, &schema_json)?;
+        Ok(JValueGen::Object(env.new_string("success")?.into()))
+    }
+}
+
+/// Public string-based JSON interface to validate a collection of partial entities against a schema
+#[jni_fn("com.cedarpolicy.model.entity.PartialEntities")]
+pub fn validatePartialEntitiesJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    entities_jstr: JString<'a>,
+    schema_jstr: JString<'a>,
+) -> jvalue {
+    match validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn validate_partial_entities_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    entities_jstr: JString<'a>,
+    schema_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if entities_jstr.is_null() || schema_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let entities_json = String::from(env.get_string(&entities_jstr)?);
+        let schema_json = String::from(env.get_string(&schema_jstr)?);
+        validate_partial_entities(&entities_json, &schema_json)?;
+        Ok(JValueGen::Object(env.new_string("success")?.into()))
+    }
+}
+
 #[cfg(test)]
 pub(crate) mod jvm_based_tests {
     use super::*;
@@ -1259,6 +1318,163 @@ pub(crate) mod jvm_based_tests {
 
     pub(crate) static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
     // Static JVM to be used by all the tests. LazyLock for thread-safe lazy initialization
+
+    #[cfg(feature = "tpe")]
+    mod tpe_tests {
+        use super::*;
+
+        const SCHEMA: &str = r#"
+            entity Group;
+            entity User in [Group] = { "isAdmin": Bool };
+            entity Photo;
+            action view appliesTo {
+                principal: [User],
+                resource: [Photo],
+                context: { "authenticated": Bool }
+            };
+        "#;
+
+        fn schema_json() -> String {
+            serde_json::json!(SCHEMA).to_string()
+        }
+
+        /// Read back the string an `_internal` returned on success.
+        #[track_caller]
+        fn success_string<'a>(env: &mut JNIEnv<'a>, result: JValueOwned<'a>) -> String {
+            let jstr = JString::cast(env, result.l().unwrap()).unwrap();
+            String::from(env.get_string(&jstr).unwrap())
+        }
+
+        /// Assert that validation failed for the expected reason. Errors crossing this boundary are
+        /// flattened to a `Box<dyn Error>`, so `is_err()` alone would also match a schema that
+        /// failed to parse or a payload that failed to deserialize.
+        #[track_caller]
+        fn assert_err_contains(result: Result<JValueOwned<'_>>, fragments: &[&str]) {
+            let err = match result {
+                Ok(_) => panic!("expected validation to fail"),
+                Err(e) => e.to_string(),
+            };
+            for fragment in fragments {
+                assert!(
+                    err.contains(fragment),
+                    "expected the error to mention `{fragment}` but was: {err}"
+                );
+            }
+        }
+
+        #[test]
+        fn validate_partial_entity_internal_success() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entity = serde_json::json!({
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false }
+            });
+            let entity_jstr = env.new_string(entity.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            let result =
+                validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
+        }
+
+        #[test]
+        fn validate_partial_entity_internal_mistyped_attr() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entity = serde_json::json!({
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": 3 }
+            });
+            let entity_jstr = env.new_string(entity.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            assert_err_contains(
+                validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr),
+                &[
+                    "attribute `isAdmin`",
+                    "User::\"alice\"",
+                    "type mismatch",
+                    "expected to have type bool",
+                    "actually has type long",
+                ],
+            );
+        }
+
+        #[test]
+        fn validate_partial_entity_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let result = validate_partial_entity_internal(
+                &mut env,
+                JString::from(JObject::null()),
+                schema_jstr,
+            );
+            assert!(
+                result.is_ok(),
+                "a null input is reported to Java, not to us"
+            );
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected java exception due to a null input"
+            );
+            env.exception_clear().unwrap();
+        }
+
+        #[test]
+        fn validate_partial_entities_internal_success() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entities = serde_json::json!([
+                {
+                    "uid": { "type": "User", "id": "alice" },
+                    "attrs": { "isAdmin": false },
+                    "parents": [ { "type": "Group", "id": "admins" } ]
+                }
+            ]);
+            let entities_jstr = env.new_string(entities.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            let result =
+                validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
+        }
+
+        #[test]
+        fn validate_partial_entities_internal_duplicate_uid() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entities = serde_json::json!([
+                { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": false }, "parents": [] },
+                { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": true }, "parents": [] }
+            ]);
+            let entities_jstr = env.new_string(entities.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            assert_err_contains(
+                validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr),
+                &["duplicate entity entry", "User::\"alice\""],
+            );
+        }
+
+        #[test]
+        fn validate_partial_entities_internal_null_schema() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entities_jstr = env.new_string("[]").unwrap();
+            let result = validate_partial_entities_internal(
+                &mut env,
+                entities_jstr,
+                JString::from(JObject::null()),
+            );
+            assert!(
+                result.is_ok(),
+                "a null input is reported to Java, not to us"
+            );
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected java exception due to a null input"
+            );
+            env.exception_clear().unwrap();
+        }
+    }
 
     mod policy_tests {
         use super::*;

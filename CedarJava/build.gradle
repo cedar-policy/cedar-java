@@ -184,7 +184,7 @@ tasks.register('compileFFI') {
             }
             exec {
                 workingDir = ffiDir
-                commandLine 'cargo', '+' + RustVersion, 'zigbuild', '--features', 'partial-eval', '--release', '--target', rustTarget
+                commandLine 'cargo', '+' + RustVersion, 'zigbuild', '--features', 'partial-eval,tpe', '--release', '--target', rustTarget
             }
 
             def sourcePath = "${ffiDir}/target/${rustTarget}/release/${libraryFile}"
@@ -206,7 +206,7 @@ tasks.register('testFFI') {
     doLast {
         exec {
             workingDir = ffiDir
-            commandLine 'cargo', 'test'
+            commandLine 'cargo', 'test', '--all-features'
         }
     }
 }

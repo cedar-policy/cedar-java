@@ -24,5 +24,6 @@ mod jset;
 mod jvm_test_utils;
 mod objects;
 mod tests;
+mod tpe;
 mod utils;
 pub use interface::*;

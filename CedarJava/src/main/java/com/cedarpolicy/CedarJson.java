@@ -17,10 +17,12 @@
 package com.cedarpolicy;
 
 import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.entity.PartialEntity;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.model.schema.Schema;
 import com.cedarpolicy.serializer.EntitySerializer;
+import com.cedarpolicy.serializer.PartialEntitySerializer;
 import com.cedarpolicy.serializer.PolicySetSerializer;
 import com.cedarpolicy.serializer.TemplateLinkSerializer;
 import com.cedarpolicy.serializer.SchemaSerializer;
@@ -58,6 +60,7 @@ public final class CedarJson {
 
         final SimpleModule module = new SimpleModule();
         module.addSerializer(Entity.class, new EntitySerializer());
+        module.addSerializer(PartialEntity.class, new PartialEntitySerializer());
         module.addSerializer(Schema.class, new SchemaSerializer());
         module.addSerializer(TemplateLink.class, new TemplateLinkSerializer());
         module.addSerializer(PolicySet.class, new PolicySetSerializer());

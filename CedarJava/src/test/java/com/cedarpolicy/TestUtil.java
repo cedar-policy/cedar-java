@@ -24,6 +24,12 @@ import com.cedarpolicy.model.policy.LinkValue;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.value.EntityTypeName;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.HashSet;
 import java.nio.charset.StandardCharsets;
@@ -34,9 +40,90 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import static com.cedarpolicy.CedarJson.objectWriter;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /** Utils to help with tests. */
 public final class TestUtil {
+    /** The escape sequence Cedar uses for an entity reference nested inside a value. */
+    private static final String ENTITY_ESCAPE_SEQ = "__entity";
+
     private TestUtil() {
+    }
+
+    /**
+     * Assert that an object serializes to the expected JSON. Compared semantically rather than as strings: neither the
+     * order of an object's fields nor the order of an array's elements is part of Cedar's encoding, and both are in fact
+     * unspecified here, because parents are serialized from a {@code Set} and attributes and tags from an immutable map
+     * whose iteration order varies between JVM runs.
+     *
+     * @param expectedJSON The expected encoding.
+     * @param obj          The object to serialize.
+     */
+    public static void assertJSONEqual(JsonNode expectedJSON, Object obj) {
+        String objJson = assertDoesNotThrow(() -> objectWriter().writeValueAsString(obj));
+        try {
+            JSONAssert.assertEquals(expectedJSON.toString(), objJson, JSONCompareMode.NON_EXTENSIBLE);
+        } catch (JSONException e) {
+            throw new AssertionError("Failed to compare JSON: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Assert that an exception's message mentions every one of the given fragments. Checking several fragments rather
+     * than one keeps the assertion specific enough to distinguish the rule that was violated, while still tolerating
+     * rewording elsewhere in the message.
+     *
+     * @param e         The exception to inspect.
+     * @param fragments The fragments the message must contain.
+     */
+    public static void assertMessageContains(Throwable e, String... fragments) {
+        for (String fragment : fragments) {
+            assertTrue(e.getMessage() != null && e.getMessage().contains(fragment),
+                    "Expected the error to mention '%s' but was: '%s'".formatted(fragment, e.getMessage()));
+        }
+    }
+
+    /**
+     * Build an entity UID in the escaped {@code __entity} form.
+     *
+     * @param type The entity type name.
+     * @param id   The entity id.
+     * @return The encoded UID.
+     */
+    public static ObjectNode buildEuidObject(String type, String id) {
+        var n = JsonNodeFactory.instance.objectNode();
+        var inner = JsonNodeFactory.instance.objectNode();
+        inner.put("id", id);
+        inner.put("type", type);
+        n.replace(ENTITY_ESCAPE_SEQ, inner);
+        return n;
+    }
+
+    /**
+     * Build a partial entity UID whose id is unknown.
+     *
+     * @param type The entity type name.
+     * @return The encoded UID.
+     */
+    public static ObjectNode buildUidObject(String type) {
+        var n = JsonNodeFactory.instance.objectNode();
+        n.put("type", type);
+        return n;
+    }
+
+    /**
+     * Build an entity UID in the bare {@code {"type", "id"}} form.
+     *
+     * @param type The entity type name.
+     * @param id   The entity id.
+     * @return The encoded UID.
+     */
+    public static ObjectNode buildUidObject(String type, String id) {
+        var n = buildUidObject(type);
+        n.put("id", id);
+        return n;
     }
 
     /**

@@ -1035,4 +1035,143 @@ mod partial_authorization_tests {
     }
 }
 
+#[cfg(feature = "tpe")]
+mod tpe_validation_tests {
+    use super::*;
+    use crate::tpe::{validate_partial_entities, validate_partial_entity};
+    use serde_json::json;
+
+    const SCHEMA: &str = r#"
+        entity Group;
+        entity User in [Group] = { "isAdmin": Bool };
+        entity Photo;
+        action view appliesTo {
+            principal: [User],
+            resource: [Photo],
+            context: { "authenticated": Bool }
+        };
+    "#;
+
+    fn schema_json() -> String {
+        json!(SCHEMA).to_string()
+    }
+
+    /// Assert that validation failed for the expected reason. Checking several fragments of the
+    /// message rather than only that an error occurred keeps the assertion specific to the rule
+    /// under test: every error crossing this boundary is flattened to a `Box<dyn Error>`, so
+    /// `Err(_)` alone would also match a schema that failed to parse or JSON that failed to
+    /// deserialize.
+    #[track_caller]
+    fn assert_err_contains(result: crate::utils::Result<()>, fragments: &[&str]) {
+        let err = result.expect_err("expected validation to fail").to_string();
+        for fragment in fragments {
+            assert!(
+                err.contains(fragment),
+                "expected the error to mention `{fragment}` but was: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn validate_partial_entity_succeeds() {
+        let entity = json!({
+            "uid": { "type": "User", "id": "alice" },
+            "attrs": { "isAdmin": false }
+        });
+        assert_matches!(
+            validate_partial_entity(&entity.to_string(), &schema_json()),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn validate_partial_entity_with_mistyped_attr_fails() {
+        let entity = json!({
+            "uid": { "type": "User", "id": "alice" },
+            "attrs": { "isAdmin": 3 }
+        });
+        assert_err_contains(
+            validate_partial_entity(&entity.to_string(), &schema_json()),
+            &[
+                "attribute `isAdmin`",
+                "User::\"alice\"",
+                "type mismatch",
+                "expected to have type bool",
+                "actually has type long",
+            ],
+        );
+    }
+
+    #[test]
+    fn validate_partial_entity_with_undeclared_type_fails() {
+        let entity = json!({ "uid": { "type": "Album", "id": "trip" } });
+        assert_err_contains(
+            validate_partial_entity(&entity.to_string(), &schema_json()),
+            &[
+                "entity `Album::\"trip\"`",
+                "type `Album`",
+                "not declared in the schema",
+            ],
+        );
+    }
+
+    #[test]
+    fn validate_partial_entities_with_unknown_ancestors_of_parent_fails() {
+        let entities = json!([
+            {
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false },
+                "parents": [ { "type": "Group", "id": "admins" } ]
+            },
+            {
+                "uid": { "type": "Group", "id": "admins" },
+                "attrs": {}
+            }
+        ]);
+        assert_err_contains(
+            validate_partial_entities(&entities.to_string(), &schema_json()),
+            &[
+                "ancestor `Group::\"admins\"`",
+                "of `User::\"alice\"`",
+                "has unknown ancestors",
+            ],
+        );
+    }
+
+    #[test]
+    fn validate_partial_entities_with_absent_parent_succeeds() {
+        let entities = json!([
+            {
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false },
+                "parents": [ { "type": "Group", "id": "admins" } ]
+            }
+        ]);
+        assert_matches!(
+            validate_partial_entities(&entities.to_string(), &schema_json()),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn validate_partial_entities_with_duplicate_uid_fails() {
+        let entities = json!([
+            {
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false },
+                "parents": []
+            },
+            {
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": true },
+                "parents": []
+            }
+        ]);
+        assert_err_contains(
+            validate_partial_entities(&entities.to_string(), &schema_json()),
+            &["duplicate entity entry", "User::\"alice\""],
+        );
+    }
+}
+
 mod parsing_tests {}
