@@ -1035,13 +1035,16 @@ mod partial_authorization_tests {
     }
 }
 
+/// Schema fixtures shared by the TPE tests here and the JNI-boundary tests in `interface.rs`.
+///
+/// `ffi::Schema` is an untagged enum discriminated by JSON type: a Cedar-format schema travels as a
+/// JSON string, a JSON-format one as a JSON object. Each fixture selects one arm.
 #[cfg(feature = "tpe")]
-mod tpe_validation_tests {
-    use super::*;
-    use crate::tpe::{validate_partial_entities, validate_partial_entity};
+pub(crate) mod tpe_schema_fixtures {
+    use cedar_policy::SchemaFragment;
     use serde_json::json;
 
-    const SCHEMA: &str = r#"
+    pub(crate) const CEDAR_SCHEMA_SRC: &str = r#"
         entity Group;
         entity User in [Group] = { "isAdmin": Bool };
         entity Photo;
@@ -1052,9 +1055,31 @@ mod tpe_validation_tests {
         };
     "#;
 
-    fn schema_json() -> String {
-        json!(SCHEMA).to_string()
+    /// The Cedar-format schema, JSON-encoded as a string.
+    pub(crate) fn schema_cedar_src() -> String {
+        json!(CEDAR_SCHEMA_SRC).to_string()
     }
+
+    /// The same schema in Cedar's JSON schema format, as a JSON object. Derived from the Cedar
+    /// source above rather than written out again, so the two cannot drift apart.
+    pub(crate) fn schema_json() -> String {
+        let (fragment, _) = SchemaFragment::from_cedarschema_str(CEDAR_SCHEMA_SRC)
+            .expect("the Cedar-format fixture should parse");
+        fragment
+            .to_json_value()
+            .expect("a parsed schema should convert to JSON")
+            .to_string()
+    }
+}
+
+#[cfg(feature = "tpe")]
+mod tpe_validation_tests {
+    use super::*;
+    use crate::tests::tpe_schema_fixtures::{schema_cedar_src, schema_json, CEDAR_SCHEMA_SRC};
+    use crate::tpe::{
+        validate_partial_entities, validate_partial_entity, validate_type_aware_partial_request,
+    };
+    use serde_json::json;
 
     /// Assert that validation failed for the expected reason. Checking several fragments of the
     /// message rather than only that an error occurred keeps the assertion specific to the rule
@@ -1079,7 +1104,7 @@ mod tpe_validation_tests {
             "attrs": { "isAdmin": false }
         });
         assert_matches!(
-            validate_partial_entity(&entity.to_string(), &schema_json()),
+            validate_partial_entity(&entity.to_string(), &schema_cedar_src()),
             Ok(())
         );
     }
@@ -1091,7 +1116,7 @@ mod tpe_validation_tests {
             "attrs": { "isAdmin": 3 }
         });
         assert_err_contains(
-            validate_partial_entity(&entity.to_string(), &schema_json()),
+            validate_partial_entity(&entity.to_string(), &schema_cedar_src()),
             &[
                 "attribute `isAdmin`",
                 "User::\"alice\"",
@@ -1106,7 +1131,7 @@ mod tpe_validation_tests {
     fn validate_partial_entity_with_undeclared_type_fails() {
         let entity = json!({ "uid": { "type": "Album", "id": "trip" } });
         assert_err_contains(
-            validate_partial_entity(&entity.to_string(), &schema_json()),
+            validate_partial_entity(&entity.to_string(), &schema_cedar_src()),
             &[
                 "entity `Album::\"trip\"`",
                 "type `Album`",
@@ -1129,7 +1154,7 @@ mod tpe_validation_tests {
             }
         ]);
         assert_err_contains(
-            validate_partial_entities(&entities.to_string(), &schema_json()),
+            validate_partial_entities(&entities.to_string(), &schema_cedar_src()),
             &[
                 "ancestor `Group::\"admins\"`",
                 "of `User::\"alice\"`",
@@ -1148,7 +1173,7 @@ mod tpe_validation_tests {
             }
         ]);
         assert_matches!(
-            validate_partial_entities(&entities.to_string(), &schema_json()),
+            validate_partial_entities(&entities.to_string(), &schema_cedar_src()),
             Ok(())
         );
     }
@@ -1168,8 +1193,156 @@ mod tpe_validation_tests {
             }
         ]);
         assert_err_contains(
-            validate_partial_entities(&entities.to_string(), &schema_json()),
+            validate_partial_entities(&entities.to_string(), &schema_cedar_src()),
             &["duplicate entity entry", "User::\"alice\""],
+        );
+    }
+
+    #[test]
+    fn validate_type_aware_partial_request_succeeds() {
+        let request = json!({
+            "principal": { "type": "User" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo", "id": "door" },
+            "context": { "authenticated": true },
+            "schema": CEDAR_SCHEMA_SRC
+        });
+        assert_matches!(
+            validate_type_aware_partial_request(&request.to_string()),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn validate_type_aware_partial_request_with_unknown_context_succeeds() {
+        let request = json!({
+            "principal": { "type": "User", "id": "alice" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo" },
+            "schema": CEDAR_SCHEMA_SRC
+        });
+        assert_matches!(
+            validate_type_aware_partial_request(&request.to_string()),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn validate_type_aware_partial_request_with_undeclared_principal_type_fails() {
+        let request = json!({
+            "principal": { "type": "Admin" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo", "id": "door" },
+            "context": { "authenticated": true },
+            "schema": CEDAR_SCHEMA_SRC
+        });
+        assert_err_contains(
+            validate_type_aware_partial_request(&request.to_string()),
+            &[
+                "principal type `Admin`",
+                "is not valid for",
+                "Action::\"view\"",
+            ],
+        );
+    }
+
+    #[test]
+    fn validate_type_aware_partial_request_with_unknown_in_context_fails() {
+        let request = json!({
+            "principal": { "type": "User", "id": "alice" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo", "id": "door" },
+            "context": { "authenticated": { "__extn": { "fn": "unknown", "arg": "authn" } } },
+            "schema": CEDAR_SCHEMA_SRC
+        });
+        assert_err_contains(
+            validate_type_aware_partial_request(&request.to_string()),
+            &["Context contains unknowns"],
+        );
+    }
+
+    #[test]
+    fn validate_partial_entity_with_json_format_schema() {
+        let entity = json!({
+            "uid": { "type": "User", "id": "alice" },
+            "attrs": { "isAdmin": false }
+        });
+        assert_matches!(
+            validate_partial_entity(&entity.to_string(), &schema_json()),
+            Ok(())
+        );
+
+        // The same violation the Cedar-format schema catches, so a passing case above cannot be a
+        // schema that parsed into something permissive.
+        let mistyped = json!({
+            "uid": { "type": "User", "id": "alice" },
+            "attrs": { "isAdmin": 3 }
+        });
+        assert_err_contains(
+            validate_partial_entity(&mistyped.to_string(), &schema_json()),
+            &[
+                "attribute `isAdmin`",
+                "User::\"alice\"",
+                "type mismatch",
+                "expected to have type bool",
+                "actually has type long",
+            ],
+        );
+    }
+
+    #[test]
+    fn validate_partial_entities_with_json_format_schema() {
+        let entities = json!([
+            {
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false },
+                "parents": [ { "type": "Group", "id": "admins" } ]
+            }
+        ]);
+        assert_matches!(
+            validate_partial_entities(&entities.to_string(), &schema_json()),
+            Ok(())
+        );
+
+        let duplicated = json!([
+            { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": false }, "parents": [] },
+            { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": true }, "parents": [] }
+        ]);
+        assert_err_contains(
+            validate_partial_entities(&duplicated.to_string(), &schema_json()),
+            &["duplicate entity entry", "User::\"alice\""],
+        );
+    }
+
+    #[test]
+    fn validate_type_aware_partial_request_with_json_format_schema() {
+        let schema: serde_json::Value = serde_json::from_str(&schema_json()).unwrap();
+        let request = json!({
+            "principal": { "type": "User" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo", "id": "door" },
+            "context": { "authenticated": true },
+            "schema": schema
+        });
+        assert_matches!(
+            validate_type_aware_partial_request(&request.to_string()),
+            Ok(())
+        );
+
+        let bad_principal = json!({
+            "principal": { "type": "Admin" },
+            "action": { "__entity": { "type": "Action", "id": "view" } },
+            "resource": { "type": "Photo", "id": "door" },
+            "context": { "authenticated": true },
+            "schema": schema
+        });
+        assert_err_contains(
+            validate_type_aware_partial_request(&bad_principal.to_string()),
+            &[
+                "principal type `Admin`",
+                "is not valid for",
+                "Action::\"view\"",
+            ],
         );
     }
 }

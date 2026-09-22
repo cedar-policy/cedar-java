@@ -46,7 +46,9 @@ use crate::{
     jmap::Map,
     jset::Set,
     objects::{JEntityId, JEntityTypeName, JEntityUID, JLinkValue, JPolicy, JTemplateLink, Object},
-    tpe::{validate_partial_entities, validate_partial_entity},
+    tpe::{
+        validate_partial_entities, validate_partial_entity, validate_type_aware_partial_request,
+    },
     utils::raise_npe,
 };
 use crate::{helpers::validate_with_level_json_str, objects::JFormatterConfig};
@@ -1280,6 +1282,33 @@ fn validate_partial_entity_internal<'a>(
     }
 }
 
+/// Public string-based JSON interface to validate a type-aware partial request against the schema
+/// carried by the request itself
+#[jni_fn("com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest")]
+pub fn validateTypeAwarePartialRequestJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    request_jstr: JString<'a>,
+) -> jvalue {
+    match validate_type_aware_partial_request_internal(&mut env, request_jstr) {
+        Ok(v) => v.as_jni(),
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+    }
+}
+
+fn validate_type_aware_partial_request_internal<'a>(
+    env: &mut JNIEnv<'a>,
+    request_jstr: JString<'a>,
+) -> Result<JValueOwned<'a>> {
+    if request_jstr.is_null() {
+        raise_npe(env)
+    } else {
+        let request_json = String::from(env.get_string(&request_jstr)?);
+        validate_type_aware_partial_request(&request_json)?;
+        Ok(JValueGen::Object(env.new_string("success")?.into()))
+    }
+}
+
 /// Public string-based JSON interface to validate a collection of partial entities against a schema
 #[jni_fn("com.cedarpolicy.model.entity.PartialEntities")]
 pub fn validatePartialEntitiesJni<'a>(
@@ -1322,21 +1351,7 @@ pub(crate) mod jvm_based_tests {
     #[cfg(feature = "tpe")]
     mod tpe_tests {
         use super::*;
-
-        const SCHEMA: &str = r#"
-            entity Group;
-            entity User in [Group] = { "isAdmin": Bool };
-            entity Photo;
-            action view appliesTo {
-                principal: [User],
-                resource: [Photo],
-                context: { "authenticated": Bool }
-            };
-        "#;
-
-        fn schema_json() -> String {
-            serde_json::json!(SCHEMA).to_string()
-        }
+        use crate::tests::tpe_schema_fixtures::{schema_cedar_src, schema_json, CEDAR_SCHEMA_SRC};
 
         /// Read back the string an `_internal` returned on success.
         #[track_caller]
@@ -1370,7 +1385,7 @@ pub(crate) mod jvm_based_tests {
                 "attrs": { "isAdmin": false }
             });
             let entity_jstr = env.new_string(entity.to_string()).unwrap();
-            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
 
             let result =
                 validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr).unwrap();
@@ -1386,7 +1401,7 @@ pub(crate) mod jvm_based_tests {
                 "attrs": { "isAdmin": 3 }
             });
             let entity_jstr = env.new_string(entity.to_string()).unwrap();
-            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
 
             assert_err_contains(
                 validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr),
@@ -1403,7 +1418,7 @@ pub(crate) mod jvm_based_tests {
         #[test]
         fn validate_partial_entity_internal_null() {
             let mut env = JVM.attach_current_thread().unwrap();
-            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
             let result = validate_partial_entity_internal(
                 &mut env,
                 JString::from(JObject::null()),
@@ -1431,7 +1446,7 @@ pub(crate) mod jvm_based_tests {
                 }
             ]);
             let entities_jstr = env.new_string(entities.to_string()).unwrap();
-            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
 
             let result =
                 validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr).unwrap();
@@ -1447,7 +1462,7 @@ pub(crate) mod jvm_based_tests {
                 { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": true }, "parents": [] }
             ]);
             let entities_jstr = env.new_string(entities.to_string()).unwrap();
-            let schema_jstr = env.new_string(schema_json()).unwrap();
+            let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
 
             assert_err_contains(
                 validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr),
@@ -1462,6 +1477,127 @@ pub(crate) mod jvm_based_tests {
             let result = validate_partial_entities_internal(
                 &mut env,
                 entities_jstr,
+                JString::from(JObject::null()),
+            );
+            assert!(
+                result.is_ok(),
+                "a null input is reported to Java, not to us"
+            );
+            assert!(
+                env.exception_check().unwrap(),
+                "Expected java exception due to a null input"
+            );
+            env.exception_clear().unwrap();
+        }
+
+        #[test]
+        fn validate_partial_entity_internal_json_format_schema() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entity = serde_json::json!({
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": false }
+            });
+            let entity_jstr = env.new_string(entity.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            let result =
+                validate_partial_entity_internal(&mut env, entity_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
+
+            let mistyped = serde_json::json!({
+                "uid": { "type": "User", "id": "alice" },
+                "attrs": { "isAdmin": 3 }
+            });
+            let mistyped_jstr = env.new_string(mistyped.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+            assert_err_contains(
+                validate_partial_entity_internal(&mut env, mistyped_jstr, schema_jstr),
+                &[
+                    "attribute `isAdmin`",
+                    "User::\"alice\"",
+                    "type mismatch",
+                    "expected to have type bool",
+                    "actually has type long",
+                ],
+            );
+        }
+
+        #[test]
+        fn validate_partial_entities_internal_json_format_schema() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let entities = serde_json::json!([
+                {
+                    "uid": { "type": "User", "id": "alice" },
+                    "attrs": { "isAdmin": false },
+                    "parents": [ { "type": "Group", "id": "admins" } ]
+                }
+            ]);
+            let entities_jstr = env.new_string(entities.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+
+            let result =
+                validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
+
+            let duplicated = serde_json::json!([
+                { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": false }, "parents": [] },
+                { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": true }, "parents": [] }
+            ]);
+            let duplicated_jstr = env.new_string(duplicated.to_string()).unwrap();
+            let schema_jstr = env.new_string(schema_json()).unwrap();
+            assert_err_contains(
+                validate_partial_entities_internal(&mut env, duplicated_jstr, schema_jstr),
+                &["duplicate entity entry", "User::\"alice\""],
+            );
+        }
+
+        #[test]
+        fn validate_type_aware_partial_request_internal_success() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let request = serde_json::json!({
+                "principal": { "type": "User" },
+                "action": { "__entity": { "type": "Action", "id": "view" } },
+                "resource": { "type": "Photo", "id": "door" },
+                "context": { "authenticated": true },
+                "schema": CEDAR_SCHEMA_SRC
+            });
+            let request_jstr = env.new_string(request.to_string()).unwrap();
+
+            let result =
+                validate_type_aware_partial_request_internal(&mut env, request_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
+        }
+
+        #[test]
+        fn validate_type_aware_partial_request_internal_type_check_failure() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let request = serde_json::json!({
+                "principal": { "type": "Admin" },
+                "action": { "__entity": { "type": "Action", "id": "view" } },
+                "resource": { "type": "Photo", "id": "door" },
+                "context": { "authenticated": true },
+                "schema": CEDAR_SCHEMA_SRC
+            });
+            let request_jstr = env.new_string(request.to_string()).unwrap();
+
+            assert_err_contains(
+                validate_type_aware_partial_request_internal(&mut env, request_jstr),
+                &[
+                    "principal type `Admin`",
+                    "is not valid for",
+                    "Action::\"view\"",
+                ],
+            );
+        }
+
+        #[test]
+        fn validate_type_aware_partial_request_internal_null() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let result = validate_type_aware_partial_request_internal(
+                &mut env,
                 JString::from(JObject::null()),
             );
             assert!(

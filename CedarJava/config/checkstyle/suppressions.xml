@@ -9,5 +9,6 @@
     <suppress checks="HiddenField" files="PartialAuthorizationRequest.java$"/>
     <suppress checks="LineLength" files="JSONTests.java$"/>
     <suppress checks="LineLength" files="IntegrationTests.java$"/>
+    <suppress checks="LineLength" files="TypeAwarePartialAuthorizationResponseTests.java$"/>
     <suppress checks="ParameterNumber" files="PartialAuthorizationSuccessResponse.java$"/>
 </suppressions>
