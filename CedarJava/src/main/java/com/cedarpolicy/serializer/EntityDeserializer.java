@@ -124,12 +124,32 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
      */
     private EntityUID parseEntityUID(JsonParser parser, JsonNode entityUIDJson)
             throws InvalidValueDeserializationException {
-        if (entityUIDJson.has("type") && entityUIDJson.has("id")) {
-            JsonEUID jsonEuid = new JsonEUID(entityUIDJson.get("type").asText(), entityUIDJson.get("id").asText());
+        JsonNode normalizedEntityUIDJson = entityUIDJson;
+        if (entityUIDJson.has("__entity")) {
+            JsonNode explicitEntityNode = entityUIDJson.get("__entity");
+            if (!explicitEntityNode.isObject()) {
+                String msg = "\"__entity\" must be a JSON object";
+                throw new InvalidValueDeserializationException(
+                        parser,
+                        msg,
+                        explicitEntityNode.asToken(),
+                        Entity.class);
+            }
+            normalizedEntityUIDJson = explicitEntityNode;
+        }
+
+        if (normalizedEntityUIDJson.has("type") && normalizedEntityUIDJson.has("id")) {
+            JsonEUID jsonEuid = new JsonEUID(
+                    normalizedEntityUIDJson.get("type").asText(),
+                    normalizedEntityUIDJson.get("id").asText());
             return EntityUID.parseFromJson(jsonEuid).get();
         } else {
             String msg = "\"type\" or \"id\" not found";
-            throw new InvalidValueDeserializationException(parser, msg, entityUIDJson.asToken(), Entity.class);
+            throw new InvalidValueDeserializationException(
+                    parser,
+                    msg,
+                    normalizedEntityUIDJson.asToken(),
+                    Entity.class);
         }
     }
 

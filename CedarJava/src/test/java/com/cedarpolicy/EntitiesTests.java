@@ -31,6 +31,7 @@ import org.skyscreamer.jsonassert.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -130,6 +131,41 @@ public class EntitiesTests {
                 + "\"parents\":[{\"type\":\"Photo\",\"id\":\"pic02\"}]," + "\"tags\":{}}]}";
 
         JSONAssert.assertEquals(expectedRepresentation, actualRepresentation, JSONCompareMode.NON_EXTENSIBLE);
+    }
+
+    @Test
+    public void givenExplicitEntityParentSyntaxParseReturns() throws JsonProcessingException, IOException {
+        String validEntitiesJson = """
+                [
+                    {"uid":{"type":"Photo","id":"pic01"},
+                    "parents":[{"__entity":{"type":"Photo","id":"pic02"}}],
+                    "attrs":{}},
+                    {"uid":{"type":"Photo","id":"pic02"},"parents":[],"attrs":{}}
+                ]
+                """;
+
+        EntityUID childEUID = EntityUID.parse("Photo::\"pic01\"").get();
+        EntityUID parentEUID = EntityUID.parse("Photo::\"pic02\"").get();
+
+        Entities entitiesFromString = Entities.parse(validEntitiesJson);
+        Entity childFromString = entitiesFromString.getEntities().stream()
+                .filter(entity -> entity.getEUID().equals(childEUID))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(Set.of(parentEUID), childFromString.getParents());
+
+        Path tempFile = Files.createTempFile("entities-explicit-parent", ".json");
+        try {
+            Files.writeString(tempFile, validEntitiesJson);
+            Entities entitiesFromFile = Entities.parse(tempFile);
+            Entity childFromFile = entitiesFromFile.getEntities().stream()
+                    .filter(entity -> entity.getEUID().equals(childEUID))
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals(Set.of(parentEUID), childFromFile.getParents());
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
     }
 
     @Test
