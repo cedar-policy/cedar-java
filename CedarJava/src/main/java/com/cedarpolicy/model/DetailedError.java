@@ -38,7 +38,7 @@ public class DetailedError {
     /** Severity */
     @JsonProperty("severity")
     public final Optional<Severity> severity;
-    /** Source labels (ranges) */
+    /** Source labels (ranges); see {@link SourceLabel} for how to index them */
     @JsonProperty("sourceLocations")
     public final ImmutableList<SourceLabel> sourceLocations;
     /** Related errors */
@@ -84,14 +84,44 @@ public class DetailedError {
         Error,
     }
 
+    /**
+     * A region of the source text an error refers to, so callers can underline it.
+     *
+     * <p><b>The offsets are UTF-8 byte offsets, not {@code String} indices.</b> Cedar produces
+     * them by counting bytes, while {@link String#substring(int, int)} counts UTF-16 chars. The
+     * two coincide only while the source is pure ASCII; a single non-ASCII character anywhere
+     * earlier in the document - an accented identifier, a non-Latin string literal, an emoji in
+     * a comment - shifts them apart, and slicing the {@code String} directly then either
+     * extracts the wrong region or throws {@link StringIndexOutOfBoundsException}. Slice the
+     * source's UTF-8 bytes instead:
+     *
+     * <pre>{@code
+     * byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
+     * String offending = new String(bytes, label.start, label.end - label.start, StandardCharsets.UTF_8);
+     * }</pre>
+     *
+     * <p>Offsets are absolute within the whole text that was parsed, not relative to the policy
+     * containing the error, so they remain directly usable when several policies are parsed
+     * together. They carry no policy identity of their own: mapping an offset back to a
+     * particular policy statement is left to the caller.
+     *
+     * <p>A region may be empty ({@code start == end}), which happens when there is no extent to
+     * highlight - an unterminated string literal, for instance, reports the position the lexer
+     * stopped at. Renderers should treat zero width as a single caret rather than assuming at
+     * least one character to underline.
+     *
+     * <p>For a parse error the region covers the unexpected token, which is not always where a
+     * reader would place the mistake: a missing operand is reported at the token that followed
+     * it, possibly on a later line.
+     */
     public static final class SourceLabel {
         /** Text of the label (if any) */
         @JsonProperty("label")
         public final Optional<String> label;
-        /** Start of the source location (in bytes) */
+        /** Start of the source location, as a UTF-8 byte offset, inclusive. See {@link SourceLabel}. */
         @JsonProperty("start")
         public final int start;
-        /** End of the source location (in bytes) */
+        /** End of the source location, as a UTF-8 byte offset, exclusive. See {@link SourceLabel}. */
         @JsonProperty("end")
         public final int end;
 
