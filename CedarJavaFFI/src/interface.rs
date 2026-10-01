@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::tpe::{json_type_aware_partial_is_authorized, json_type_aware_partial_reauthorize};
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
@@ -62,6 +63,8 @@ const V0_VALIDATE_OP: &str = "ValidateOperation";
 const V0_VALIDATE_LEVEL_OP: &str = "ValidateWithLevelOperation";
 const V0_VALIDATE_ENTITIES: &str = "ValidateEntities";
 const V0_STATEFUL_AUTH_OP: &str = "StatefulAuthorizationOperation";
+const V0_AUTH_TYPE_AWARE_PARTIAL_OP: &str = "AuthorizationTypeAwarePartialOperation";
+const V0_TYPE_AWARE_PARTIAL_REAUTHORIZE_OP: &str = "TypeAwarePartialReauthorizeOperation";
 
 thread_local! {
     static AUTHORIZER: Authorizer = Authorizer::new();
@@ -327,6 +330,8 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
         V0_AUTH_OP => is_authorized_json_str(input),
         #[cfg(feature = "partial-eval")]
         V0_AUTH_PARTIAL_OP => is_authorized_partial_json_str(input),
+        V0_AUTH_TYPE_AWARE_PARTIAL_OP => json_type_aware_partial_is_authorized(input),
+        V0_TYPE_AWARE_PARTIAL_REAUTHORIZE_OP => json_type_aware_partial_reauthorize(input),
         V0_VALIDATE_OP => validate_json_str(input),
         V0_VALIDATE_ENTITIES => json_validate_entities(&input),
         V0_VALIDATE_LEVEL_OP => validate_with_level_json_str(input),
@@ -360,7 +365,7 @@ fn default_true() -> bool {
     true
 }
 
-fn make_auth_failure(msg: String) -> AuthorizationAnswer {
+pub(crate) fn make_auth_failure(msg: String) -> AuthorizationAnswer {
     AuthorizationAnswer::Failure {
         errors: vec![DetailedError {
             message: msg,

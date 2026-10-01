@@ -21,6 +21,9 @@ import com.cedarpolicy.model.schema.Schema.JsonOrCedar;
 import com.cedarpolicy.model.policy.TemplateLink;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.model.policy.LinkValue;
+import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
+import org.junit.jupiter.api.function.Executable;
+import java.util.stream.Collectors;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.value.EntityTypeName;
@@ -207,4 +210,27 @@ public final class TestUtil {
         return new PolicySet(policies, templates, templateLinks);
     }
 
+
+    /** Policy carries its own id, so residual accessors return sets rather than maps. */
+    public static Set<String> ids(Set<Policy> policies) {
+        return policies.stream().map(Policy::getID).collect(Collectors.toSet());
+    }
+
+    /**
+     * Skips the assertions when the native library was built without the experimental feature they need.
+     *
+     * <p>An {@link AssertionError} is rethrown unchanged so a genuine failure keeps its expected/actual diff instead of
+     * arriving wrapped.
+     */
+    public static void assumeExperimentalFeature(Executable executable) {
+        try {
+            executable.execute();
+        } catch (MissingExperimentalFeatureException e) {
+            System.err.println("Skipping assertions: " + e.getMessage());
+        } catch (AssertionError e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
