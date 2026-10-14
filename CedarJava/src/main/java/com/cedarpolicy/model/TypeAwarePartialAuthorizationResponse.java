@@ -52,6 +52,41 @@ public final class TypeAwarePartialAuthorizationResponse {
         this.warnings = warnings == null ? List.of() : List.copyOf(warnings);
     }
 
+    private TypeAwarePartialAuthorizationResponse(TypeAwarePartialAuthorizationResponse response,
+            TypeAwarePartialAuthorizationRequest request, com.cedarpolicy.model.policy.PolicySet policies,
+            com.cedarpolicy.model.entity.PartialEntities entities, com.cedarpolicy.AuthorizationEngine engine) {
+        this.type = response.type;
+        this.success = response.success.map(
+                s -> new TypeAwarePartialAuthorizationSuccessResponse(s, request, policies, entities, engine));
+        this.errors = response.errors;
+        this.warnings = response.warnings;
+    }
+
+    /**
+     * Returns a copy whose success response, if any, remembers what the residuals were computed from, so that
+     * {@link TypeAwarePartialAuthorizationSuccessResponse#reauthorize} does not need them passed again.
+     *
+     * <p>Public only because the engine that calls it is in another package; <b>callers should not use it.</b> Pass
+     * inputs other than the ones the residuals were computed from and the residuals describe one authorization while
+     * {@code reauthorize} answers a different one — as a success, because Cedar can only check the completed request
+     * against the partial inputs it is handed.
+     *
+     * @param request  the partial request the residuals were computed from
+     * @param policies the policy set the residuals were computed from
+     * @param entities the partially known entities the residuals were computed from
+     * @param engine   the engine to reauthorize through
+     * @return a copy carrying those inputs
+     */
+    public TypeAwarePartialAuthorizationResponse withInputs(TypeAwarePartialAuthorizationRequest request,
+            com.cedarpolicy.model.policy.PolicySet policies,
+            com.cedarpolicy.model.entity.PartialEntities entities, com.cedarpolicy.AuthorizationEngine engine) {
+        java.util.Objects.requireNonNull(request, "request");
+        java.util.Objects.requireNonNull(policies, "policies");
+        java.util.Objects.requireNonNull(entities, "entities");
+        java.util.Objects.requireNonNull(engine, "engine");
+        return new TypeAwarePartialAuthorizationResponse(this, request, policies, entities, engine);
+    }
+
     /**
      * Whether this is a success or a failure response.
      *
@@ -83,7 +118,7 @@ public final class TypeAwarePartialAuthorizationResponse {
     }
 
     /**
-     * Warnings, which either kind of response may carry.
+     * Warnings, always empty for type-aware partial evaluation: Cedar's {@code TpeResponse} exposes none.
      *
      * @return the warnings, empty if there were none
      */

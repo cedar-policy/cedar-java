@@ -1046,7 +1046,7 @@ pub(crate) mod tpe_schema_fixtures {
 
     pub(crate) const CEDAR_SCHEMA_SRC: &str = r#"
         entity Group;
-        entity User in [Group] = { "isAdmin": Bool };
+        entity User in [Group] = { "isAdmin": Bool, "num"?: Long };
         entity Photo;
         action view appliesTo {
             principal: [User],
@@ -1069,6 +1069,34 @@ pub(crate) mod tpe_schema_fixtures {
             .to_json_value()
             .expect("a parsed schema should convert to JSON")
             .to_string()
+    }
+}
+
+/// With the `tpe` feature off, both type-aware operations must still be dispatched and must answer with
+/// something Java can deserialize, carrying the token that becomes
+/// `MissingExperimentalFeatureException`. Falling through to `call_cedar`'s unsupported-operation arm
+/// would produce an `errors` array of bare strings that the TPE response types cannot bind.
+#[cfg(not(feature = "tpe"))]
+mod tpe_disabled_tests {
+    use super::*;
+
+    #[test]
+    fn both_operations_report_the_disabled_feature_token() {
+        for op in [
+            "AuthorizationTypeAwarePartialOperation",
+            "TypeAwarePartialReauthorizeOperation",
+        ] {
+            let answer: serde_json::Value = serde_json::from_str(&call_cedar(op, "{}"))
+                .unwrap_or_else(|e| panic!("{op} must answer with valid JSON: {e}"));
+            assert_eq!(answer["type"], "failure", "{op}");
+            let message = answer["errors"][0]["message"].as_str().unwrap();
+            assert!(
+                message.contains("TypeAwarePartialEvaluationNotEnabled"),
+                "{op} must carry the token but said: {message}"
+            );
+            // The error object must have the DetailedError shape, not a bare string.
+            assert!(answer["errors"][0]["related"].is_array(), "{op}");
+        }
     }
 }
 
@@ -1259,6 +1287,485 @@ mod tpe_validation_tests {
             validate_type_aware_partial_request(&request.to_string()),
             &["Context contains unknowns"],
         );
+    }
+
+    /// The authorization handler, end to end through the operation dispatch.
+    mod authorization {
+        use super::*;
+        use crate::call_cedar;
+
+        const OP: &str = "AuthorizationTypeAwarePartialOperation";
+
+        fn input(principal: serde_json::Value, policies: serde_json::Value) -> serde_json::Value {
+            json!({
+                "principal": principal,
+                "action": { "__entity": { "type": "Action", "id": "view" } },
+                "resource": { "type": "Photo", "id": "door" },
+                "context": { "authenticated": true },
+                "schema": CEDAR_SCHEMA_SRC,
+                "policies": policies,
+                "entities": []
+            })
+        }
+
+        fn call_with(input: &serde_json::Value) -> serde_json::Value {
+            serde_json::from_str(&call_cedar(OP, &input.to_string())).unwrap()
+        }
+
+        fn call(principal: serde_json::Value, static_policies: &str) -> serde_json::Value {
+            call_with(&input(
+                principal,
+                json!({ "staticPolicies": static_policies }),
+            ))
+        }
+
+        fn failure_messages(answer: &serde_json::Value) -> Vec<String> {
+            assert_eq!(answer["type"], "failure");
+            answer["errors"]
+                .as_array()
+                .expect("a failure answer must carry an errors array")
+                .iter()
+                .map(|e| {
+                    e["message"]
+                        .as_str()
+                        .expect("every error must carry a message")
+                        .to_string()
+                })
+                .collect()
+        }
+
+        #[test]
+        fn concrete_request_reaches_a_decision() {
+            let answer = call(
+                json!({ "type": "User", "id": "alice" }),
+                r#"permit(principal, action, resource);"#,
+            );
+            assert_eq!(answer["type"], "residuals");
+            assert_eq!(answer["response"]["decision"], "allow");
+            // A concrete Allow still carries the permit that decided it, and that permit is trivial.
+            assert_eq!(
+                answer["response"]["residuals"].as_object().unwrap().len(),
+                1
+            );
+            assert!(answer["response"]["nontrivialResiduals"]
+                .as_array()
+                .unwrap()
+                .is_empty());
+        }
+
+        #[test]
+        fn unknown_principal_id_yields_a_residual() {
+            let answer = call(
+                json!({ "type": "User" }),
+                r#"permit(principal, action, resource) when { principal.isAdmin };"#,
+            );
+            assert_eq!(answer["type"], "residuals");
+            assert!(answer["response"]["decision"].is_null());
+            let residuals = answer["response"]["residuals"].as_object().unwrap();
+            assert_eq!(residuals.len(), 1);
+            let id = residuals.keys().next().unwrap();
+            assert_eq!(
+                answer["response"]["nontrivialResiduals"]
+                    .as_array()
+                    .unwrap(),
+                &vec![serde_json::Value::String(id.clone())],
+                "a residual with a condition left must be non-trivial"
+            );
+        }
+
+        #[test]
+        fn trivial_and_nontrivial_residuals_are_distinguished() {
+            let answer = call(
+                json!({ "type": "User" }),
+                r#"permit(principal, action, resource);
+                   permit(principal, action, resource) when { principal.isAdmin };"#,
+            );
+            let residuals = answer["response"]["residuals"].as_object().unwrap();
+            let nontrivial = answer["response"]["nontrivialResiduals"]
+                .as_array()
+                .unwrap();
+            assert_eq!(residuals.len(), 2, "every residual is reported");
+            assert_eq!(nontrivial.len(), 1, "only one of them is non-trivial");
+
+            // Assert which residual landed on which side, so an inverted split fails here. The
+            // non-trivial one is the policy whose condition survived, and it is identified by the
+            // attribute it still reads rather than by id, because ids are generated positionally.
+            let nontrivial_id = nontrivial[0]
+                .as_str()
+                .expect("a residual id must be a string");
+            let nontrivial_body = residuals
+                .get(nontrivial_id)
+                .expect("nontrivialResiduals must be a subset of residuals' keys")
+                .to_string();
+            assert!(
+                nontrivial_body.contains("isAdmin"),
+                "the non-trivial residual should still read isAdmin but was: {nontrivial_body}"
+            );
+            let trivial_body = residuals
+                .iter()
+                .find(|(id, _)| *id != nontrivial_id)
+                .map(|(_, body)| body.to_string())
+                .expect("the other residual should be the trivial one");
+            assert!(
+                !trivial_body.contains("isAdmin"),
+                "the trivial residual should carry no condition but was: {trivial_body}"
+            );
+        }
+
+        #[test]
+        fn undeclared_principal_type_is_a_failure_not_a_panic() {
+            let answer = call(
+                json!({ "type": "Admin" }),
+                r#"permit(principal, action, resource);"#,
+            );
+            let messages = failure_messages(&answer);
+            assert_eq!(messages.len(), 1);
+            assert!(
+                messages[0].contains("Admin") && messages[0].contains("is not valid for"),
+                "expected the error to say the type is not valid for the action but was: {messages:?}"
+            );
+        }
+
+        #[test]
+        fn a_forbid_reaches_a_deny() {
+            let answer = call(
+                json!({ "type": "User", "id": "alice" }),
+                r#"permit(principal, action, resource);
+                   forbid(principal, action, resource);"#,
+            );
+            assert_eq!(answer["type"], "residuals");
+            assert_eq!(answer["response"]["decision"], "deny");
+        }
+
+        /// Type-aware partial evaluation validates the policy set against the schema, which plain
+        /// authorization does not. A policy that parses but does not type check is a failure, not a
+        /// residual.
+        #[test]
+        fn a_policy_that_fails_schema_validation_is_a_failure() {
+            let answer = call(
+                json!({ "type": "User", "id": "alice" }),
+                r#"permit(principal, action, resource) when { principal.nosuchattr };"#,
+            );
+            let messages = failure_messages(&answer);
+            assert_eq!(
+                messages,
+                vec!["policy failed to validate against the schema"]
+            );
+        }
+
+        /// A template-linked policy residualizes as a static policy keyed by the link id, which is
+        /// what lets the Java side rebuild the residuals with no templates of its own.
+        #[test]
+        fn a_template_link_residualizes_under_its_link_id() {
+            let answer = call_with(&input(
+                json!({ "type": "User" }),
+                json!({
+                    "templates": {
+                        "tmpl": "permit(principal == ?principal, action, resource) when { principal.isAdmin };"
+                    },
+                    "templateLinks": [{
+                        "templateId": "tmpl",
+                        "newId": "linked",
+                        "values": { "?principal": { "type": "User", "id": "alice" } }
+                    }]
+                }),
+            ));
+            assert_eq!(answer["type"], "residuals");
+            let residuals = answer["response"]["residuals"].as_object().unwrap();
+            assert_eq!(
+                residuals.keys().collect::<Vec<_>>(),
+                vec!["linked"],
+                "the residual is keyed by the link id, not the template id"
+            );
+            let body = residuals["linked"].to_string();
+            assert!(
+                !body.contains("slot") && !body.contains('?'),
+                "the link's slot should be substituted away but was: {body}"
+            );
+        }
+
+        #[test]
+        fn malformed_json_is_a_failure_not_a_panic() {
+            let answer: serde_json::Value =
+                serde_json::from_str(&call_cedar(OP, "{ not json")).unwrap();
+            let messages = failure_messages(&answer);
+            assert_eq!(messages.len(), 1);
+            assert!(
+                messages[0].contains("key must be a string"),
+                "expected the error to describe the bad JSON but was: {messages:?}"
+            );
+        }
+
+        #[test]
+        fn a_bad_policy_set_is_a_failure() {
+            let answer = call(
+                json!({ "type": "User", "id": "alice" }),
+                "this is not a policy",
+            );
+            let messages = failure_messages(&answer);
+            // The underlying parse error is preserved, not flattened to the wrapper's context.
+            assert_eq!(
+                messages,
+                vec!["failed to parse policies from string: unexpected token `is`"]
+            );
+        }
+
+        /// An entity set where alice's `num` is known, so arithmetic on it can overflow.
+        fn overflowing_entities() -> serde_json::Value {
+            json!([{ "uid": { "type": "User", "id": "alice" },
+                     "attrs": { "isAdmin": true, "num": 1 },
+                     "parents": [], "tags": {} }])
+        }
+
+        const OVERFLOWS: &str = "permit(principal, action, resource) \
+             when { principal has num && principal.num + 9223372036854775807 > 0 };";
+
+        /// Residuals arrive as Cedar source, and an errored one is reported by id.
+        #[test]
+        fn an_errored_residual_is_reported_by_id() {
+            let mut input = input(
+                json!({ "type": "User", "id": "alice" }),
+                json!({ "staticPolicies": OVERFLOWS }),
+            );
+            input["entities"] = overflowing_entities();
+            let answer = call_with(&input);
+            assert_eq!(answer["type"], "residuals");
+            let residuals = answer["response"]["residuals"].as_object().unwrap();
+            assert_eq!(residuals.len(), 1);
+            let (id, src) = residuals.iter().next().unwrap();
+            assert!(
+                src.as_str().unwrap().contains("error()"),
+                "the residual should carry Cedar's own rendering but was: {src}"
+            );
+            assert_eq!(
+                answer["response"]["erroredResiduals"].as_array().unwrap(),
+                &vec![serde_json::Value::String(id.clone())]
+            );
+        }
+
+        /// An error nested inside a live residual: absent from Cedar's error buckets, but still
+        /// unparseable, so it must be reported.
+        #[test]
+        fn a_nested_errored_residual_is_reported_by_id() {
+            // No `context` key at all, so `context.authenticated` cannot be resolved and the `||`
+            // cannot short-circuit — which is what keeps the error nested rather than folded away.
+            let input = json!({
+                "principal": { "type": "User", "id": "alice" },
+                "action": { "__entity": { "type": "Action", "id": "view" } },
+                "resource": { "type": "Photo", "id": "door" },
+                "schema": CEDAR_SCHEMA_SRC,
+                "policies": { "staticPolicies":
+                    "permit(principal, action, resource) when { context.authenticated || (principal has num && principal.num + 9223372036854775807 > 0) };" },
+                "entities": overflowing_entities()
+            });
+            let answer = call_with(&input);
+            assert_eq!(answer["type"], "residuals");
+            let nontrivial = answer["response"]["nontrivialResiduals"]
+                .as_array()
+                .unwrap();
+            let errored = answer["response"]["erroredResiduals"].as_array().unwrap();
+            assert_eq!(errored.len(), 1, "the nested error must be reported");
+            assert_eq!(
+                nontrivial, errored,
+                "and it is also a non-trivial residual, which is what error_permits() would miss"
+            );
+        }
+
+        #[test]
+        fn a_clean_residual_is_not_reported_as_errored() {
+            let answer = call(
+                json!({ "type": "User" }),
+                r#"permit(principal, action, resource) when { principal.isAdmin };"#,
+            );
+            assert!(answer["response"]["erroredResiduals"]
+                .as_array()
+                .unwrap()
+                .is_empty());
+        }
+
+        /// Reauthorization, which runs natively so residuals never cross to Java and back.
+        mod reauthorize {
+            use super::*;
+
+            const REAUTH_OP: &str = "TypeAwarePartialReauthorizeOperation";
+
+            /// A partial call with the context unknown, completed by `concrete`.
+            fn reauth(
+                policies: &str,
+                entities: serde_json::Value,
+                concrete_principal: serde_json::Value,
+                concrete_context: serde_json::Value,
+                concrete_entities: serde_json::Value,
+            ) -> serde_json::Value {
+                let input = json!({
+                    "principal": { "type": "User", "id": "alice" },
+                    "action": { "__entity": { "type": "Action", "id": "view" } },
+                    "resource": { "type": "Photo", "id": "door" },
+                    "schema": CEDAR_SCHEMA_SRC,
+                    "policies": { "staticPolicies": policies },
+                    "entities": entities,
+                    "concreteRequest": {
+                        "principal": concrete_principal,
+                        "action": { "__entity": { "type": "Action", "id": "view" } },
+                        "resource": { "type": "Photo", "id": "door" },
+                        "context": concrete_context
+                    },
+                    "concreteEntities": concrete_entities
+                });
+                serde_json::from_str(&call_cedar(REAUTH_OP, &input.to_string())).unwrap()
+            }
+
+            #[test]
+            fn completes_an_undecided_authorization() {
+                let answer = reauth(
+                    "permit(principal, action, resource) when { context.authenticated };",
+                    json!([]),
+                    json!({ "type": "User", "id": "alice" }),
+                    json!({ "authenticated": true }),
+                    json!([]),
+                );
+                assert_eq!(answer["type"], "success");
+                assert_eq!(answer["response"]["decision"], "allow");
+            }
+
+            /// The case that motivates running this natively: an errored residual cannot be
+            /// serialized, but reauthorization never serializes it.
+            #[test]
+            fn works_when_a_residual_errored() {
+                let answer = reauth(
+                    OVERFLOWS,
+                    overflowing_entities(),
+                    json!({ "type": "User", "id": "alice" }),
+                    json!({ "authenticated": true }),
+                    // The partial entities named alice, so the concrete ones must too — Cedar
+                    // checks entity consistency as well as request consistency.
+                    json!([{ "uid": { "type": "User", "id": "alice" },
+                             "attrs": { "isAdmin": true, "num": 1 }, "parents": [] }]),
+                );
+                assert_eq!(
+                    answer["type"], "success",
+                    "an errored residual must not make reauthorization fail: {answer}"
+                );
+                assert_eq!(answer["response"]["decision"], "deny");
+                let errors = answer["response"]["diagnostics"]["errors"]
+                    .as_array()
+                    .expect("the erroring policy should be reported in diagnostics");
+                assert_eq!(errors.len(), 1, "expected one evaluation error: {answer}");
+            }
+
+            /// Diagnostics survive the reauthorize path, not just the partial-authorization one. An entity
+            /// that does not conform names the entity and the attribute; flattening to `to_string()` used
+            /// to reduce this to "entity does not conform to the schema".
+            #[test]
+            fn preserves_diagnostics_for_a_nonconforming_concrete_entity() {
+                let input = json!({
+                    "principal": { "type": "User", "id": "alice" },
+                    "action": { "__entity": { "type": "Action", "id": "view" } },
+                    "resource": { "type": "Photo", "id": "door" },
+                    "schema": CEDAR_SCHEMA_SRC,
+                    "policies": { "staticPolicies": "permit(principal, action, resource);" },
+                    "entities": [],
+                    "concreteRequest": {
+                        "principal": { "type": "User", "id": "alice" },
+                        "action": { "__entity": { "type": "Action", "id": "view" } },
+                        "resource": { "type": "Photo", "id": "door" },
+                        "context": { "authenticated": true }
+                    },
+                    // `isAdmin` is required by the fixture schema and omitted here.
+                    "concreteEntities": [{ "uid": { "type": "User", "id": "alice" }, "attrs": {}, "parents": [] }]
+                });
+                let answer: serde_json::Value =
+                    serde_json::from_str(&call_cedar(REAUTH_OP, &input.to_string())).unwrap();
+                assert_eq!(answer["type"], "failure");
+                let message = answer["errors"][0]["message"].as_str().unwrap();
+                assert!(
+                    message.contains("isAdmin") && message.contains("alice"),
+                    "the diagnostic must name the entity and the attribute, but was: {message}"
+                );
+            }
+
+            /// A concrete request must supply a context. Defaulting an absent one to empty would answer a
+            /// different question than the caller asked: a `forbid ... when { context.blocked }` would
+            /// evaluate false and flip a Deny to an Allow, silently.
+            #[test]
+            fn rejects_a_concrete_request_with_no_context() {
+                let input = json!({
+                    "principal": { "type": "User", "id": "alice" },
+                    "action": { "__entity": { "type": "Action", "id": "view" } },
+                    "resource": { "type": "Photo", "id": "door" },
+                    "schema": CEDAR_SCHEMA_SRC,
+                    "policies": { "staticPolicies": "permit(principal, action, resource);" },
+                    "entities": [],
+                    "concreteRequest": {
+                        "principal": { "type": "User", "id": "alice" },
+                        "action": { "__entity": { "type": "Action", "id": "view" } },
+                        "resource": { "type": "Photo", "id": "door" }
+                        // no context
+                    },
+                    "concreteEntities": []
+                });
+                let answer: serde_json::Value =
+                    serde_json::from_str(&call_cedar(REAUTH_OP, &input.to_string())).unwrap();
+                assert_eq!(answer["type"], "failure");
+                let message = answer["errors"][0]["message"].as_str().unwrap();
+                assert!(
+                    message.contains("context"),
+                    "expected the error to name the missing context but was: {message}"
+                );
+            }
+
+            /// A JSON null context is rejected too, which is what Java sends for an empty `Optional`.
+            #[test]
+            fn rejects_a_concrete_request_with_a_null_context() {
+                let input = json!({
+                    "principal": { "type": "User", "id": "alice" },
+                    "action": { "__entity": { "type": "Action", "id": "view" } },
+                    "resource": { "type": "Photo", "id": "door" },
+                    "schema": CEDAR_SCHEMA_SRC,
+                    "policies": { "staticPolicies": "permit(principal, action, resource);" },
+                    "entities": [],
+                    "concreteRequest": {
+                        "principal": { "type": "User", "id": "alice" },
+                        "action": { "__entity": { "type": "Action", "id": "view" } },
+                        "resource": { "type": "Photo", "id": "door" },
+                        "context": null
+                    },
+                    "concreteEntities": []
+                });
+                let answer: serde_json::Value =
+                    serde_json::from_str(&call_cedar(REAUTH_OP, &input.to_string())).unwrap();
+                assert_eq!(answer["type"], "failure");
+            }
+
+            /// Completing a *different* request is rejected. Authorizing a residual policy set
+            /// cannot detect this and would silently grant access.
+            #[test]
+            fn rejects_a_request_that_does_not_match_the_partial_one() {
+                let answer = reauth(
+                    "permit(principal == User::\"alice\", action, resource) when { context.authenticated };",
+                    json!([]),
+                    json!({ "type": "User", "id": "bob" }),
+                    json!({ "authenticated": true }),
+                    json!([]),
+                );
+                assert_eq!(answer["type"], "failure");
+                let message = answer["errors"][0]["message"].as_str().unwrap();
+                assert!(
+                    message.contains("alice") && message.contains("bob"),
+                    "expected the error to name both principals but was: {message}"
+                );
+            }
+        }
+
+        #[test]
+        fn an_unknown_request_field_is_ignored() {
+            let mut input = input(
+                json!({ "type": "User", "id": "alice" }),
+                json!({ "staticPolicies": "permit(principal, action, resource);" }),
+            );
+            input["aFieldFromTheFuture"] = json!(7);
+            assert_eq!(call_with(&input)["type"], "residuals");
+        }
     }
 
     #[test]

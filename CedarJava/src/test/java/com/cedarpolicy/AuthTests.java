@@ -24,7 +24,6 @@ import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.AuthorizationResponse.SuccessOrFailure;
 import com.cedarpolicy.model.AuthorizationSuccessResponse.Decision;
-import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.policy.Policy;
 import com.cedarpolicy.model.Context;
@@ -37,7 +36,6 @@ import com.cedarpolicy.value.PrimBool;
 import com.cedarpolicy.model.entity.Entities;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -143,7 +141,7 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var policySet = new PolicySet(policies);
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
@@ -170,7 +168,7 @@ public class AuthTests {
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
         var policySet = new PolicySet(policies);
 
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
@@ -194,7 +192,7 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
         var policySet = new PolicySet(policies);
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
@@ -218,7 +216,7 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when {context.authenticated == true};", "p0"));
         var policySet = new PolicySet(policies);
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new Entities());
                 assertEquals(Decision.Allow, response.success.orElseThrow().getDecision());
@@ -239,7 +237,7 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource);", "p0"));
         var policySet = new PolicySet(policies);
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertTrue(response.success.orElseThrow().getDecision() == null);
@@ -260,7 +258,7 @@ public class AuthTests {
         var policies = new HashSet<Policy>();
         policies.add(new Policy("permit(principal == User::\"alice\",action,resource) when{context.authenticated};", "p0"));
         var policySet = new PolicySet(policies);
-        assumePartialEvaluation(() -> {
+        TestUtil.assumeExperimentalFeature(() -> {
             try {
                 final PartialAuthorizationResponse response = auth.isAuthorizedPartial(q, policySet, new HashSet<>());
                 assertNull(response.success.orElseThrow().getDecision());
@@ -271,13 +269,4 @@ public class AuthTests {
         });
     }
 
-    private void assumePartialEvaluation(Executable executable) {
-        try {
-            executable.execute();
-        } catch (MissingExperimentalFeatureException e) {
-            System.err.println("Skipping assertions: " + e.getMessage());
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

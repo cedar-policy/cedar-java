@@ -25,9 +25,24 @@ public class MissingExperimentalFeatureException extends InternalException {
 
     public MissingExperimentalFeatureException(ExperimentalFeature experimentalFeature) {
         super("Missing experimental feature. To enable this feature please recompile "
-                + Path.of(System.getenv("CEDAR_JAVA_FFI_LIB")).getFileName()
+                + nativeLibraryName()
                 + " with \"--features=" + experimentalFeature.getCompileFlag() + "\".");
         this.experimentalFeature = experimentalFeature;
+    }
+
+    /**
+     * The library to name in the message. {@code CEDAR_JAVA_FFI_LIB} is only an override, so it is unset in the normal
+     * bundled-library case — reading it unguarded threw a {@link NullPointerException} from inside this constructor,
+     * which discarded the very error being reported.
+     */
+    private static String nativeLibraryName() {
+        String override = System.getenv("CEDAR_JAVA_FFI_LIB");
+        if (override == null || override.isEmpty()) {
+            return "the CedarJava native library";
+        }
+        // getFileName() is null for a path with no name element, such as a bare root.
+        Path name = Path.of(override).getFileName();
+        return name == null ? override : name.toString();
     }
 
     public ExperimentalFeature getExperimentalFeature() {

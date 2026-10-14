@@ -13,3 +13,11 @@ action view appliesTo {
     authenticated?: Bool,
   }
 };
+
+action edit appliesTo {
+  principal: [User],
+  resource: [Photo],
+  context: {
+    authenticated?: Bool,
+  }
+};

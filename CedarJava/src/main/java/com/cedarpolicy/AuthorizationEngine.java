@@ -23,9 +23,12 @@ import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.EntityValidationRequest;
 import com.cedarpolicy.model.PartialAuthorizationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest;
+import com.cedarpolicy.model.TypeAwarePartialAuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.entity.Entities;
+import com.cedarpolicy.model.entity.PartialEntities;
 import com.cedarpolicy.model.entity.Entity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
@@ -108,6 +111,73 @@ public interface AuthorizationEngine {
     @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
     PartialAuthorizationResponse isAuthorizedPartial(PartialAuthorizationRequest request,
                                                      PolicySet policySet, Entities entities) throws AuthException;
+
+    /**
+     * Asks what the given {@link TypeAwarePartialAuthorizationRequest} evaluates to against the {@code policySet} and
+     * the partially known {@code entities}, returning residual policies for whatever could not be decided.
+     *
+     * <p>The <em>policy set</em> is validated against the request's schema, which plain authorization does not do, so a
+     * policy set that authorizes fine can fail here — an unconstrained scope means every condition must typecheck for
+     * every entity type the action accepts, and an optional attribute needs a {@code has} guard.
+     *
+     * @param request   The request to evaluate.
+     * @param policySet The policy set to evaluate against.
+     * @param entities  The partially known entities to evaluate against.
+     * @return Every residual, plus a concrete decision if one could be reached.
+     * @throws AuthException On failure to make the authorization request.
+     * @throws UnsupportedOperationException If the implementation does not support type-aware partial evaluation.
+     */
+    @Experimental(ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION)
+    default TypeAwarePartialAuthorizationResponse isAuthorizedTypeAwarePartial(
+            TypeAwarePartialAuthorizationRequest request, PolicySet policySet,
+            PartialEntities entities) throws AuthException {
+        throw new UnsupportedOperationException(
+                "isAuthorizedTypeAwarePartial is not implemented by " + getClass().getName());
+    }
+
+    /**
+     * Overload for entities that are all fully known; they are lifted using the schema the request already carries.
+     *
+     * @param request   The request to evaluate.
+     * @param policySet The policy set to evaluate against.
+     * @param entities  The concrete entities to evaluate against.
+     * @return Every residual, plus a concrete decision if one could be reached.
+     * @throws AuthException On failure to make the authorization request, or if the entities do not check out against
+     *                       the request's schema.
+     */
+    @Experimental(ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION)
+    default TypeAwarePartialAuthorizationResponse isAuthorizedTypeAwarePartial(
+            TypeAwarePartialAuthorizationRequest request, PolicySet policySet,
+            Entities entities) throws AuthException {
+        return isAuthorizedTypeAwarePartial(request, policySet,
+                new PartialEntities(entities, request.schema));
+    }
+
+    /**
+     * Completes a type-aware partial authorization now that the previously unknown parts of the request and entities
+     * are known, returning the decision the original policies would have reached.
+     *
+     * <p>Prefer {@link com.cedarpolicy.model.TypeAwarePartialAuthorizationSuccessResponse#reauthorize}, which supplies
+     * the first three arguments from the response itself so they cannot disagree with the residuals you inspected. This
+     * form exists for that method to delegate to, and for a caller who has the partial inputs but not the response.
+     *
+     * @param request         The partial request the residuals were computed from.
+     * @param policySet       The policy set the residuals were computed from.
+     * @param partialEntities The partially known entities the residuals were computed from.
+     * @param concreteRequest The same request with its unknowns filled in.
+     * @param entities        The same entities with their unknowns filled in. Cedar validates both against the partial
+     *     inputs and rejects a mismatch; see
+     *     {@link com.cedarpolicy.model.TypeAwarePartialAuthorizationSuccessResponse#reauthorize} for what it compares.
+     * @return The authorization decision, or a failure response if the completed inputs are inconsistent with the
+     *     partial ones.
+     * @throws AuthException On failure to make the authorization request.
+     */
+    @Experimental(ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION)
+    default AuthorizationResponse reauthorize(TypeAwarePartialAuthorizationRequest request, PolicySet policySet,
+            PartialEntities partialEntities, AuthorizationRequest concreteRequest, Entities entities)
+            throws AuthException {
+        throw new UnsupportedOperationException("reauthorize is not implemented by " + getClass().getName());
+    }
 
     /**
      * Asks whether the policies in the given {@link ValidationRequest} <code>q</code> are correct

@@ -28,7 +28,7 @@ import java.util.Optional;
 
 /**
  * An entity UID whose id may be unknown. The entity type is always known: type-aware partial evaluation requires the
- * type of an unknown principal or resource in order to type check the request.
+ * type of an unknown principal or resource in order to validate the request.
  *
  * <p>This is the partial counterpart to {@link EntityUID} and holds the same component types, {@link EntityTypeName}
  * and {@link EntityIdentifier}, so that an id that is present has already been through the same validation as a

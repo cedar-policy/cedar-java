@@ -30,13 +30,18 @@ import com.cedarpolicy.model.AuthorizationResponse;
 import com.cedarpolicy.model.EntityValidationRequest;
 import com.cedarpolicy.model.LevelValidationRequest;
 import com.cedarpolicy.model.PartialAuthorizationResponse;
+import com.cedarpolicy.model.TypeAwarePartialAuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.entity.Entities;
 import com.cedarpolicy.model.entity.Entity;
+import com.cedarpolicy.model.entity.PartialEntities;
+import com.cedarpolicy.model.entity.PartialEntity;
 import com.cedarpolicy.model.exception.AuthException;
 import com.cedarpolicy.model.exception.BadRequestException;
 import com.cedarpolicy.model.exception.InternalException;
+import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
+import com.cedarpolicy.model.DetailedError;
 import com.cedarpolicy.model.policy.PolicySet;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -121,6 +126,44 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
             PolicySet policySet, Entities entities) throws AuthException {
         return isAuthorizedPartial(q, policySet, entities.getEntities());
+    }
+
+    @Experimental(ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION)
+    @Override
+    public TypeAwarePartialAuthorizationResponse isAuthorizedTypeAwarePartial(
+            com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest q, PolicySet policySet,
+            PartialEntities entities) throws AuthException {
+        var response = call("AuthorizationTypeAwarePartialOperation",
+                TypeAwarePartialAuthorizationResponse.class,
+                new TypeAwarePartialAuthorizationRequest(q, policySet, entities));
+        throwIfFeatureDisabled(response.getErrors().orElse(List.of()));
+        return response.withInputs(q, policySet, entities, this);
+    }
+
+    @Experimental(ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION)
+    @Override
+    public AuthorizationResponse reauthorize(com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest request,
+            PolicySet policySet, PartialEntities partialEntities,
+            com.cedarpolicy.model.AuthorizationRequest concreteRequest, Entities entities) throws AuthException {
+        var response = call("TypeAwarePartialReauthorizeOperation", AuthorizationResponse.class,
+                new TypeAwarePartialReauthorizeRequest(request, policySet, partialEntities, concreteRequest, entities));
+        throwIfFeatureDisabled(response.errors.map(e -> (List<DetailedError>) e).orElse(List.of()));
+        return response;
+    }
+
+    /**
+     * The native library reports a disabled experimental feature as a failure answer rather than a thrown exception,
+     * because {@link #call} converts every native error into an {@link AuthException}. Recognising the token here is
+     * what turns it back into {@link MissingExperimentalFeatureException}.
+     */
+    private static void throwIfFeatureDisabled(List<DetailedError> errors) throws AuthException {
+        for (var error : errors) {
+            var translated = ExperimentalFeature.TYPE_AWARE_PARTIAL_EVALUATION
+                    .translateIfDisabled(new InternalException(error.message));
+            if (translated instanceof MissingExperimentalFeatureException) {
+                throw translated;
+            }
+        }
     }
 
     @Override
@@ -210,6 +253,40 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
                     request.enableRequestValidation);
             this.policies = policySet;
             this.entities = entities;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    private static final class TypeAwarePartialAuthorizationRequest
+            extends com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest {
+        @JsonProperty private final PolicySet policies;
+        @JsonProperty private final Set<PartialEntity> entities;
+
+        TypeAwarePartialAuthorizationRequest(com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest request,
+                PolicySet policySet, PartialEntities entities) {
+            super(request);
+            this.policies = policySet;
+            this.entities = entities.getEntities();
+        }
+    }
+
+    /** The partial payload plus the completed request and entities Cedar validates it against. */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    private static final class TypeAwarePartialReauthorizeRequest
+            extends com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest {
+        @JsonProperty private final PolicySet policies;
+        @JsonProperty private final Set<PartialEntity> entities;
+        @JsonProperty private final com.cedarpolicy.model.AuthorizationRequest concreteRequest;
+        @JsonProperty private final Set<Entity> concreteEntities;
+
+        TypeAwarePartialReauthorizeRequest(com.cedarpolicy.model.TypeAwarePartialAuthorizationRequest request,
+                PolicySet policySet, PartialEntities partialEntities,
+                com.cedarpolicy.model.AuthorizationRequest concreteRequest, Entities concreteEntities) {
+            super(request);
+            this.policies = policySet;
+            this.entities = partialEntities.getEntities();
+            this.concreteRequest = concreteRequest;
+            this.concreteEntities = concreteEntities.getEntities();
         }
     }
 
