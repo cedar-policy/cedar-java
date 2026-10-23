@@ -63,3 +63,66 @@ jobs:
       - name: Generate Java Documentation
         working-directory: CedarJava
         run: ./gradlew javadoc
+      - name: Collect runtime dependencies for Alpine
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: CedarJava
+        run: ./gradlew copyRuntimeDependencies
+      - name: Upload Alpine smoke artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpine-smoke
+          path: |
+            CedarJava/build/libs/*-uber.jar
+            CedarJava/build/dependencies/*.jar
+          if-no-files-found: error
+
+  musl-smoke:
+    name: Authorize on Alpine
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Alpine smoke artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: alpine-smoke
+          path: smoke
+      - name: Run the uber JAR on musl
+        run: |
+          cat > smoke/Smoke.java <<'JAVA'
+          import com.cedarpolicy.BasicAuthorizationEngine;
+          import com.cedarpolicy.model.AuthorizationRequest;
+          import com.cedarpolicy.model.AuthorizationResponse.SuccessOrFailure;
+          import com.cedarpolicy.model.entity.Entity;
+          import com.cedarpolicy.model.policy.Policy;
+          import com.cedarpolicy.model.policy.PolicySet;
+          import com.cedarpolicy.value.EntityTypeName;
+          import com.cedarpolicy.value.EntityUID;
+          import java.util.Map;
+          import java.util.Set;
+
+          class Smoke {
+              public static void main(String[] args) throws Exception {
+                  var engine = new BasicAuthorizationEngine();
+                  var request = new AuthorizationRequest(
+                          new EntityUID(EntityTypeName.parse("User").orElseThrow(), "alice"),
+                          new EntityUID(EntityTypeName.parse("Action").orElseThrow(), "view"),
+                          new EntityUID(EntityTypeName.parse("Resource").orElseThrow(), "doc"),
+                          Map.of());
+                  for (boolean expected : new boolean[] {true, false}) {
+                      String effect = expected ? "permit" : "forbid";
+                      var policies = new PolicySet(Set.of(
+                              new Policy(effect + "(principal, action, resource);", "policy0")));
+                      var response = engine.isAuthorized(request, policies, Set.<Entity>of());
+                      if (response.type != SuccessOrFailure.Success
+                              || response.success.orElseThrow().isAllowed() != expected) {
+                          throw new AssertionError("Unexpected " + effect + " response: " + response);
+                      }
+                      System.out.println(effect + ": allowed=" + expected);
+                  }
+              }
+          }
+          JAVA
+          docker run --rm -v "$PWD/smoke:/smoke:ro" -w /smoke \
+            eclipse-temurin:17-alpine \
+            sh -ec 'unset CEDAR_JAVA_FFI_LIB; java -cp "libs/*:dependencies/*" Smoke.java'

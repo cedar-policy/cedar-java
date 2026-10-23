@@ -119,17 +119,21 @@ def compiledLibDir = 'resources/compiled'
 def rustLibraryTargets = [
         'aarch64-apple-darwin' : 'libcedar_java_ffi.dylib',
         'aarch64-unknown-linux-gnu' : 'libcedar_java_ffi.so',
+        'aarch64-unknown-linux-musl' : 'libcedar_java_ffi.so',
         'x86_64-apple-darwin' : 'libcedar_java_ffi.dylib',
         'x86_64-pc-windows-gnu' : 'cedar_java_ffi.dll',
-        'x86_64-unknown-linux-gnu' : 'libcedar_java_ffi.so'
+        'x86_64-unknown-linux-gnu' : 'libcedar_java_ffi.so',
+        'x86_64-unknown-linux-musl' : 'libcedar_java_ffi.so'
 ]
 
 def rustJavaTargets = [
         'aarch64-apple-darwin' : 'macos/aarch64',
         'aarch64-unknown-linux-gnu' : 'linux/aarch64',
+        'aarch64-unknown-linux-musl' : 'linux_musl/aarch64',
         'x86_64-apple-darwin' : 'macos/x86_64',
         'x86_64-pc-windows-gnu' : 'windows/x86_64',
-        'x86_64-unknown-linux-gnu' : 'linux/x86_64'
+        'x86_64-unknown-linux-gnu' : 'linux/x86_64',
+        'x86_64-unknown-linux-musl' : 'linux_musl/x86_64'
 ]
 
 def RustVersion = '1.89'
@@ -184,6 +188,10 @@ tasks.register('compileFFI') {
             }
             exec {
                 workingDir = ffiDir
+                if (rustTarget.endsWith('-musl')) {
+                    // Rust's static musl CRT does not support cdylibs.
+                    environment 'RUSTFLAGS', '-C target-feature=-crt-static'
+                }
                 commandLine 'cargo', '+' + RustVersion, 'zigbuild', '--features', 'partial-eval,tpe', '--release', '--target', rustTarget
             }
 
@@ -217,6 +225,11 @@ tasks.register('cleanFFI', Exec) {
 
     workingDir ffiDir
     commandLine 'cargo', 'clean'
+}
+
+tasks.register('copyRuntimeDependencies', Copy) {
+    from configurations.runtimeClasspath
+    into layout.buildDirectory.dir('dependencies')
 }
 
 tasks.register('uberJar', Jar) {
