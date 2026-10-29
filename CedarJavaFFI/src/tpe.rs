@@ -256,6 +256,22 @@ fn plain(message: String) -> DetailedError {
     }
 }
 
+/// Cedar 4.11's `TpeError` is not a `miette::Diagnostic`, and its `Validation` variant displays as a
+/// `{:#?}` dump. Rebuild the shape later Cedar versions produce — one "failed to validate" error with
+/// each validation error, help text and source span intact, under `related` — so callers see the same
+/// failure on either Cedar line. The other variants carry only a message.
+#[cfg(feature = "tpe")]
+fn tpe_error_details(e: cedar_policy::tpe_err::TpeError) -> Vec<DetailedError> {
+    use cedar_policy::tpe_err::TpeError;
+    match e {
+        TpeError::Validation(errs) => vec![DetailedError {
+            related: errs.into_iter().map(detailed).collect(),
+            ..plain("policy failed to validate against the schema".to_string())
+        }],
+        e => vec![plain(e.to_string())],
+    }
+}
+
 #[cfg(feature = "tpe")]
 fn tpe_failure(message: String) -> TypeAwarePartialAuthAnswer {
     tpe_failure_detailed(vec![plain(message)])
@@ -306,8 +322,9 @@ impl TypeAwarePartialAuthCall {
             .map(|c| Context::from_json_value(c, Some((&schema, &action))))
             .transpose()
             .map_err(|e| vec![detailed(e)])?;
+        // Cedar 4.11's `tpe_err::EntitiesError` is not a `miette::Diagnostic`.
         let entities = PartialEntities::from_json_value(self.entities, &schema)
-            .map_err(|e| vec![detailed(e)])?;
+            .map_err(|e| vec![plain(e.to_string())])?;
         let request = PartialRequest::new(principal, action, resource, context, &schema)
             .map_err(|e| vec![detailed(e)])?;
         Ok(ParsedCall {
@@ -361,12 +378,13 @@ fn type_aware_partial_is_authorized(input: &str) -> TypeAwarePartialAuthAnswer {
     };
     let response = match policies.tpe(&request, &entities, &schema) {
         Ok(response) => response,
-        Err(e) => return tpe_failure_detailed(vec![detailed(e)]),
+        Err(e) => return tpe_failure_detailed(tpe_error_details(e)),
     };
 
     let mut residuals = HashMap::new();
     let mut errored_residuals = HashSet::new();
-    for p in response.policies() {
+    // In Cedar 4.11 `residual_policies` yields every residual, trivial or not.
+    for p in response.residual_policies() {
         let id = p.id().to_string();
         if or_failure!(residual_errors(&p)) {
             errored_residuals.insert(id.clone());
@@ -448,7 +466,10 @@ fn type_aware_partial_reauthorize(input: &str) -> cedar_policy::ffi::Authorizati
         Ok(parsed) => parsed,
         Err(errors) => return auth_failure(errors),
     };
-    let response = or_failure!(policies.tpe(&request, &entities, &schema));
+    let response = match policies.tpe(&request, &entities, &schema) {
+        Ok(response) => response,
+        Err(e) => return auth_failure(tpe_error_details(e)),
+    };
 
     let concrete = call.concrete_request;
     let action = or_failure!(EntityUid::from_json(concrete.action));

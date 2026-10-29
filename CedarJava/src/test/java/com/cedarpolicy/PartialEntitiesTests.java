@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import static com.cedarpolicy.TestUtil.assertMessageContains;
 import static com.cedarpolicy.TestUtil.buildEuidObject;
 import static com.cedarpolicy.TestUtil.buildUidObject;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -58,13 +59,11 @@ public class PartialEntitiesTests {
                 new PartialEntity(alice, Optional.empty(), Optional.empty(), Optional.empty(), TPE_SCHEMA_CEDAR));
         assertEquals(1, new PartialEntities(entities, TPE_SCHEMA_CEDAR).getEntities().size());
 
-        // A collection-level rule, which only the collection validator can catch.
+        // Accepted, as with the JSON-format schema: see `testAcceptsDuplicateUid`.
         var duplicated = Set.of(
                 new PartialEntity(alice, Optional.empty(), Optional.empty(), Optional.empty(), TPE_SCHEMA_CEDAR),
                 new PartialEntity(alice, Optional.of(Map.of()), Optional.empty(), Optional.empty(), TPE_SCHEMA_CEDAR));
-        InternalException e =
-                assertThrows(InternalException.class, () -> new PartialEntities(duplicated, TPE_SCHEMA_CEDAR));
-        assertMessageContains(e, "duplicate entity entry", "User::\"alice\"");
+        assertDoesNotThrow(() -> new PartialEntities(duplicated, TPE_SCHEMA_CEDAR));
     }
 
     @Test
@@ -77,7 +76,7 @@ public class PartialEntitiesTests {
                 new PartialEntity(admins, Optional.empty(), Optional.empty(), Optional.empty(), TPE_SCHEMA));
         InternalException e =
                 assertThrows(InternalException.class, () -> new PartialEntities(entities, TPE_SCHEMA));
-        assertMessageContains(e, "ancestor `Group::\"admins\"`", "of `User::\"alice\"`", "has unknown ancestors");
+        assertMessageContains(e, "User::\"alice\"", "ancestor `Group::\"admins\"`", "has unknown ancestors");
     }
 
     @Test
@@ -97,15 +96,14 @@ public class PartialEntitiesTests {
         assertEquals(2, withParent.getEntities().size());
     }
 
+    /** Cedar 4.11 does not reject a repeated uid in partial entities, and CedarJava follows Cedar. */
     @Test
-    public void testRejectsDuplicateUid() throws InternalException {
+    public void testAcceptsDuplicateUid() throws InternalException {
         var alice = new EntityUID(EntityTypeName.parse("User").get(), "alice");
         var entities = Set.of(
                 new PartialEntity(alice, Optional.empty(), Optional.empty(), Optional.empty(), TPE_SCHEMA),
                 new PartialEntity(alice, Optional.of(Map.of()), Optional.empty(), Optional.empty(), TPE_SCHEMA));
-        InternalException e =
-                assertThrows(InternalException.class, () -> new PartialEntities(entities, TPE_SCHEMA));
-        assertMessageContains(e, "duplicate entity entry", "User::\"alice\"");
+        assertDoesNotThrow(() -> new PartialEntities(entities, TPE_SCHEMA));
     }
 
     @Test
@@ -222,8 +220,8 @@ public class PartialEntitiesTests {
     }
 
     @Test
-    public void testFromJsonRejectsDuplicateUid() {
-        // The same rule as `testRejectsDuplicateUid`, reached through the JSON encoding. Worth covering separately
+    public void testFromJsonAcceptsDuplicateUid() {
+        // The same rule as `testAcceptsDuplicateUid`, reached through the JSON encoding. Worth covering separately
         // because a JSON array can carry two entries with the same uid, whereas a `Set` relies on the elements
         // differing to keep both.
         ObjectNode first = JsonNodeFactory.instance.objectNode();
@@ -233,9 +231,7 @@ public class PartialEntitiesTests {
         second.set("attrs", JsonNodeFactory.instance.objectNode());
         ArrayNode json = JsonNodeFactory.instance.arrayNode().add(first).add(second);
 
-        InternalException e =
-                assertThrows(InternalException.class, () -> PartialEntities.fromJson(json, TPE_SCHEMA));
-        assertMessageContains(e, "duplicate entity entry", "User::\"alice\"");
+        assertDoesNotThrow(() -> PartialEntities.fromJson(json, TPE_SCHEMA));
     }
 
     @Test

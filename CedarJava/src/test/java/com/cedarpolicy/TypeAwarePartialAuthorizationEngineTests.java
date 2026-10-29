@@ -109,7 +109,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
             assertEquals(Set.of("p0"), TestUtil.ids(success.getNontrivialResiduals()));
             // The principal id is unknown, so `principal` survives as a variable.
             assertEquals("permit(principal, action, resource) when "
-                    + "{ (principal has department) && (principal.department == \"eng\") };",
+                    + "{ (principal has department) && ((principal.department) == \"eng\") };",
                     success.getResiduals().iterator().next().getSource());
         });
     }
@@ -145,7 +145,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
 
             assertEquals("p0", residual.getID());
             assertEquals("@owner(\"team-a\")\npermit(principal, action, resource) when "
-                    + "{ (User::\"alice\" has department) && (User::\"alice\".department == \"eng\") };",
+                    + "{ (User::\"alice\" has department) && ((User::\"alice\".department) == \"eng\") };",
                     residual.getSource());
             // The annotation survives, and the residual is still a usable Policy because nothing errored.
             assertEquals(Map.of("owner", "team-a"), residual.getAnnotations());
@@ -209,7 +209,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
             // The principal id is known here, unlike the test above, so `principal` is substituted with the
             // entity — which is why a residual must not be evaluated for a different principal.
             assertEquals("permit(principal, action, resource) when "
-                    + "{ (User::\"alice\" has department) && (User::\"alice\".department == \"eng\") };",
+                    + "{ (User::\"alice\" has department) && ((User::\"alice\".department) == \"eng\") };",
                     success.getResiduals().iterator().next().getSource());
         });
     }
@@ -590,7 +590,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
             assertEquals(Set.of("p0"), success.getErroredResidualIds(),
                     "a nested error must still be reported, which error_permits() alone would not do");
             assertEquals("permit(principal, action, resource) when "
-                    + "{ (User::\"alice\" has department) || error() };",
+                    + "{ (User::\"alice\" has department) || (error()) };",
                     success.getResiduals().iterator().next().getSource());
         });
     }
@@ -638,35 +638,34 @@ public class TypeAwarePartialAuthorizationEngineTests {
                             new AuthorizationRequest(bob, TPE_VIEW, TPE_DOOR, new HashMap<String, Value>()),
                             new Entities(Set.of(aliceEng,
                                     new Entity(bob, Map.of("department", new PrimString("eng")), Set.of(), Map.of()))),
-                            "partial request principal id `alice` does not match concrete request principal id `bob`"),
+                            "Principal eid `alice` and `bob` do not match"),
                     new Mismatch("resource id",
                             new AuthorizationRequest(TPE_ALICE, TPE_VIEW, window, new HashMap<String, Value>()),
                             new Entities(Set.of(aliceEng)),
-                            "partial request resource id `door` does not match concrete request resource id `window`"),
+                            "Resource eid `door` and `window` do not match"),
                     new Mismatch("action",
                             new AuthorizationRequest(TPE_ALICE, edit, TPE_DOOR, new HashMap<String, Value>()),
                             new Entities(Set.of(aliceEng)),
-                            "does not match concrete request action"),
+                            "Actions `Action::\"view\"` and `Action::\"edit\"` do not match"),
                     new Mismatch("context",
                             new AuthorizationRequest(TPE_ALICE, TPE_VIEW, TPE_DOOR,
                                     new HashMap<>(Map.of("authenticated", new PrimBool(true)))),
                             new Entities(Set.of(aliceEng)),
-                            "the partial and concrete request contexts do not match"),
+                            "Contexts are inconsistent"),
                     new Mismatch("entity missing from the concrete store",
                             new AuthorizationRequest(TPE_ALICE, TPE_VIEW, TPE_DOOR, new HashMap<String, Value>()),
                             new Entities(Set.of()),
-                            "entity `User::\"alice\"` is present in the partial entities but missing from the "
-                                    + "concrete entities"),
+                            "Concrete entities does not include `User::\"alice\"`"),
                     new Mismatch("parents",
                             new AuthorizationRequest(TPE_ALICE, TPE_VIEW, TPE_DOOR, new HashMap<String, Value>()),
                             new Entities(Set.of(new Entity(TPE_ALICE,
                                     Map.of("department", new PrimString("eng")), Set.of(group), Map.of()))),
-                            "concrete entity `User::\"alice\"` has ancestors that do not match the partial entity"),
+                            "Entity `User::\"alice\"`'s ancestors do not match"),
                     new Mismatch("tags",
                             new AuthorizationRequest(TPE_ALICE, TPE_VIEW, TPE_DOOR, new HashMap<String, Value>()),
                             new Entities(Set.of(new Entity(TPE_ALICE, Map.of("department", new PrimString("eng")),
                                     Set.of(), Map.of("clearance", new PrimString("high"))))),
-                            "concrete entity `User::\"alice\"` has tag values that do not match the partial entity"));
+                            "Entity `User::\"alice\"`'s tags do not match"));
 
             for (var m : mismatches) {
                 var response = success.reauthorize(m.request(), m.entities());
@@ -708,7 +707,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
                     new Entity(TPE_ALICE, Map.of("department", new PrimString("sales")), Set.of(), Map.of()))));
             assertEquals(SuccessOrFailure.Failure, changed.type);
             assertTrue(changed.errors.orElseThrow().get(0).message.contains(
-                    "concrete entity `User::\"alice\"` has attribute values that do not match the partial entity"),
+                    "Entity `User::\"alice\"`'s attributes do not match"),
                     "unexpected message: " + changed.errors.orElseThrow().get(0).message);
         });
     }
@@ -750,7 +749,7 @@ public class TypeAwarePartialAuthorizationEngineTests {
                             new Entity(root, Map.of("department", new PrimString("eng")), Set.of(), Map.of()))));
             assertEquals(SuccessOrFailure.Failure, asAdmin.type);
             assertTrue(asAdmin.errors.orElseThrow().get(0).message.contains(
-                    "partial request principal type `User` does not match concrete request principal type `Admin`"),
+                    "Principal types `User` and `Admin` do not match"),
                     "unexpected message: " + asAdmin.errors.orElseThrow().get(0).message);
         });
     }

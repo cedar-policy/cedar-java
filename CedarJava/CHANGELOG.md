@@ -1,6 +1,23 @@
 # Changelog
 
-## Unreleased
+## 4.11.0
+* Pinned to `cedar-policy 4.11.2`
+* Added `PolicyParseException`, thrown by `PolicySet.parsePolicies` when policy text fails to parse. It is a subclass of `InternalException`, so existing `catch` blocks and `getMessage()` are unaffected, and adds `getDetailedErrors()` returning Cedar's structured diagnostics - source span, expected tokens, and help text - for each error. `getErrors()` now carries one entry per parse error rather than a single entry for the whole document [#367](https://github.com/cedar-policy/cedar-java/pull/367)
+* Adds Type-Aware Partial Evaluation (TPE) support [#372](https://github.com/cedar-policy/cedar-java/pull/372). This is an experimental feature in cedar-policy and can change behavior in future releases (See [experimental-features](https://github.com/cedar-policy/rfcs/blob/main/README.md#experimental-features)).
+
+## 4.10.0
+* Pinned to `cedar-policy 4.10.0`
+
+## 4.9.0
+* Pinned to `cedar-policy 4.9.1`
+* Improve toCedarExpr() correctness and add CedarStrings utility [#351](https://github.com/cedar-policy/cedar-java/pull/351)
+* Add PolicySet and Schema caching [#350](https://github.com/cedar-policy/cedar-java/pull/350)
+* Optimize JNI performance and fix Decimal validation [#349](https://github.com/cedar-policy/cedar-java/pull/349)
+* * Updated Java source and target compatibility from 1.8 to 17 aligning with the pre-requisites in README [#350](https://github.com/cedar-policy/cedar-java/pull/350)
+* Bugfix: EntityIdentifier equals implementation [#352](https://github.com/cedar-policy/cedar-java/pull/352)
+
+
+## 4.8.0
 * Added Schema conversion APIs [#325](https://github.com/cedar-policy/cedar-java/pull/325)
 * Added Level Validation [#327](https://github.com/cedar-policy/cedar-java/pull/327)
 * Added DateTime extension support [#328](https://github.com/cedar-policy/cedar-java/pull/328)
@@ -8,7 +25,6 @@
 * Added Offset function support [#331](https://github.com/cedar-policy/cedar-java/pull/331)
 * Added PolicySet to JSON conversion API [#329](https://github.com/cedar-policy/cedar-java/pull/329)
 * Added Cedar Schema support for Entity Validation [#332](https://github.com/cedar-policy/cedar-java/pull/332)
-* Added `PolicyParseException`, thrown by `PolicySet.parsePolicies` when policy text fails to parse. It is a subclass of `InternalException`, so existing `catch` blocks and `getMessage()` are unaffected, and adds `getDetailedErrors()` returning Cedar's structured diagnostics - source span, expected tokens, and help text - for each error. `getErrors()` now carries one entry per parse error rather than a single entry for the whole document [#367](https://github.com/cedar-policy/cedar-java/pull/367)
 
 ## 4.3.1
 ### Added

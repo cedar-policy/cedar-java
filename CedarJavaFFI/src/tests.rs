@@ -1184,8 +1184,8 @@ mod tpe_validation_tests {
         assert_err_contains(
             validate_partial_entities(&entities.to_string(), &schema_cedar_src()),
             &[
+                "User::\"alice\"",
                 "ancestor `Group::\"admins\"`",
-                "of `User::\"alice\"`",
                 "has unknown ancestors",
             ],
         );
@@ -1206,8 +1206,10 @@ mod tpe_validation_tests {
         );
     }
 
+    /// Cedar 4.11's `PartialEntities::from_json_value` does not reject a repeated uid — the later entry
+    /// replaces the earlier one — and this crate follows Cedar rather than adding its own check.
     #[test]
-    fn validate_partial_entities_with_duplicate_uid_fails() {
+    fn validate_partial_entities_with_duplicate_uid_succeeds() {
         let entities = json!([
             {
                 "uid": { "type": "User", "id": "alice" },
@@ -1220,9 +1222,9 @@ mod tpe_validation_tests {
                 "parents": []
             }
         ]);
-        assert_err_contains(
+        assert_matches!(
             validate_partial_entities(&entities.to_string(), &schema_cedar_src()),
-            &["duplicate entity entry", "User::\"alice\""],
+            Ok(())
         );
     }
 
@@ -1815,9 +1817,10 @@ mod tpe_validation_tests {
             { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": false }, "parents": [] },
             { "uid": { "type": "User", "id": "alice" }, "attrs": { "isAdmin": true }, "parents": [] }
         ]);
-        assert_err_contains(
+        // Accepted, as with the Cedar-format schema: see `validate_partial_entities_with_duplicate_uid_succeeds`.
+        assert_matches!(
             validate_partial_entities(&duplicated.to_string(), &schema_json()),
-            &["duplicate entity entry", "User::\"alice\""],
+            Ok(())
         );
     }
 

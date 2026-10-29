@@ -230,12 +230,17 @@ tasks.register('uberJar', Jar) {
     from(layout.buildDirectory.dir(compiledLibDir))
 }
 
+// The cedar-integration-tests branch to test against; should match the cedar-policy branch in CedarJavaFFI/Cargo.toml.
+def IntegrationTestsBranch = 'release/4.11.x'
+// GitHub names the zip's top-level folder after the branch, with `/` replaced by `-`.
+def IntegrationTestsZipRoot = 'cedar-integration-tests-' + IntegrationTestsBranch.replace('/', '-')
+
 tasks.register('downloadIntegrationTests', Download) {
     group 'Build'
     description 'Downloads Cedar repository with integration tests.'
 
-    src 'https://codeload.github.com/cedar-policy/cedar-integration-tests/zip/main'
-    dest layout.buildDirectory.file('cedar-integration-tests-main.zip')
+    src "https://codeload.github.com/cedar-policy/cedar-integration-tests/zip/${IntegrationTestsBranch}"
+    dest layout.buildDirectory.file("${IntegrationTestsZipRoot}.zip")
     overwrite false
 }
 
@@ -245,8 +250,11 @@ tasks.register('extractIntegrationTests', Copy) {
 
     dependsOn('checkstyleTest')
     dependsOn('downloadIntegrationTests')
-    from zipTree(layout.buildDirectory.file('cedar-integration-tests-main.zip'))
+    from zipTree(layout.buildDirectory.file("${IntegrationTestsZipRoot}.zip"))
     into layout.buildDirectory.dir('resources/test')
+    // Extract under a fixed folder name so the tests need not know which branch was downloaded.
+    eachFile { it.path = it.path.replaceFirst("^${IntegrationTestsZipRoot}/", 'cedar-integration-tests/') }
+    includeEmptyDirs = false
 }
 
 tasks.register('extractCorpusTests', Copy) {
@@ -255,8 +263,8 @@ tasks.register('extractCorpusTests', Copy) {
 
     dependsOn('extractIntegrationTests')
     dependsOn('processTestResources')
-    from tarTree(layout.buildDirectory.file('resources/test/cedar-integration-tests-main/corpus-tests.tar.gz'))
-    into layout.buildDirectory.dir('resources/test/cedar-integration-tests-main')
+    from tarTree(layout.buildDirectory.file('resources/test/cedar-integration-tests/corpus-tests.tar.gz'))
+    into layout.buildDirectory.dir('resources/test/cedar-integration-tests')
 }
 
 tasks.named('test') {
@@ -324,7 +332,7 @@ publishing {
             from components.java
             groupId = 'com.cedarpolicy'
             artifactId = 'cedar-java'
-            version = '3.1.2'
+            version = '4.11.0'
 
             artifacts {
                 jar
