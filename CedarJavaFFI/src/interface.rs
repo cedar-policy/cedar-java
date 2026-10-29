@@ -1560,6 +1560,7 @@ pub(crate) mod jvm_based_tests {
             assert!(!env.exception_check().unwrap());
         }
 
+        /// Cedar 4.11 accepts a repeated uid (the later entry wins), and so does this crate.
         #[test]
         fn validate_partial_entities_internal_duplicate_uid() {
             let mut env = JVM.attach_current_thread().unwrap();
@@ -1570,10 +1571,10 @@ pub(crate) mod jvm_based_tests {
             let entities_jstr = env.new_string(entities.to_string()).unwrap();
             let schema_jstr = env.new_string(schema_cedar_src()).unwrap();
 
-            assert_err_contains(
-                validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr),
-                &["duplicate entity entry", "User::\"alice\""],
-            );
+            let result =
+                validate_partial_entities_internal(&mut env, entities_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
         }
 
         #[test]
@@ -1653,10 +1654,10 @@ pub(crate) mod jvm_based_tests {
             ]);
             let duplicated_jstr = env.new_string(duplicated.to_string()).unwrap();
             let schema_jstr = env.new_string(schema_json()).unwrap();
-            assert_err_contains(
-                validate_partial_entities_internal(&mut env, duplicated_jstr, schema_jstr),
-                &["duplicate entity entry", "User::\"alice\""],
-            );
+            let result =
+                validate_partial_entities_internal(&mut env, duplicated_jstr, schema_jstr).unwrap();
+            assert_eq!(success_string(&mut env, result), "success");
+            assert!(!env.exception_check().unwrap());
         }
 
         #[test]
