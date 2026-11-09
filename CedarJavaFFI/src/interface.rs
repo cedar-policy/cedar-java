@@ -575,7 +575,31 @@ fn throw_parse_errors(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
                 throw_internal(env, errs);
             }
         }
-        Err(_) => throw_internal(env, errs),
+        Err(_) => {
+            clear_missing_class_error(env);
+            throw_internal(env, errs);
+        }
+    }
+}
+
+/// A CedarJava `.jar` older than this library has no `PolicyParseException`, so building one
+/// leaves a `NoClassDefFoundError` pending. Clear it, so that such a jar gets the
+/// `InternalException` it has always received for a parse error. Any other pending exception,
+/// such as an `OutOfMemoryError`, is put back to propagate.
+fn clear_missing_class_error(env: &mut JNIEnv<'_>) {
+    let pending = match env.exception_occurred() {
+        Ok(pending) if !pending.is_null() => pending,
+        _ => return,
+    };
+    // `IsInstanceOf` may not be called with an exception pending, so clear first and decide after.
+    if env.exception_clear().is_err() {
+        return;
+    }
+    let missing_class = env
+        .is_instance_of(&pending, "java/lang/NoClassDefFoundError")
+        .unwrap_or(false);
+    if !missing_class {
+        let _ = env.throw(pending);
     }
 }
 
@@ -617,9 +641,10 @@ fn internal_error_message(errs: &ParseErrors) -> String {
 fn throw_internal(env: &mut JNIEnv<'_>, errs: &ParseErrors) {
     // Guard on a pending exception exactly as `jni_failed` does. This is not only for safety
     // but is also the more useful behaviour: whatever the JVM already threw (an
-    // `OutOfMemoryError`, or a `NoClassDefFoundError` from a `.jar` that predates the `.so`)
-    // says far more about the failure than an `InternalException` naming a parse error would,
-    // and it propagates to the caller when this native method returns.
+    // `OutOfMemoryError`, say) says far more about the failure than an `InternalException`
+    // naming a parse error would, and it propagates to the caller when this native method
+    // returns. The exception is the `NoClassDefFoundError` an older `.jar` causes, which
+    // `clear_missing_class_error` has already cleared.
     //
     // The guard is also what makes the `unwrap` below sound. jni-rs refuses to make JNI calls
     // while an exception is pending, so `throw_new` would fail its internal `find_class` and
