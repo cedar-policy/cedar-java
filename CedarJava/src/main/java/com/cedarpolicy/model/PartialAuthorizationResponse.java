@@ -4,9 +4,9 @@ import com.cedarpolicy.Experimental;
 import com.cedarpolicy.ExperimentalFeature;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Experimental(ExperimentalFeature.PARTIAL_EVALUATION)
@@ -25,12 +25,12 @@ public class PartialAuthorizationResponse {
      * This will be present if and only if `type` is `Failure`.
      */
     @JsonProperty("errors")
-    public final Optional<ImmutableList<DetailedError>> errors;
+    public final Optional<List<DetailedError>> errors;
     /**
      * Warnings can be produced regardless of whether we have a `Success` or `Failure`.
      */
     @JsonProperty("warnings")
-    public final ImmutableList<String> warnings;
+    public final List<String> warnings;
 
     /**
      * If `type` is `Success`, `success` should be present and `errors` empty.
@@ -45,11 +45,11 @@ public class PartialAuthorizationResponse {
     ) {
         this.type = type;
         this.success = success;
-        this.errors = errors.map((list) -> ImmutableList.copyOf(list));
+        this.errors = errors.map((list) -> List.copyOf(list));
         if (warnings == null) {
-            this.warnings = ImmutableList.of(); // empty
+            this.warnings = List.of(); // empty
         } else {
-            this.warnings = ImmutableList.copyOf(warnings);
+            this.warnings = List.copyOf(warnings);
         }
     }
 
