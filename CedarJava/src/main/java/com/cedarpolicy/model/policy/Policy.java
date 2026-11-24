@@ -110,13 +110,51 @@ public class Policy {
         return new Policy(policyText, policyId);
     }
 
+    /**
+     * Like {@link #fromJson(String, String)}, but rejects the policy if its expression depth exceeds
+     * {@code depthLimit}.
+     *
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     */
+    public static Policy fromJson(String policyId, String policyJson, int depthLimit)
+            throws InternalException, NullPointerException {
+        String policyText = fromJsonWithDepthLimitJni(policyJson, PolicySet.requireValidDepthLimit(depthLimit));
+        return new Policy(policyText, policyId);
+    }
+
     public static Policy parseStaticPolicy(String policyStr) throws InternalException, NullPointerException {
         String policyText = parsePolicyJni(policyStr);
         return new Policy(policyText, null);
     }
 
+    /**
+     * Like {@link #parseStaticPolicy(String)}, but rejects the policy if its expression depth exceeds
+     * {@code depthLimit}. Use this for untrusted input: deeply nested policies can overflow the
+     * native stack, which aborts the JVM.
+     *
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     */
+    public static Policy parseStaticPolicy(String policyStr, int depthLimit)
+            throws InternalException, NullPointerException {
+        String policyText = parsePolicyWithDepthLimitJni(policyStr, PolicySet.requireValidDepthLimit(depthLimit));
+        return new Policy(policyText, null);
+    }
+
     public static Policy parsePolicyTemplate(String templateStr) throws InternalException, NullPointerException {
         String templateText = parsePolicyTemplateJni(templateStr);
+        return new Policy(templateText, null);
+    }
+
+    /**
+     * Like {@link #parsePolicyTemplate(String)}, but rejects the template if its expression depth
+     * exceeds {@code depthLimit}.
+     *
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     */
+    public static Policy parsePolicyTemplate(String templateStr, int depthLimit)
+            throws InternalException, NullPointerException {
+        String templateText =
+                parsePolicyTemplateWithDepthLimitJni(templateStr, PolicySet.requireValidDepthLimit(depthLimit));
         return new Policy(templateText, null);
     }
 
@@ -167,6 +205,15 @@ public class Policy {
     private static native String parsePolicyJni(String policyStr) throws InternalException, NullPointerException;
 
     private static native String parsePolicyTemplateJni(String policyTemplateStr)
+            throws InternalException, NullPointerException;
+
+    private static native String parsePolicyWithDepthLimitJni(String policyStr, int depthLimit)
+            throws InternalException, NullPointerException;
+
+    private static native String parsePolicyTemplateWithDepthLimitJni(String policyTemplateStr, int depthLimit)
+            throws InternalException, NullPointerException;
+
+    private static native String fromJsonWithDepthLimitJni(String policyJsonStr, int depthLimit)
             throws InternalException, NullPointerException;
 
     private native String toJsonJni(String policyStr) throws InternalException, NullPointerException;

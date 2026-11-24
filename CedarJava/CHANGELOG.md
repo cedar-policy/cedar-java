@@ -4,6 +4,7 @@
 * Pinned to `cedar-policy 4.11.2`
 * Added `PolicyParseException`, thrown by `PolicySet.parsePolicies` when policy text fails to parse. It is a subclass of `InternalException`, so existing `catch` blocks and `getMessage()` are unaffected, and adds `getDetailedErrors()` returning Cedar's structured diagnostics - source span, expected tokens, and help text - for each error. `getErrors()` now carries one entry per parse error rather than a single entry for the whole document [#367](https://github.com/cedar-policy/cedar-java/pull/367)
 * Adds Type-Aware Partial Evaluation (TPE) support [#372](https://github.com/cedar-policy/cedar-java/pull/372). This is an experimental feature in cedar-policy and can change behavior in future releases (See [experimental-features](https://github.com/cedar-policy/rfcs/blob/main/README.md#experimental-features)).
+* Added depth-limited parse overloads `PolicySet.parsePolicies(..., int depthLimit)`, `PolicySet.parsePoliciesJson(..., int depthLimit)`, `Policy.parseStaticPolicy(String, int)`, `Policy.parsePolicyTemplate(String, int)`, and `Policy.fromJson(String, String, int)`. Use them for untrusted input: deeply nested policies can overflow the native stack and abort the JVM. Requires a `cedar-policy` release with [cedar#2383](https://github.com/cedar-policy/cedar/pull/2383)
 
 ## 4.10.0
 * Pinned to `cedar-policy 4.10.0`
