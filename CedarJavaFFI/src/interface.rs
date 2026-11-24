@@ -30,7 +30,7 @@ use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use dashmap::DashMap;
 use jni::{
     objects::{JClass, JObject, JString, JThrowable, JValueGen, JValueOwned},
-    sys::{jstring, jvalue},
+    sys::{jint, jstring, jvalue},
     JNIEnv,
 };
 use jni_fn::jni_fn;
@@ -729,22 +729,65 @@ fn parse_cedar_schema_internal<'a>(
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn parsePolicyJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_jstr: JString<'a>) -> jvalue {
-    match parse_policy_internal(&mut env, policy_jstr) {
+    match parse_policy_internal(&mut env, policy_jstr, None) {
         Err(e) => jni_failed(&mut env, e.as_ref()),
         Ok(policy_text) => policy_text.as_jni(),
     }
 }
 
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn parsePolicyWithDepthLimitJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policy_jstr: JString<'a>,
+    depth_limit: jint,
+) -> jvalue {
+    let result = depth_limit_from_jint(depth_limit)
+        .and_then(|limit| parse_policy_internal(&mut env, policy_jstr, Some(limit)));
+    match result {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policy_text) => policy_text.as_jni(),
+    }
+}
+
+/// Fold an error's `source()` chain into its message.
+///
+/// The JSON parsers report an exceeded depth limit as the source of a generic "error
+/// deserializing a policy/template from JSON", and `jni_failed` keeps only the top-level
+/// message. Without this, Java callers could not tell a too-deep policy from malformed JSON.
+fn with_error_sources(e: Box<dyn Error>) -> Box<dyn Error> {
+    let mut message = e.to_string();
+    let mut source = e.source();
+    while let Some(err) = source {
+        message.push_str(": ");
+        message.push_str(&err.to_string());
+        source = err.source();
+    }
+    message.into()
+}
+
+/// Convert a Java depth limit to `usize`. The Java side rejects negative values, so this
+/// only guards against a caller that bypasses it.
+fn depth_limit_from_jint(depth_limit: jint) -> Result<usize> {
+    usize::try_from(depth_limit)
+        .map_err(|_| format!("depth limit must be non-negative, got {depth_limit}").into())
+}
+
 fn parse_policy_internal<'a>(
     env: &mut JNIEnv<'a>,
     policy_jstr: JString<'a>,
+    depth_limit: Option<usize>,
 ) -> Result<JValueOwned<'a>> {
     if policy_jstr.is_null() {
         raise_npe(env)
     } else {
         let policy_jstring = env.get_string(&policy_jstr)?;
         let policy_string = String::from(policy_jstring);
-        match Policy::from_str(&policy_string) {
+        let parsed = match depth_limit {
+            Some(limit) => Policy::parse_with_depth_limit(None, &policy_string, limit),
+            None => Policy::from_str(&policy_string),
+        };
+        match parsed {
             Err(e) => Err(Box::new(e)),
             Ok(p) => {
                 let policy_text = format!("{}", p);
@@ -782,13 +825,35 @@ fn policy_set_to_json_internal<'a>(
 
 #[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
 pub fn parsePoliciesJni<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JString<'a>) -> jvalue {
-    match parse_policies_internal(&mut env, policies_jstr) {
+    let result = parse_policies_internal(&mut env, policies_jstr, None);
+    parse_policies_result_to_jni(&mut env, result)
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
+pub fn parsePoliciesWithDepthLimitJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_jstr: JString<'a>,
+    depth_limit: jint,
+) -> jvalue {
+    let result = depth_limit_from_jint(depth_limit)
+        .and_then(|limit| parse_policies_internal(&mut env, policies_jstr, Some(limit)));
+    parse_policies_result_to_jni(&mut env, result)
+}
+
+/// Return the parsed policy set, or throw: a `PolicyParseException` for parse errors
+/// (including an exceeded depth limit), an `InternalException` for anything else.
+fn parse_policies_result_to_jni<'a>(
+    env: &mut JNIEnv<'a>,
+    result: Result<JValueOwned<'a>>,
+) -> jvalue {
+    match result {
         Err(e) => match e.downcast_ref::<ParseErrors>() {
             Some(parse_errors) => {
-                throw_parse_errors(&mut env, parse_errors);
+                throw_parse_errors(env, parse_errors);
                 JValueOwned::Object(JObject::null()).as_jni()
             }
-            None => jni_failed(&mut env, e.as_ref()),
+            None => jni_failed(env, e.as_ref()),
         },
         Ok(policies_set) => policies_set.as_jni(),
     }
@@ -797,6 +862,7 @@ pub fn parsePoliciesJni<'a>(mut env: JNIEnv<'a>, _: JClass, policies_jstr: JStri
 fn parse_policies_internal<'a>(
     env: &mut JNIEnv<'a>,
     policies_jstr: JString<'a>,
+    depth_limit: Option<usize>,
 ) -> Result<JValueOwned<'a>> {
     if policies_jstr.is_null() {
         raise_npe(env)
@@ -804,7 +870,10 @@ fn parse_policies_internal<'a>(
         // Parse the string into the Rust PolicySet
         let policies_jstring = env.get_string(&policies_jstr)?;
         let policies_string = String::from(policies_jstring);
-        let policy_set = PolicySet::from_str(&policies_string)?;
+        let policy_set = match depth_limit {
+            Some(limit) => PolicySet::from_str_with_depth_limit(&policies_string, limit)?,
+            None => PolicySet::from_str(&policies_string)?,
+        };
 
         policy_set_to_java(env, &policy_set)
     }
@@ -816,7 +885,23 @@ pub fn parsePoliciesJsonJni<'a>(
     _: JClass,
     policies_json_jstr: JString<'a>,
 ) -> jvalue {
-    match parse_policies_json_internal(&mut env, policies_json_jstr) {
+    match parse_policies_json_internal(&mut env, policies_json_jstr, None) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policies_set) => policies_set.as_jni(),
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.PolicySet")]
+pub fn parsePoliciesJsonWithDepthLimitJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policies_json_jstr: JString<'a>,
+    depth_limit: jint,
+) -> jvalue {
+    let result = depth_limit_from_jint(depth_limit)
+        .and_then(|limit| parse_policies_json_internal(&mut env, policies_json_jstr, Some(limit)))
+        .map_err(with_error_sources);
+    match result {
         Err(e) => jni_failed(&mut env, e.as_ref()),
         Ok(policies_set) => policies_set.as_jni(),
     }
@@ -825,6 +910,7 @@ pub fn parsePoliciesJsonJni<'a>(
 fn parse_policies_json_internal<'a>(
     env: &mut JNIEnv<'a>,
     policies_json_jstr: JString<'a>,
+    depth_limit: Option<usize>,
 ) -> Result<JValueOwned<'a>> {
     if policies_json_jstr.is_null() {
         raise_npe(env)
@@ -832,7 +918,10 @@ fn parse_policies_json_internal<'a>(
         // Parse the JSON string into the Rust PolicySet
         let policies_json_jstring = env.get_string(&policies_json_jstr)?;
         let policies_json_string = String::from(policies_json_jstring);
-        let policy_set = PolicySet::from_json_str(&policies_json_string)?;
+        let policy_set = match depth_limit {
+            Some(limit) => PolicySet::from_json_str_with_depth_limit(&policies_json_string, limit)?,
+            None => PolicySet::from_json_str(&policies_json_string)?,
+        };
 
         policy_set_to_java(env, &policy_set)
     }
@@ -1036,7 +1125,22 @@ pub fn parsePolicyTemplateJni<'a>(
     _: JClass,
     template_jstr: JString<'a>,
 ) -> jvalue {
-    match parse_policy_template_internal(&mut env, template_jstr) {
+    match parse_policy_template_internal(&mut env, template_jstr, None) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(template_text) => template_text.as_jni(),
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn parsePolicyTemplateWithDepthLimitJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    template_jstr: JString<'a>,
+    depth_limit: jint,
+) -> jvalue {
+    let result = depth_limit_from_jint(depth_limit)
+        .and_then(|limit| parse_policy_template_internal(&mut env, template_jstr, Some(limit)));
+    match result {
         Err(e) => jni_failed(&mut env, e.as_ref()),
         Ok(template_text) => template_text.as_jni(),
     }
@@ -1045,13 +1149,18 @@ pub fn parsePolicyTemplateJni<'a>(
 fn parse_policy_template_internal<'a>(
     env: &mut JNIEnv<'a>,
     template_jstr: JString<'a>,
+    depth_limit: Option<usize>,
 ) -> Result<JValueOwned<'a>> {
     if template_jstr.is_null() {
         raise_npe(env)
     } else {
         let template_jstring = env.get_string(&template_jstr)?;
         let template_string = String::from(template_jstring);
-        match Template::from_str(&template_string) {
+        let parsed = match depth_limit {
+            Some(limit) => Template::parse_with_depth_limit(None, &template_string, limit),
+            None => Template::from_str(&template_string),
+        };
+        match parsed {
             Err(e) => Err(Box::new(e)),
             Ok(template) => {
                 let template_text = template.to_string();
@@ -1129,7 +1238,23 @@ fn template_effect_jni_internal<'a>(
 
 #[jni_fn("com.cedarpolicy.model.policy.Policy")]
 pub fn fromJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_json_jstr: JString<'a>) -> jvalue {
-    match from_json_internal(&mut env, policy_json_jstr) {
+    match from_json_internal(&mut env, policy_json_jstr, None) {
+        Err(e) => jni_failed(&mut env, e.as_ref()),
+        Ok(policy_text) => policy_text.as_jni(),
+    }
+}
+
+#[jni_fn("com.cedarpolicy.model.policy.Policy")]
+pub fn fromJsonWithDepthLimitJni<'a>(
+    mut env: JNIEnv<'a>,
+    _: JClass,
+    policy_json_jstr: JString<'a>,
+    depth_limit: jint,
+) -> jvalue {
+    let result = depth_limit_from_jint(depth_limit)
+        .and_then(|limit| from_json_internal(&mut env, policy_json_jstr, Some(limit)))
+        .map_err(with_error_sources);
+    match result {
         Err(e) => jni_failed(&mut env, e.as_ref()),
         Ok(policy_text) => policy_text.as_jni(),
     }
@@ -1138,14 +1263,21 @@ pub fn fromJsonJni<'a>(mut env: JNIEnv<'a>, _: JClass, policy_json_jstr: JString
 fn from_json_internal<'a>(
     env: &mut JNIEnv<'a>,
     policy_json_jstr: JString<'a>,
+    depth_limit: Option<usize>,
 ) -> Result<JValueOwned<'a>> {
     if policy_json_jstr.is_null() {
         raise_npe(env)
     } else {
         let policy_json_jstring = env.get_string(&policy_json_jstr)?;
         let policy_json_string = String::from(policy_json_jstring);
+        // `serde_json::from_str` enforces its 128-level nesting limit on the text, which
+        // keeps the `Value` shallow enough for `from_json_with_depth_limit` to be safe.
         let policy_json_value: Value = serde_json::from_str(&policy_json_string)?;
-        match Policy::from_json(None, policy_json_value) {
+        let parsed = match depth_limit {
+            Some(limit) => Policy::from_json_with_depth_limit(None, policy_json_value, limit),
+            None => Policy::from_json(None, policy_json_value),
+        };
+        match parsed {
             Err(e) => Err(Box::new(e)),
             Ok(p) => {
                 let policy_text = format!("{}", p);
@@ -1855,13 +1987,96 @@ pub(crate) mod jvm_based_tests {
             );
             env.exception_clear().unwrap();
         }
+        /// `1 + 2` inside a `when` clause has expression depth 4.
+        const DEPTH_4_POLICY: &str = "permit(principal, action, resource) when { 1 + 2 };";
+        const DEPTH_4_TEMPLATE: &str =
+            "permit(principal == ?principal, action, resource) when { 1 + 2 };";
+        const DEPTH_4_POLICY_JSON: &str = r#"{"effect":"permit","principal":{"op":"All"},"action":{"op":"All"},"resource":{"op":"All"},"conditions":[{"kind":"when","body":{"+":{"left":{"Value":1},"right":{"Value":2}}}}]}"#;
+        const TOO_DEEP: &str = "expression depth 4 exceeds the configured limit of 3";
+
+        #[test]
+        fn depth_limited_parsers_accept_at_limit_and_reject_over_limit() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            type Parser =
+                for<'a> fn(&mut JNIEnv<'a>, JString<'a>, Option<usize>) -> Result<JValueOwned<'a>>;
+            let cases: [(&str, Parser, &str); 3] = [
+                ("policy", parse_policy_internal, DEPTH_4_POLICY),
+                ("template", parse_policy_template_internal, DEPTH_4_TEMPLATE),
+                ("from_json", from_json_internal, DEPTH_4_POLICY_JSON),
+            ];
+            for (name, parse, src) in cases {
+                let jstr = env.new_string(src).unwrap();
+                assert!(parse(&mut env, jstr, Some(4)).is_ok(), "{name} at limit");
+                let jstr = env.new_string(src).unwrap();
+                let err = with_error_sources(parse(&mut env, jstr, Some(3)).expect_err(name));
+                assert!(err.to_string().contains(TOO_DEEP), "{name}: {err}");
+            }
+        }
+
+        #[test]
+        fn parse_policies_internal_depth_limit_is_a_parse_error() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let jstr = env.new_string(DEPTH_4_POLICY).unwrap();
+            let err = parse_policies_internal(&mut env, jstr, Some(3)).expect_err("too deep");
+            // A `ParseErrors` is what routes the failure to `PolicyParseException`.
+            let parse_errors = err.downcast_ref::<ParseErrors>().expect("ParseErrors");
+            assert_eq!(parse_errors.to_string(), TOO_DEEP);
+        }
+
+        #[test]
+        fn with_error_sources_keeps_the_json_depth_error() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let jstr = env.new_string(DEPTH_4_POLICY_JSON).unwrap();
+            let err = from_json_internal(&mut env, jstr, Some(3)).expect_err("too deep");
+            // The bare message hides the cause, which is why the JSON entry points fold sources in.
+            assert!(!err.to_string().contains(TOO_DEEP), "{err}");
+            assert_eq!(
+                with_error_sources(err).to_string(),
+                format!("error deserializing a policy/template from JSON: {TOO_DEEP}")
+            );
+        }
+
+        /// Only the failure path: the success path builds Java `PolicySet` objects, and the
+        /// test JVM has no CedarJava classes. `PolicyDepthLimitTests` covers that in Java.
+        #[test]
+        fn parse_policies_json_internal_depth_limit() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let pset = format!(
+                r#"{{"staticPolicies":{{"p":{DEPTH_4_POLICY_JSON}}},"templates":{{}},"templateLinks":[]}}"#
+            );
+            let jstr = env.new_string(&pset).unwrap();
+            let err = parse_policies_json_internal(&mut env, jstr, Some(3)).expect_err("too deep");
+            assert!(with_error_sources(err).to_string().contains(TOO_DEEP));
+        }
+
+        #[test]
+        fn depth_limit_rejects_deep_nesting_without_stack_overflow() {
+            let mut env = JVM.attach_current_thread().unwrap();
+            let n = 10000;
+            let deep = "(".repeat(n) + "1" + &")".repeat(n);
+            let src = format!("permit(principal, action, resource) when {{ {deep} }};");
+            let jstr = env.new_string(&src).unwrap();
+            let err = parse_policies_internal(&mut env, jstr, Some(100)).expect_err("too deep");
+            assert!(
+                err.to_string()
+                    .contains("exceeds the configured limit of 100"),
+                "{err}"
+            );
+        }
+
+        #[test]
+        fn depth_limit_from_jint_rejects_negative() {
+            assert_eq!(depth_limit_from_jint(7).unwrap(), 7);
+            assert!(depth_limit_from_jint(-1).is_err());
+        }
+
         #[test]
         fn parse_policy_internal_success_basic() {
             let mut env = JVM.attach_current_thread().unwrap();
             let input = r#"permit(principal,action,resource);"#;
             let policy_jstr = env.new_string(input).unwrap();
 
-            let result = parse_policy_internal(&mut env, policy_jstr);
+            let result = parse_policy_internal(&mut env, policy_jstr, None);
             assert!(
                 result.is_ok(),
                 "Expected parse_policy_internal to succeed: {:?}",
@@ -1886,7 +2101,7 @@ pub(crate) mod jvm_based_tests {
             let input = r#"permit(principal == User::"alice", action == Action::"read", resource == Resource::"file");"#;
             let jstr = env.new_string(input).unwrap();
 
-            let result = parse_policy_template_internal(&mut env, jstr);
+            let result = parse_policy_template_internal(&mut env, jstr, None);
 
             assert!(
                 result.is_err(),
@@ -1909,7 +2124,7 @@ pub(crate) mod jvm_based_tests {
         fn parse_policy_internal_null() {
             let mut env = JVM.attach_current_thread().unwrap();
             let null_str = JString::from(JObject::null());
-            let result = parse_policy_internal(&mut env, null_str);
+            let result = parse_policy_internal(&mut env, null_str, None);
             assert!(result.is_ok(), "Expected error on null input");
             assert!(
                 env.exception_check().unwrap(),
@@ -1922,7 +2137,7 @@ pub(crate) mod jvm_based_tests {
             let mut env = JVM.attach_current_thread().unwrap();
             let policy_template = r#"permit(principal==?principal,action == Action::"readfile",resource==?resource );"#;
             let jstr = env.new_string(policy_template).unwrap();
-            let result = parse_policy_template_internal(&mut env, jstr);
+            let result = parse_policy_template_internal(&mut env, jstr, None);
             assert!(result.is_ok());
 
             let jvalue = result.unwrap();
@@ -1943,14 +2158,14 @@ pub(crate) mod jvm_based_tests {
             let mut env = JVM.attach_current_thread().unwrap();
             let invalid_input = r#"permit(Principa,Action,Resource );"#;
             let jstr = env.new_string(invalid_input).unwrap();
-            let result = parse_policy_template_internal(&mut env, jstr);
+            let result = parse_policy_template_internal(&mut env, jstr, None);
             assert!(result.is_err(), "Expected to fail for invalid input");
         }
         #[test]
         fn parse_policy_template_internal_null() {
             let mut env = JVM.attach_current_thread().unwrap();
             let null_str = JString::from(JObject::null());
-            let result = parse_policy_template_internal(&mut env, null_str);
+            let result = parse_policy_template_internal(&mut env, null_str, None);
             assert!(result.is_ok(), "Expected error on null input");
             assert!(
                 env.exception_check().unwrap(),
@@ -1997,7 +2212,7 @@ pub(crate) mod jvm_based_tests {
                 "#;
 
             let java_str = env.new_string(policy_json).unwrap();
-            let result = from_json_internal(&mut env, java_str);
+            let result = from_json_internal(&mut env, java_str, None);
             assert!(
                 result.is_ok(),
                 "Expected from_json parsing to succeed, got: {:?}",
@@ -2021,7 +2236,7 @@ pub(crate) mod jvm_based_tests {
         fn from_json_internal_null() {
             let mut env = JVM.attach_current_thread().unwrap();
             let null_str = JString::from(JObject::null());
-            let result = from_json_internal(&mut env, null_str);
+            let result = from_json_internal(&mut env, null_str, None);
             assert!(result.is_ok(), "Expected error on null input");
             assert!(
                 env.exception_check().unwrap(),
@@ -2072,7 +2287,7 @@ pub(crate) mod jvm_based_tests {
         "#;
 
             let java_str = env.new_string(invalid_input).unwrap();
-            let result = from_json_internal(&mut env, java_str);
+            let result = from_json_internal(&mut env, java_str, None);
             assert!(
                 result.is_err(),
                 "Expected json parsing to fail: {:?}",
@@ -2109,7 +2324,7 @@ pub(crate) mod jvm_based_tests {
             let invalid_input = r#"Permit(Principal, Resource, Action);"#;
             let jstr = env.new_string(invalid_input).unwrap();
 
-            let result = from_json_internal(&mut env, jstr);
+            let result = from_json_internal(&mut env, jstr, None);
             assert!(
                 result.is_err(),
                 "Expected json_internal parsing to fail: {:?}",

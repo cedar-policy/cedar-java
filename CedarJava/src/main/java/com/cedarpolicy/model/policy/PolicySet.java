@@ -152,6 +152,45 @@ public class PolicySet {
     }
 
     /**
+     * Parse multiple policies and templates from a file into a PolicySet, rejecting any policy whose
+     * expression depth exceeds {@code depthLimit}.
+     *
+     * <p>Use this for untrusted input. Deeply nested policies can overflow the native stack, which
+     * aborts the JVM. See {@link #parsePolicies(String, int)}.
+     *
+     * @param filePath the path to the file containing the policies
+     * @param depthLimit the maximum expression depth, must be non-negative
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException if parsing fails or a policy exceeds the depth limit
+     * @throws IOException
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     */
+    public static PolicySet parsePolicies(Path filePath, int depthLimit) throws InternalException, IOException {
+        String policiesString = Files.readString(filePath);
+        return parsePolicies(policiesString, depthLimit);
+    }
+
+    /**
+     * Parse a string containing multiple policies and templates into a PolicySet, rejecting any
+     * policy whose expression depth exceeds {@code depthLimit}.
+     *
+     * <p>Use this for untrusted input. Cedar parses and evaluates policies recursively, so deeply
+     * nested input can overflow the native stack, which aborts the JVM. An exceeded limit is reported
+     * as a {@link com.cedarpolicy.model.exception.PolicyParseException} with the message
+     * "expression depth N exceeds the configured limit of M".
+     *
+     * @param policiesString the string containing the policies
+     * @param depthLimit the maximum expression depth, must be non-negative
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException if parsing fails or a policy exceeds the depth limit
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePolicies(String policiesString, int depthLimit) throws InternalException {
+        return parsePoliciesWithDepthLimitJni(policiesString, requireValidDepthLimit(depthLimit));
+    }
+
+    /**
      * Parse multiple policies and templates from a JSON file into a PolicySet.
      *
      * <p>The file is expected to contain the JSON (EST) representation of a policy set, e.g.
@@ -189,6 +228,47 @@ public class PolicySet {
     public static PolicySet parsePoliciesJson(String policiesJsonString) throws InternalException {
         PolicySet policySet = parsePoliciesJsonJni(policiesJsonString);
         return policySet;
+    }
+
+    /**
+     * Parse multiple policies and templates from a JSON file into a PolicySet, rejecting any policy
+     * whose expression depth exceeds {@code depthLimit}. See {@link #parsePoliciesJson(String, int)}.
+     *
+     * @param filePath the path to the JSON file containing the policies
+     * @param depthLimit the maximum expression depth, must be non-negative
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException if parsing fails or a policy exceeds the depth limit
+     * @throws IOException
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     */
+    public static PolicySet parsePoliciesJson(Path filePath, int depthLimit) throws InternalException, IOException {
+        String policiesJsonString = Files.readString(filePath);
+        return parsePoliciesJson(policiesJsonString, depthLimit);
+    }
+
+    /**
+     * Parse a JSON string containing multiple policies and templates into a PolicySet, rejecting any
+     * policy whose expression depth exceeds {@code depthLimit}.
+     *
+     * <p>The JSON parser limits the nesting of the JSON text, but many shallow conditions can still
+     * combine into a deep expression, which {@code depthLimit} bounds.
+     *
+     * @param policiesJsonString the JSON string containing the policies
+     * @param depthLimit the maximum expression depth, must be non-negative
+     * @return a PolicySet containing the parsed policies
+     * @throws InternalException if parsing fails or a policy exceeds the depth limit
+     * @throws IllegalArgumentException if {@code depthLimit} is negative
+     * @throws NullPointerException
+     */
+    public static PolicySet parsePoliciesJson(String policiesJsonString, int depthLimit) throws InternalException {
+        return parsePoliciesJsonWithDepthLimitJni(policiesJsonString, requireValidDepthLimit(depthLimit));
+    }
+
+    static int requireValidDepthLimit(int depthLimit) {
+        if (depthLimit < 0) {
+            throw new IllegalArgumentException("depthLimit must be non-negative, got " + depthLimit);
+        }
+        return depthLimit;
     }
 
     // --- Caching support ---
@@ -260,6 +340,10 @@ public class PolicySet {
 
     private static native PolicySet parsePoliciesJni(String policiesStr) throws InternalException, NullPointerException;
     private static native PolicySet parsePoliciesJsonJni(String policiesJsonStr)
+            throws InternalException, NullPointerException;
+    private static native PolicySet parsePoliciesWithDepthLimitJni(String policiesStr, int depthLimit)
+            throws InternalException, NullPointerException;
+    private static native PolicySet parsePoliciesJsonWithDepthLimitJni(String policiesJsonStr, int depthLimit)
             throws InternalException, NullPointerException;
     private static native String policySetToJson(String policySetStr) throws InternalException, NullPointerException;
     private static native void preparsePolicySetJni(String id, String policiesJson) throws InternalException;
