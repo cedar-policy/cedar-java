@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.cedarpolicy.loader.LibraryLoader;
 import com.cedarpolicy.model.AuthorizationResponse;
@@ -43,6 +44,8 @@ import com.cedarpolicy.model.exception.InternalException;
 import com.cedarpolicy.model.exception.MissingExperimentalFeatureException;
 import com.cedarpolicy.model.DetailedError;
 import com.cedarpolicy.model.policy.PolicySet;
+import com.cedarpolicy.model.schema.Schema;
+import com.cedarpolicy.value.EntityUID;
 import com.cedarpolicy.value.Value;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -72,25 +75,12 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     @Override
     public AuthorizationResponse isAuthorized(com.cedarpolicy.model.AuthorizationRequest q,
             PolicySet policySet, Set<Entity> entities) throws AuthException {
-        // Use the stateful (cached) path only if the policy set is cached AND
-        // any provided schema is also cached. Fall back to the uncached path
-        // otherwise to avoid silently skipping schema validation.
-        Optional<String> policySetKey = policySet.cacheKey();
-        if (policySetKey.isPresent()) {
-            boolean hasSchema = q.schema.isPresent();
-            Optional<String> schemaKey = hasSchema ? q.schema.get().cacheKey() : Optional.empty();
-            if (!hasSchema || schemaKey.isPresent()) {
-                StatefulAuthRequest statefulReq = new StatefulAuthRequest(
-                        q, policySetKey.get(), schemaKey.orElse(null), entities);
-                try {
-                    return call("StatefulAuthorizationOperation", AuthorizationResponse.class, statefulReq);
-                } catch (AuthException e) {
-                    if (e.getMessage() != null && e.getMessage().contains("not found")) {
-                        // Cache entry was evicted; fall back to uncached path
-                    } else {
-                        throw e;
-                    }
-                }
+        Optional<CacheKeys> keys = cacheKeys(policySet, q.schema);
+        if (keys.isPresent()) {
+            AuthorizationResponse response = call("StatefulAuthorizationOperation", AuthorizationResponse.class,
+                    new StatefulAuthRequest(q, keys.get(), entities));
+            if (!isCacheMiss(response.errors)) {
+                return response;
             }
         }
         final AuthorizationRequest request = new AuthorizationRequest(q, policySet, entities);
@@ -111,6 +101,13 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
     public PartialAuthorizationResponse isAuthorizedPartial(com.cedarpolicy.model.PartialAuthorizationRequest q,
             PolicySet policySet, Set<Entity> entities) throws AuthException {
         try {
+            Optional<CacheKeys> keys = cacheKeys(policySet, q.schema);
+            if (keys.isPresent()) {
+                Optional<PartialAuthorizationResponse> response = statefulPartial(q, keys.get(), entities);
+                if (response.isPresent() && !isCacheMiss(response.get().errors)) {
+                    return response.get();
+                }
+            }
             final PartialAuthorizationRequest request = new PartialAuthorizationRequest(q, policySet, entities);
             return call("AuthorizationPartialOperation", PartialAuthorizationResponse.class, request);
         } catch (InternalException e) {
@@ -165,6 +162,52 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
             }
         }
     }
+
+    /**
+     * Run partial authorization on the cached path. Empty when the native library cannot answer it, so that the caller
+     * falls back to the uncached path: a native library older than this class (reachable through
+     * {@code CEDAR_JAVA_FFI_LIB}) answers an unknown operation with a payload this response type cannot bind. Falling
+     * back keeps the behaviour of such a library, and of one built without partial evaluation, exactly as before.
+     */
+    private static Optional<PartialAuthorizationResponse> statefulPartial(
+            com.cedarpolicy.model.PartialAuthorizationRequest q, CacheKeys keys, Set<Entity> entities) {
+        try {
+            return Optional.of(call("StatefulAuthorizationPartialOperation", PartialAuthorizationResponse.class,
+                    new StatefulPartialAuthRequest(q, keys, entities)));
+        } catch (AuthException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** The cache keys of a policy set and its optional schema, when the cached path can be used. */
+    private record CacheKeys(String policySetId, String schemaName) { }
+
+    /**
+     * The stateful (cached) path is used only if the policy set is cached AND any provided schema is also cached.
+     * Otherwise the uncached path is used, so that schema-based parsing and validation are never silently skipped.
+     */
+    private static Optional<CacheKeys> cacheKeys(PolicySet policySet, Optional<Schema> schema) {
+        Optional<String> policySetKey = policySet.cacheKey();
+        if (policySetKey.isEmpty()) {
+            return Optional.empty();
+        }
+        if (schema.isEmpty()) {
+            return Optional.of(new CacheKeys(policySetKey.get(), null));
+        }
+        return schema.get().cacheKey().map(schemaKey -> new CacheKeys(policySetKey.get(), schemaKey));
+    }
+
+    /**
+     * Whether a stateful call failed only because a cache entry it names is gone, in which case the caller falls back
+     * to the uncached path. The native layer reports a miss as the sole error, with one of these messages.
+     */
+    private static boolean isCacheMiss(Optional<? extends List<DetailedError>> errors) {
+        return errors.filter(e -> e.size() == 1)
+                .map(e -> CACHE_MISS.matcher(e.get(0).message).matches())
+                .orElse(false);
+    }
+
+    private static final Pattern CACHE_MISS = Pattern.compile("preparsed (policy set|schema) '.*' not found");
 
     @Override
     public ValidationResponse validate(ValidationRequest q) throws AuthException {
@@ -319,14 +362,40 @@ public final class BasicAuthorizationEngine implements AuthorizationEngine {
         @JsonProperty final boolean validateRequest;
         @JsonProperty final Set<Entity> entities;
 
-        StatefulAuthRequest(com.cedarpolicy.model.AuthorizationRequest request,
-                String policySetId, String schemaName, Set<Entity> entities) {
+        StatefulAuthRequest(com.cedarpolicy.model.AuthorizationRequest request, CacheKeys keys,
+                Set<Entity> entities) {
             this.principal = request.principalEUID;
             this.action = request.actionEUID;
             this.resource = request.resourceEUID;
             this.context = request.context;
-            this.preparsedPolicySetId = policySetId;
-            this.preparsedSchemaName = schemaName;
+            this.preparsedPolicySetId = keys.policySetId();
+            this.preparsedSchemaName = keys.schemaName();
+            this.validateRequest = request.enableRequestValidation;
+            this.entities = entities;
+        }
+    }
+
+    /** The cached counterpart of {@link PartialAuthorizationRequest}: the same fields, with cache keys in place of the
+     * policy set and schema. */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    private static final class StatefulPartialAuthRequest {
+        @JsonProperty final Optional<EntityUID> principal;
+        @JsonProperty final Optional<EntityUID> action;
+        @JsonProperty final Optional<EntityUID> resource;
+        @JsonProperty final Optional<Map<String, Value>> context;
+        @JsonProperty final String preparsedPolicySetId;
+        @JsonProperty final String preparsedSchemaName;
+        @JsonProperty final boolean validateRequest;
+        @JsonProperty final Set<Entity> entities;
+
+        StatefulPartialAuthRequest(com.cedarpolicy.model.PartialAuthorizationRequest request, CacheKeys keys,
+                Set<Entity> entities) {
+            this.principal = request.principal;
+            this.action = request.action;
+            this.resource = request.resource;
+            this.context = request.context;
+            this.preparsedPolicySetId = keys.policySetId();
+            this.preparsedSchemaName = keys.schemaName();
             this.validateRequest = request.enableRequestValidation;
             this.entities = entities;
         }
