@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::stateful::json_stateful_is_authorized;
+#[cfg(feature = "partial-eval")]
+use crate::stateful::json_stateful_is_authorized_partial;
 use crate::tpe::{json_type_aware_partial_is_authorized, json_type_aware_partial_reauthorize};
 use cedar_policy::entities_errors::EntitiesError;
 #[cfg(feature = "partial-eval")]
 use cedar_policy::ffi::is_authorized_partial_json_str;
 use cedar_policy::ffi::{
-    schema_to_json, schema_to_text, AuthorizationAnswer, DetailedError, EntityUid as FfiEntityUid,
-    PolicySet as PolicySetFFI, Schema as FFISchema, SchemaToJsonAnswer, SchemaToTextAnswer,
+    schema_to_json, schema_to_text, DetailedError, PolicySet as PolicySetFFI, Schema as FFISchema,
+    SchemaToJsonAnswer, SchemaToTextAnswer,
 };
 use cedar_policy::{
     ffi::{is_authorized_json_str, validate_json_str},
-    Authorizer, Entities as CedarEntities, EntityUid, ParseErrors, Policy, PolicySet, Request,
-    Schema, SlotId, Template,
+    Authorizer, Entities as CedarEntities, EntityUid, ParseErrors, Policy, PolicySet, Schema,
+    SlotId, Template,
 };
 use cedar_policy_formatter::{policies_str_to_pretty, Config};
 use dashmap::DashMap;
@@ -38,7 +41,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 use std::{error::Error, panic, str::FromStr};
 
 use crate::{
@@ -63,15 +66,21 @@ const V0_VALIDATE_OP: &str = "ValidateOperation";
 const V0_VALIDATE_LEVEL_OP: &str = "ValidateWithLevelOperation";
 const V0_VALIDATE_ENTITIES: &str = "ValidateEntities";
 const V0_STATEFUL_AUTH_OP: &str = "StatefulAuthorizationOperation";
+#[cfg(feature = "partial-eval")]
+const V0_STATEFUL_AUTH_PARTIAL_OP: &str = "StatefulAuthorizationPartialOperation";
 const V0_AUTH_TYPE_AWARE_PARTIAL_OP: &str = "AuthorizationTypeAwarePartialOperation";
 const V0_TYPE_AWARE_PARTIAL_REAUTHORIZE_OP: &str = "TypeAwarePartialReauthorizeOperation";
 
 thread_local! {
-    static AUTHORIZER: Authorizer = Authorizer::new();
+    pub(crate) static AUTHORIZER: Authorizer = Authorizer::new();
 }
 
-static CACHED_POLICY_SETS: LazyLock<DashMap<String, PolicySet>> = LazyLock::new(DashMap::new);
-static CACHED_SCHEMAS: LazyLock<DashMap<String, Schema>> = LazyLock::new(DashMap::new);
+// Entries are behind an `Arc` so that a stateful call takes a cheap reference to the parsed policy
+// set and schema instead of deep-cloning them (policies carry their source text) on every request.
+pub(crate) static CACHED_POLICY_SETS: LazyLock<DashMap<String, Arc<PolicySet>>> =
+    LazyLock::new(DashMap::new);
+pub(crate) static CACHED_SCHEMAS: LazyLock<DashMap<String, Arc<Schema>>> =
+    LazyLock::new(DashMap::new);
 
 static MAX_CACHED_POLICY_SETS: AtomicUsize = AtomicUsize::new(1024);
 static MAX_CACHED_SCHEMAS: AtomicUsize = AtomicUsize::new(1024);
@@ -185,7 +194,7 @@ pub fn preparsePolicySetJni(
                 );
                 return;
             }
-            CACHED_POLICY_SETS.insert(id, parsed);
+            CACHED_POLICY_SETS.insert(id, Arc::new(parsed));
         }
         Err(errors) => {
             let msg = errors
@@ -273,7 +282,7 @@ pub fn preparseSchemaJni(
                 );
                 return;
             }
-            CACHED_SCHEMAS.insert(id, parsed);
+            CACHED_SCHEMAS.insert(id, Arc::new(parsed));
         }
         Err(error) => {
             let _ = env.throw_new(
@@ -336,6 +345,8 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
         V0_VALIDATE_ENTITIES => json_validate_entities(&input),
         V0_VALIDATE_LEVEL_OP => validate_with_level_json_str(input),
         V0_STATEFUL_AUTH_OP => json_stateful_is_authorized(input),
+        #[cfg(feature = "partial-eval")]
+        V0_STATEFUL_AUTH_PARTIAL_OP => json_stateful_is_authorized_partial(input),
         _ => {
             let ires = Answer::fail_internally(format!("unsupported operation: {}", call));
             serde_json::to_string(&ires)
@@ -344,149 +355,6 @@ pub(crate) fn call_cedar(call: &str, input: &str) -> String {
     result.unwrap_or_else(|err| {
         panic!("failed to handle call {call} with input {input}\nError: {err}")
     })
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct StatefulAuthCall {
-    principal: Value,
-    action: Value,
-    resource: Value,
-    #[serde(default)]
-    context: Value,
-    preparsed_policy_set_id: String,
-    preparsed_schema_name: Option<String>,
-    #[serde(default = "default_true")]
-    validate_request: bool,
-    entities: Value,
-}
-
-fn default_true() -> bool {
-    true
-}
-
-pub(crate) fn make_auth_failure(msg: String) -> AuthorizationAnswer {
-    AuthorizationAnswer::Failure {
-        errors: vec![DetailedError {
-            message: msg,
-            help: None,
-            code: None,
-            url: None,
-            severity: None,
-            source_locations: vec![],
-            related: vec![],
-        }],
-        warnings: vec![],
-    }
-}
-
-fn json_stateful_is_authorized(input: &str) -> serde_json::Result<String> {
-    let call: StatefulAuthCall = serde_json::from_str(input)?;
-
-    // Look up cached policy set
-    let policies = CACHED_POLICY_SETS
-        .get(&call.preparsed_policy_set_id)
-        .map(|r| r.clone());
-    let policies = match policies {
-        Some(p) => p,
-        None => {
-            return serde_json::to_string(&make_auth_failure(format!(
-                "preparsed policy set '{}' not found",
-                call.preparsed_policy_set_id
-            )));
-        }
-    };
-
-    // Look up cached schema (optional)
-    let schema = if let Some(ref schema_name) = call.preparsed_schema_name {
-        let s = CACHED_SCHEMAS.get(schema_name).map(|r| r.clone());
-        match s {
-            Some(schema) => Some(schema),
-            None => {
-                return serde_json::to_string(&make_auth_failure(format!(
-                    "preparsed schema '{}' not found",
-                    schema_name
-                )));
-            }
-        }
-    } else {
-        None
-    };
-
-    // Parse principal, action, resource via FFI EntityUid type
-    let principal: FfiEntityUid = match serde_json::from_value(call.principal) {
-        Ok(p) => p,
-        Err(e) => {
-            return serde_json::to_string(&make_auth_failure(format!(
-                "failed to parse principal: {e}"
-            )));
-        }
-    };
-    let action: FfiEntityUid = match serde_json::from_value(call.action) {
-        Ok(a) => a,
-        Err(e) => {
-            return serde_json::to_string(&make_auth_failure(format!(
-                "failed to parse action: {e}"
-            )));
-        }
-    };
-    let resource: FfiEntityUid = match serde_json::from_value(call.resource) {
-        Ok(r) => r,
-        Err(e) => {
-            return serde_json::to_string(&make_auth_failure(format!(
-                "failed to parse resource: {e}"
-            )));
-        }
-    };
-
-    let principal = match principal.parse(Some("principal")) {
-        Ok(p) => p,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-    let action = match action.parse(Some("action")) {
-        Ok(a) => a,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-    let resource = match resource.parse(Some("resource")) {
-        Ok(r) => r,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-
-    // Parse context
-    let context = match cedar_policy::Context::from_json_value(
-        call.context,
-        schema.as_ref().map(|s| (s, &action)),
-    ) {
-        Ok(c) => c,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-
-    // Build request
-    let schema_for_validation = if call.validate_request {
-        schema.as_ref()
-    } else {
-        None
-    };
-    let request = match Request::new(principal, action, resource, context, schema_for_validation) {
-        Ok(r) => r,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-
-    // Parse entities
-    let entities = match CedarEntities::from_json_value(call.entities, schema.as_ref()) {
-        Ok(e) => e,
-        Err(e) => return serde_json::to_string(&make_auth_failure(e.to_string())),
-    };
-
-    // Authorize using cached data
-    let response =
-        AUTHORIZER.with(|authorizer| authorizer.is_authorized(&request, &policies, &entities));
-
-    let ans = AuthorizationAnswer::Success {
-        response: response.into(),
-        warnings: vec![],
-    };
-    serde_json::to_string(&ans)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -1474,7 +1342,7 @@ pub(crate) mod jvm_based_tests {
     use super::*;
     use crate::jvm_test_utils::*;
     use jni::JavaVM;
-    use std::sync::LazyLock;
+    use std::sync::{Arc, LazyLock};
 
     pub(crate) static JVM: LazyLock<JavaVM> = LazyLock::new(|| create_jvm().unwrap());
     // Static JVM to be used by all the tests. LazyLock for thread-safe lazy initialization

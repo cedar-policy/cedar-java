@@ -18,6 +18,8 @@ package com.cedarpolicy;
 
 import com.cedarpolicy.model.AuthorizationRequest;
 import com.cedarpolicy.model.AuthorizationResponse;
+import com.cedarpolicy.model.PartialAuthorizationRequest;
+import com.cedarpolicy.model.PartialAuthorizationResponse;
 import com.cedarpolicy.model.ValidationRequest;
 import com.cedarpolicy.model.ValidationResponse;
 import com.cedarpolicy.model.entity.Entities;
@@ -87,6 +89,12 @@ public class AuthorizationBenchmark {
     private PolicySet xlargePolicySet;
     private PolicySet xlargePolicySetCached;
 
+    // Partial evaluation (resource unknown), with and without a schema
+    private Schema largeSchemaUncached;
+    private PartialAuthorizationRequest partialLargeRequest;
+    private PartialAuthorizationRequest partialLargeRequestCached;
+    private PartialAuthorizationRequest partialSmallRequest;
+
     // Validation
     private ValidationRequest validationRequest;
 
@@ -114,6 +122,22 @@ public class AuthorizationBenchmark {
 
         xlargePolicySetCached = buildXLargePolicies();
         xlargePolicySetCached.cache();
+
+        setUpPartialScenario();
+        checkPartialScenario();
+    }
+
+    /** A failure answer is cheap to produce, so a benchmark that silently fails would report a misleading speedup. */
+    private void checkPartialScenario() throws AuthException {
+        PartialAuthorizationResponse[] responses = {
+            uncachedPartialSmall(), cachedPartialSmall(), uncachedPartialXLarge(), cachedPartialXLarge(),
+            uncachedPartialLargeWithSchema(), cachedPartialLargeWithSchema(),
+        };
+        for (PartialAuthorizationResponse response : responses) {
+            if (response.type != PartialAuthorizationResponse.SuccessOrFailure.Success) {
+                throw new IllegalStateException("partial evaluation benchmark request failed: " + response);
+            }
+        }
     }
 
     private static String readResource(String resourcePath) throws Exception {
@@ -194,6 +218,31 @@ public class AuthorizationBenchmark {
 
     private void setUpXLargeScenario() throws Exception {
         xlargePolicySet = buildXLargePolicies();
+    }
+
+    /**
+     * Partial evaluation with the resource unknown. The large scenario passes a schema, so the uncached path parses
+     * both the policies and the schema on every call. The schema must therefore be a separate, uncached instance:
+     * the engine only takes the cached path when the policy set and the schema are both cached.
+     */
+    private void setUpPartialScenario() throws Exception {
+        EntityTypeName userType = EntityTypeName.parse("User").get();
+        EntityTypeName actionType = EntityTypeName.parse("Action").get();
+
+        HashMap<String, com.cedarpolicy.value.Value> context = new HashMap<>();
+        context.put("sourceIp", new com.cedarpolicy.value.IpAddress("10.1.2.3"));
+        context.put("requestId", new com.cedarpolicy.value.PrimString("req-bench-001"));
+
+        largeSchemaUncached = new Schema(JsonOrCedar.Json, Optional.of(readResource("/large_schema.json")),
+                Optional.empty());
+        partialLargeRequest = PartialAuthorizationRequest.builder()
+                .principal(userType.of("alice")).action(actionType.of("ViewDocument")).context(context)
+                .schema(largeSchemaUncached).build();
+        partialLargeRequestCached = PartialAuthorizationRequest.builder()
+                .principal(userType.of("alice")).action(actionType.of("ViewDocument")).context(context)
+                .schema(largeSchema).build();
+        partialSmallRequest = PartialAuthorizationRequest.builder()
+                .principal(userType.of("alice")).action(actionType.of("view")).emptyContext().build();
     }
 
     private void setUpValidationScenario() throws Exception {
@@ -331,6 +380,39 @@ public class AuthorizationBenchmark {
     @Benchmark
     public AuthorizationResponse cachedXLargePolicyLargeEntities() throws AuthException {
         return engine.isAuthorized(largeRequest, xlargePolicySetCached, largeEntities);
+    }
+
+    // --- Partial evaluation (resource unknown) ---
+
+    @Benchmark
+    public PartialAuthorizationResponse uncachedPartialSmall() throws AuthException {
+        return engine.isAuthorizedPartial(partialSmallRequest, smallPolicySet, smallEntities);
+    }
+
+    @Benchmark
+    public PartialAuthorizationResponse cachedPartialSmall() throws AuthException {
+        return engine.isAuthorizedPartial(partialSmallRequest, smallPolicySetCached, smallEntities);
+    }
+
+    @Benchmark
+    public PartialAuthorizationResponse uncachedPartialXLarge() throws AuthException {
+        return engine.isAuthorizedPartial(partialSmallRequest, xlargePolicySet, smallEntities);
+    }
+
+    @Benchmark
+    public PartialAuthorizationResponse cachedPartialXLarge() throws AuthException {
+        return engine.isAuthorizedPartial(partialSmallRequest, xlargePolicySetCached, smallEntities);
+    }
+
+    /** Large policies, large entities and a schema: the uncached path parses policies and schema on every call. */
+    @Benchmark
+    public PartialAuthorizationResponse uncachedPartialLargeWithSchema() throws AuthException {
+        return engine.isAuthorizedPartial(partialLargeRequest, largePolicySet, largeEntities);
+    }
+
+    @Benchmark
+    public PartialAuthorizationResponse cachedPartialLargeWithSchema() throws AuthException {
+        return engine.isAuthorizedPartial(partialLargeRequestCached, largePolicySetCached, largeEntities);
     }
 
     // --- Validation ---

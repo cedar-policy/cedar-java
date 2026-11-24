@@ -23,6 +23,7 @@ mod jmap;
 mod jset;
 mod jvm_test_utils;
 mod objects;
+mod stateful;
 mod tests;
 mod tpe;
 mod utils;

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+* `isAuthorizedPartial` now uses the cached (stateful) path when the policy set, and any schema, have been cached with `cache()`, so they are no longer serialized and parsed on every call [#380](https://github.com/cedar-policy/cedar-java/issues/380)
+* Bugfix: the cached `isAuthorized` path now returns the same detailed errors as the uncached one, including the cause chain, `help`, `code`, source locations and `related` errors [#379](https://github.com/cedar-policy/cedar-java/issues/379)
+* Bugfix: when a cache entry is missing, `isAuthorized` falls back to the uncached path instead of returning a `preparsed policy set '…' not found` failure
+
 ## 4.11.0
 * Pinned to `cedar-policy 4.11.2`
 * Added `PolicyParseException`, thrown by `PolicySet.parsePolicies` when policy text fails to parse. It is a subclass of `InternalException`, so existing `catch` blocks and `getMessage()` are unaffected, and adds `getDetailedErrors()` returning Cedar's structured diagnostics - source span, expected tokens, and help text - for each error. `getErrors()` now carries one entry per parse error rather than a single entry for the whole document [#367](https://github.com/cedar-policy/cedar-java/pull/367)
